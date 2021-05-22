@@ -1,0 +1,102 @@
+---
+title: 'Continuous Integration with Angular CLI'
+publishedAt: '2017-07-13'
+summary: 'Angular CLI is a powerful tool to scaffold and build Angular apps. Not only it provides you scalable project structure, instead, it handles all common tedious tasks for you out of the box and it already follows the Angular best practices.'
+image: '/static/images/continuous-integration-with-angular-cli/banner.jpeg'
+---
+
+<Image
+  alt={`Continuous Integration with Angular CLI`}
+  src={`/static/images/continuous-integration-with-angular-cli/banner.jpeg`}
+  width={1600}
+  height={500}
+  priority
+/>
+
+Angular CLI is a powerful tool to scaffold and build Angular apps. Not only it provides you scalable project structure, instead, it handles all common tedious tasks for you out of the box and it already follows the Angular best practices.
+
+> Build and test your application in a minute
+
+As tasks, we’ve common commands like:
+
+- `ng new` to initialize a new Angular project with a lot of settings.
+- `ng generate` to generate something from a blueprint.
+- `ng serve` to build the application and starts a web server.
+- `ng build` to compile the application into an output directory.
+- `ng test` to run your unit tests with Karma the provided test runner.
+- `ng lint` to lint you app code using tslint to ensure best practices of Angular.
+
+With these commands, you can easily create a new Angular app, generate some components following blueprints and build it in few minutes. Even that, you can ensure everything is still functional with the test runner and if you still respect the style and best practices from Angular with the linter. And this, without any configuration necessary, everything is already ready so you can run test without any further configuration. However, these tools are only effective if you run the command, otherwise, it’s a wasted potential.
+
+## Continuous Integration
+
+To use it at its full potential, we can automatically execute these commands into a continuous integration tool such as CircleCI, Travis, AppVeyor, Jenkins, Bamboo, and a lot more, hooked with your source control on each commit, pull request and even prevent merge if these commands fail. In that way, this will prevent someone from merging if his code doesn’t match with your or Angular style and breaking your project with unbuildable code. You’ve probably already heard “but it’s working on my computer“ that’s exactly what we want to prevent here.
+
+All you have to do is to setup the environment and executes these previous pre-chewed commands.
+
+First, let’s build our angular application in production and AoT to be sure everything is alright, then test it and finally lint it. It can be executed on multiple tools, but let’s do examples for a few, at least my favorites.
+
+We will use Yarn as a fast and secure package manager to cache our dependencies between builds, for more information refer to this article: [Reliable Continuous Integration in Javascript](/blog/reliable-continuous-integration-in-javascript).
+
+### CircleCI 2.0
+
+Version 2.0 has been rolled out few days ago, enjoy this updated config.
+
+```yml
+version: 2
+jobs:
+  build:
+    working_directory: ~/app-name
+    docker:
+      - image: circleci/node:6-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+      - run:
+          name: install-dependencies
+          command: yarn install
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+            - ./node_modules
+      - run:
+          name: angular-build
+          command: yarn ng -- build --prod --aot --no-progress
+      - run:
+          name: angular-test
+          command: yarn test -- --single-run --no-progress
+      - run:
+          name: angular-lint
+          command: yarn lint
+```
+
+### AppVeyor
+
+```yml
+image: Visual Studio 2017
+
+environment:
+  nodejs_version: '6'
+
+platform:
+  - x64
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - yarn install --no-progress
+
+test_script:
+  - yarn ng -- build --prod --aot --no-progress
+  - yarn test -- --single-run --no-progress
+  - yarn lint
+
+build: off
+
+cache:
+  - node_modules -> yarn.lock
+  - '%LOCALAPPDATA%/Yarn'
+```
+
+For more information, feel free to checkout the repository that was used to experiment this: https://github.com/ci-samples/angular-cli-circleci.

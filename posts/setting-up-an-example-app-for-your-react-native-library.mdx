@@ -1,0 +1,160 @@
+---
+title: 'Setting up an Example App for Your React Native Library'
+publishedAt: '2019-04-01'
+summary: 'Having a hard time with a React Native example app? Here’s how you can simplify this with Metro bundler.'
+image: '/static/images/setting-up-an-example-app-for-your-react-native-library/banner.png'
+---
+
+<Image
+  alt={`Setting up an Example App for Your React Native Library`}
+  src={`/static/images/setting-up-an-example-app-for-your-react-native-library/banner.png`}
+  width={1600}
+  height={800}
+  priority
+/>
+
+<code>
+  Unable to resolve module … Module does not exist in the module map or in these
+  directories … Naming collision
+</code>
+
+There is probably a tonne of ways to create an example app for your React Native library, except almost each of them comes with some major downsides.
+
+The naive and common approach will be to use: `yarn add file:../` to add your library to your example app, and that would probably work great! But, you would have to reinstall your package on every lib change, if you don’t forget it. Some libraries are using something similar, with a custom script to automatically watch and update files on changes (`watchman` / `rsync`), this may be great engineering but certainly not the best developer experience! (See [wix/wml](https://github.com/wix/wml)).
+
+Then, what about symlinks? Well, [Metro doesn’t follow them](https://github.com/facebook/metro/issues/1), so you can forget about symlinks and yarn link or you will end up with:
+
+<code>
+  Unable to resolve module ... Module does not exist in the module map or in
+  these directories
+</code>
+
+Also, even if you pass these steps you will necessarily have to meet this error:
+
+<code>Haste module map naming collision duplicate module name</code>
+
+This usually means you have duplicated `node_modules` that have been copied over your lib and the example app, so there is no easy exit with conventional methods.
+
+---
+
+What if I told you that there is an easier way, without hassle?
+
+## Link your library using 🚇 Metro
+
+With [Metro bundler](https://facebook.github.io/metro/), you can link your library to an example app without any extraneous dependencies.
+
+- No need to **sync** your library on each change.
+- No need of **symlinks** (which are not followed by Metro).
+- No need to hassle with duplicated **haste modules**.
+
+Starting from 0.59, React Native projects comes with a [metro.config.js](https://github.com/facebook/react-native/blob/aefb05941a60f05f15270361794dccc88f6a09ba/template/metro.config.js) — before 0.59, filename and functionalities may differ — that allow us to configure Metro’s core concepts which are:
+
+### Resolution
+
+> Metro needs to build a graph of all the modules that are required from the entry point. To find which file is required from another file Metro uses a resolver. In reality this stage happens in parallel with the transformation stage.
+
+### Transformation
+
+> All modules go through a transformer. A transformer is responsible for converting (transpiling) a module to a format that is understandable by the target platform (eg. React Native). Transformation of modules happens in parallel based on the amount of cores that you have.
+
+### Serialization
+
+> As soon as all the modules have been transformed they will be serialized. A serializer combines the modules to generate one or multiple bundles. A bundle is literally a bundle of modules combined into a single JavaScript file.
+
+In our case, we will have to configure one of these concepts — remember our previous issues with the haste resolver? — the **resolution**.
+
+### Configuring Metro
+
+First, we will have to tell Metro to watch for an additional folder in addition to our example app folder, which is the library you want to link in addition to relying only on the app’s `node_modules`:
+
+```diff:metro.config.js
+ /**
+  * Metro configuration for React Native
+  * https://github.com/facebook/react-native
+  *
+  * @format
+  */
+
++const path = require('path');
+
++const reactNativeLib = path.resolve(__dirname, '..');
+
+ module.exports = {
++  watchFolders: [path.resolve(__dirname, 'node_modules'), reactNativeLib],
+   transformer: {
+     getTransformOptions: async () => ({
+       transform: {
+         experimentalImportSupport: false,
+         inlineRequires: false,
+       },
+     }),
+   },
+ };
+```
+
+Then, we have to explicitly tell Metro to blacklist `node_modules/react-native/.*` from your library folder:
+
+```diff:metro.config.js
+ /**
+  * Metro configuration for React Native
+  * https://github.com/facebook/react-native
+  *
+  * @format
+  */
+
+ const path = require('path');
++const blacklist = require('metro-config/src/defaults/blacklist');
+
+ const reactNativeLib = path.resolve(__dirname, '..');
+
+ module.exports = {
+   watchFolders: [path.resolve(__dirname, 'node_modules'), reactNativeLib],
++  resolver: {
++    blacklistRE: blacklist([
++      new RegExp(`${reactNativeLib}/node_modules/react-native/.*`),
++    ]),
++  },
+   transformer: {
+     getTransformOptions: async () => ({
+       transform: {
+         experimentalImportSupport: false,
+         inlineRequires: false,
+       },
+     }),
+   },
+ };
+```
+
+By doing this, we tell Metro to not resolve files that are matching our regex to prevent any haste collisions from happening. We may want to tweak our Regex or add additional ones if we have more than an example.
+
+If you have native modules that you would like to link, you would have to edit the path referencing them as `../../` instead of accessing them directly from the example app’s `node_modules`.
+
+```diff
+include ':react-native-lib-example'
+-project(':react-native-lib-example').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-lib-example/android')
++project(':react-native-lib-example').projectDir = new File(rootProject.projectDir, '../../android')
+```
+
+```diff
+ HEADER_SEARCH_PATHS = (
+   "$(inherited)",
+-  "$(SRCROOT)/../node_modules/react-native-lib-example/ios/**",
++  "$(SRCROOT)/../../ios/**",
+ );
+```
+
+Your example app should be up and running! 🎉
+
+---
+
+For further information, you can refer to [this commit](https://github.com/charpeni/react-native-lib-example-app/commit/443d0b309efc5a606b12158c935bbde5b9858e94).
+
+For [further documentation on configuring Metro](https://facebook.github.io/metro/docs/en/configuration).
+
+A full example repository is also available here: https://github.com/charpeni/react-native-lib-example-app
+
+## What’s next?
+
+Interested in testing this or you’d like to maintain or work on React Native libraries? Come see us in the [☂️ Lean Core initiative](https://github.com/facebook/react-native/issues/23313).
+
+There’s also plenty of libs that are waiting on this developer experience improvement in the React Native Community: https://github.com/react-native-community

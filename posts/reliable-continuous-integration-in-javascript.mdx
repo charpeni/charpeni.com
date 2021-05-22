@@ -1,0 +1,109 @@
+---
+title: 'Reliable Continuous Integration in JavaScript'
+publishedAt: '2017-01-18'
+summary: 'When you build a piece of software you want to build a reliable one, so often you’re using various continuous integration tools. But, is your continuous integration process is as reliable as you think?'
+image: '/static/images/reliable-continuous-integration-in-javascript/banner.png'
+---
+
+<Image
+  alt={`Reliable Continuous Integration in JavaScript`}
+  src={`/static/images/reliable-continuous-integration-in-javascript/banner.png`}
+  width={636}
+  height={300}
+  priority
+/>
+
+When you build a piece of software you want to build a reliable one, so often you’re using various continuous integration tools, such as _CircleCI_, _Travis_, _Shippable_, _Codeship_, _AppVeyor_, _Semaphore_, _Jenkins_, and _Bamboo_.
+
+## But, is your continuous integration process is as reliable as you think?
+
+I’ve seen a lot of people on their continuous integration cache or reuse the same `node_modules` between builds. What they want is a fast pipeline, but more often than not this is done to the cost of a trustworthy CI.
+
+— Have you ever heard this when your application act strangely ?
+
+> You should delete your node_modules folder and redo a npm install.
+
+— Because I do, and way too often.
+
+<div className="img-center">
+  <Image
+    alt={`Do I be honest or nice?`}
+    src={`/static/images/reliable-continuous-integration-in-javascript/honest-or-nice.gif`}
+    width={500}
+    height={282}
+  />
+</div>
+
+The `node_modules` folder is not as reliable it could be
+
+You may want to clean it up sometimes, because it seems to get clogged with time, especially on a testing environment.
+
+## What is the expected lifetime of the node_modules folder?
+
+Lifetime of the `node_modules` should be for the current build, unless you often run some sanity checks.
+
+## Extraneous Packages
+
+> npm prune
+
+If you don’t know this command, you should probably read this and run it into your development folders.
+
+> This command removes “extraneous” packages.
+> Extraneous packages are packages that are not listed on the parent package’s dependencies list.
+
+So, let’s say for example that in an application I add a dependency named `potato`, I commit and I push. CI will run and install `potato` into `node_modules` folder. Now, let’s say I remove that dependency from `package.json`. Since it’s already installed on my machine and the CI container, it will work fine.
+
+If I clone the repository again or another developer tries my repository, it will not work as expected. However, it works on my machine and the CI is green. So we need to put the whole project on hold until we can resolve the issue. Finding and resolving the issue can be both time consuming and frustrating especially if there’s only two devs involved.
+
+— You’ve probably heard this before :
+
+> Yeah but it works on my computer
+
+— We certainly do not want to hear that
+
+The role of the CI should be to validate that an application works well from a fresh installation.
+
+That’s why **you should always clean `node_modules` and do a npm install or at least run the prune command**.
+
+If an install worked on one system, it should work exactly the same way on any other system
+
+## Git Dependencies
+
+If you use a dependency that isn’t published to NPM like a git URL, your dependency won’t be updated by npm install if the version wasn’t updated, even if you commit to master or your specified branch/tag/commit.
+
+That’s why clean install should be privileged, you certainly don’t want to test your application with an older dependency version.
+
+## Yarn to the Rescue
+
+<Image
+  alt={`Yarn Logo`}
+  src={`/static/images/reliable-continuous-integration-in-javascript/yarn.png`}
+  width={400}
+  height={180}
+/>
+
+> If you want an ultra fast, mega secure, and super reliable solution, [Yarn](https://yarnpkg.com/) will be yours
+
+### Fast
+
+> Yarn caches every package it downloads so it never needs to download the same package again. It also parallelizes operations to maximize resource utilization so install times are faster than ever.
+
+### Reliable
+
+> Using a detailed, concise lockfile format and a deterministic algorithm for installs, Yarn is able to guarantee that an install that worked on one system will work exactly the same way on any other system.
+
+### Secure
+
+> Yarn uses checksums to verify the integrity of every installed package before its code is executed.
+
+Moreover, Yarn doesn’t require additional steps to prune extraneous packages, `yarn install` will do it automatically on each installation.
+
+Also, Yarn resolves git tarball like a charm.
+
+## Conclusion
+
+So basically, just install Yarn and replace npm install by yarn install to considerably increase the trust level of your CI.
+
+If you want to reach the top trust level, be sure you run yarn install on a clean environment. The cache provided by Yarn will do the job for you, don’t forget to keep the yarn cache and not the `node_modules` folder across builds. [See here how to do it](https://classic.yarnpkg.com/en/docs/install-ci).
+
+Thank you!

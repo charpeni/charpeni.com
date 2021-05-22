@@ -1,0 +1,112 @@
+---
+title: 'React Native at Classcraft'
+publishedAt: '2018-07-23'
+summary: 'We had to carefully find a way to introduce React Native bit-by-bit into the existing native application.'
+image: '/static/images/react-native-at-classcraft/banner.jpeg'
+---
+
+<Image
+  alt={`React Native at Classcraft`}
+  src={`/static/images/react-native-at-classcraft/banner.jpeg`}
+  width={1600}
+  height={800}
+  priority
+/>
+
+> We had to carefully find a way to introduce React Native bit-by-bit into the existing native application.
+
+At Classcraft, we are using JavaScript, especially [Meteor](https://www.meteor.com/) and [React](https://reactjs.org/) for our web apps, and before the last year, our mobile applications were coded in full native apps (Objective-C and Java). We’ve been struggling with legacy stuff and a lot of new features coming from our growing web’s codebase.
+
+We’re a small team, and the mobile team don’t have a distinct team for iOS and Android. So, each time a refactor or a new feature comes in, we had to do it on both platforms. This was leading to many wastes of time and frustration, also all the business logics were initially coded and maintained in JavaScript (from the web apps), why should we have to rewrite it in Objective-C and Java then?
+
+## Introducing React Native
+
+So, to minimize the maintenance cost and to improve the development cycle we looked into [React Native](https://facebook.github.io/react-native/). Unfortunately, we didn’t have the bandwidth to discard our native apps and redo everything with React Native.
+
+In order to achieve that, we tackled this one step at the time, as this timeline shows. So, we had to carefully find a way to introduce React Native bit-by-bit into the existing native application, without wasting our resources on unwanted or unnoticed refactors but also while getting traction on the bugs and features planning.
+
+### Summary of Classcraft's Mobile App timeline
+
+- **March 2014**, initial commit.
+- **Sep 2016**, both repos got merged into one with the first line of React Native.
+- **Spring & Summer 2017**, a lot of screens got rewritten as React Native views.
+- **June 2017**, I joined the team. 🎉
+- **Fall 2017**, the core of the application became a React Native app hosting jointly React and native views.
+- **Winter 2018**, many new features got introduced fully in JavaScript using shared code from the web’s codebase.
+
+---
+
+### First Contact Between Classcraft’s App and React Native
+
+Our initial goal was to gradually introduce React Native into an existing native application. We kept our existing structure, but some views get refactored into React Native views, and they were mounted by the `UIViewController` on iOS or a `Fragment` on Android (If you attempt a similar approach, you can refer to [Integration with Existing Apps docs](https://facebook.github.io/react-native/docs/integration-with-existing-apps)).
+
+The deciding factor was if we had to do any significant UI changes or bug fixes that would be easier to convert into React Native, do it. New features will be in React Native as well since all the business logic are ready — or almost — to use in our shared code. What I mean by shared code, is that all of our utils and business logic in JavaScript that applied to any platform had been exported into a folder that is used as a NPM package.
+
+Here is a high-level overview of what was the structure of the app was after the first phase integration — remember that at this phase our React Native views were only meant to replace a `UIView` or `Layout`.
+
+<div className="img-center">
+  <Image
+    alt={`App diagram`}
+    src={`/static/images/react-native-at-classcraft/app-diagram-1.png`}
+    width={350}
+    height={670}
+  />
+</div>
+
+It could be an entire view that got rewritten or even small components like the badge we’re using in the messaging section.
+
+Here is the native view we’re still using for the messages:
+
+<div className="img-center">
+  <Image
+    alt={`Messages section`}
+    src={`/static/images/react-native-at-classcraft/messages.png`}
+    width={280}
+    height={460}
+  />
+</div>
+
+Noticed those green notification badges?
+
+Those are, in fact, a React Native view that’s shown on each row by the native controller. This component is meant to receive some props from the native controller and then gather the information and display a badge, if necessary.
+
+Then with this implementation, we can integrate this component into our both platform.
+
+We were happy with this solution, and it improved our bandwidth since we didn’t have to replicate all the logic on each platform. But still, we had to tweaks native to declare and display our React Native views or with full React Native views, we have to declare some `UIViewController` and `Fragment` to host it and pass the required props. In short, it was a success, but not enough, the second phase will talk about this in deep.
+
+Unfortunately, switching from native to React Native made us lose our typing. It leads us to introduced [Flow](https://flow.org/) — a static type checker for JavaScript — into our codebase (web & mobile). [TypeScript](https://www.typescriptlang.org/) was also an option, but with our existing web codebase using Meteor, React, Webpack and Babel, we stick to an incremental introduction of Flow across our apps, with, of course, shared types.
+
+### The Second Phase
+
+After successfully introducing React Native into existing apps, our goal was to switch from a native container to a React Native container, which use [react-navigation](https://github.com/react-navigation/react-navigation) to display React Native and native views seamlessly. With this structure, we’ll be able to ship feature faster as we won’t have to touch any native code and it could be done by any web wizards.
+
+So we made the switch following the docs about Native UI Components ([iOS](https://facebook.github.io/react-native/docs/native-components-ios) / [Android](https://facebook.github.io/react-native/docs/native-components-android)). But we end up coding our own solution to host `UIViewController` or `Fragment` instead of `UIView` or `Layout`. With this solution, we leverage our legacy views into a new app structure without having to refactor it (well actually we had to handle the navigation bar with react-navigation), but that was not a tricky part. I may write a technical blog post about this strategy to display directly a `UIViewController` or `Fragment`, just ping me if you’re interested.
+
+We still have our native application “container”, but it’s only used to launch the React Native app and to handle the sign in/up process. Even the deep linking — except for login from third parties — is a passthrough handled by react-navigation.
+
+<div className="img-center">
+  <Image
+    alt={`GIF of the application running`}
+    src={`/static/images/react-native-at-classcraft/app-gif.gif`}
+    width={335}
+    height={600}
+  />
+</div>
+
+Following this, the native side still handles data subscriptions, but our new React Native screens are handling their own subscriptions.
+
+Also, translations are now loaded by React Native and then sent through the bridge to the native side. At the moment, the native can’t communicate synchronously with React Native, so we send the whole dictionary of terms to the native.
+
+Except for these points, everything stays pretty much the same on the native side after the second phase. Now we’re slowly phasing out remaining native views!
+
+## What's Next for Mobile at Classcraft
+
+I can’t speak for the team, but I’m still happy with the choices I have made so far. I’m still pretty excited about JavaScript, and I’m glad our mobile application is now in JavaScript.
+
+Still speaking for myself, I may have an eye on [ReasonML](https://reasonml.github.io/) to leverage the typing and to keep up the functional paradigm, who knows where this is going.
+
+We had some trouble with the integration of Meteor into React Native. Actually, we use [react-native-meteor](https://github.com/inProgress-team/react-native-meteor), and unfortunately, this is not the real implementation of Meteor, the core got rewritten, and it’s hard keeping the beat with Meteor (we’re actually the primary maintainer of this open-source lib). We encountered many not so funny issues, which I wrote about some of them [here](https://github.com/Urigo/meteor-native-packages/issues/1#issuecomment-379782096). Hopefully, we’ll have some time soon to dig into projects like [Meteor Client Bundler](https://github.com/Urigo/meteor-client-bundler), which sounds great for our case and to improve the sharing between our mobile and web applications.
+
+We’re also excited about the state of React Native in 2018, especially with all the changes that [Fabric](https://facebook.github.io/react-native/blog/2018/06/14/state-of-react-native-2018) will bring.
+
+Have you experienced any integration of React Native into an existing app or used Meteor with React Native? What’s your experience so far?

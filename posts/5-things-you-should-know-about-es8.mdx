@@ -1,0 +1,141 @@
+---
+title: '5 Things You Should Know About ES8'
+publishedAt: '2017-07-14'
+summary: 'ECMAScript 2017 8th edition (ES2017/ES8) has been officially released and published a few weeks ago, let’s figure it out some important changes. All of these are available with Node 8 and with the latest version of browsers without babel or any polyfills.'
+image: '/static/images/5-things-you-should-know-about-es8/banner.jpeg'
+---
+
+<Image
+  alt={`5 Things You Should Know About ES8`}
+  src={`/static/images/5-things-you-should-know-about-es8/banner.jpeg`}
+  width={1600}
+  height={300}
+  priority
+/>
+
+ECMAScript 2017 8th edition (ES2017/ES8) has been officially released and published a few weeks ago, let’s figure it out some important changes. All of these are available with Node 8 and with the latest version of browsers without babel or any polyfills.
+
+[Here’s the specification in detail](https://www.ecma-international.org/publications/standards/Ecma-262.htm).
+
+## Object.values
+
+> Like Object.keys, but for values.
+
+Such as `Object.keys` do, the `Object.values` method returns an array of a given object’s own enumerable property values instead of keys.
+
+```javascript
+const translations = {
+  en: {
+    home: 'Home',
+    greeting: 'Welcome',
+  },
+  fr: {
+    home: 'Accueil',
+    greeting: 'Bienvenue',
+  },
+};
+
+Object.keys(translations).forEach((key) => {
+  console.log(key); // "en"
+  // "fr"
+});
+
+Object.values(translations).forEach((value) => {
+  console.log(value); // "{ home: "Home", greeting: "Welcome" }"
+  // "{ home: "Accueil, greeting: "Bienvenue" }"
+});
+```
+
+## Object.entries
+
+> If we merged Object.keys and Object.values, that would be Object.entries. It returns an array of [key, value].
+
+The `Object.entries()` method returns an array of a given object's own enumerable property `[key, value]` pairs.
+
+```javascript
+const translations = {
+  en: {
+    home: 'Home',
+    greeting: 'Welcome',
+  },
+  fr: {
+    home: 'Accueil',
+    greeting: 'Bienvenue',
+  },
+};
+
+// Before Object.entries
+Object.keys(translations).forEach((key) => {
+  console.log(key, translations[key]); // "en" "{ home: "Home", greeting: "Welcome" }"
+  // "fr" "{ home: "Accueil, greeting: "Bienvenue" }"
+});
+
+Object.entries(translations).forEach(([key, value]) => {
+  console.log(key, value); // "en" "{ home: "Home", greeting: "Welcome" }"
+  // "fr" "{ home: "Accueil, greeting: "Bienvenue" }"
+});
+```
+
+## padStart
+
+> Pad a string from the start until the given length is reached.
+
+The `padStart()` method pads the current string with another string (repeated, if needed) so that the resulting string reaches the given length. The padding is applied from the start (left) of the current string.
+
+```javascript
+'abc'.padStart(10); // "       abc"
+'abc'.padStart(10, 'foo'); // "foofoofabc"
+'abc'.padStart(6, '123465'); // "123abc"
+'abc'.padStart(8, '0'); // "00000abc"
+'abc'.padStart(1); // "abc"
+```
+
+## padEnd
+
+> Pad a string from the end until the given length is reached.
+
+The `padEnd()` method pads the current string with a given string (repeated, if needed) so that the resulting string reaches a given length. The padding is applied from the end (right) of the current string.
+
+```javascript
+'abc'.padEnd(10); // "abc       "
+'abc'.padEnd(10, 'foo'); // "abcfoofoof"
+'abc'.padEnd(6, '123456'); // "abc123"
+'abc'.padEnd(1); // "abc"
+```
+
+## padThai
+
+<div className="img-center">
+  <Image
+    alt={`A pad thai`}
+    src={`/static/images/5-things-you-should-know-about-es8/pad-thai.jpeg`}
+    width={400}
+    height={267}
+  />
+</div>
+
+Just a delicious pad thai.
+
+## Trailing commas in function parameter lists
+
+<!-- prettier-ignore-start -->
+```javascript
+function abc(a, b, c,) {} // <- OK
+function abc(
+  a,
+  b,
+  c, // <- OK
+) {
+  // some code
+}
+
+abc('', '', '',); // <- OK
+abc(
+  '',
+  '',
+  '', // <- OK
+);
+```
+<!-- prettier-ignore-end -->
+
+Enjoy ES2017!
