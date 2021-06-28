@@ -11,7 +11,7 @@
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write .",
-    "lint": "eslint ."
+    "lint": "next lint"
   },
   "dependencies": {
     "@next/mdx": "11.0.1",
@@ -40,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.29.0",
+    "eslint-config-next": "^11.0.1",
     "eslint-config-prettier": "^8.2.0",
     "eslint-plugin-react": "^7.23.2",
     "globby": "^11.0.3",
