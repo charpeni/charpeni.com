@@ -54,7 +54,7 @@ export default function Home({ posts }) {
             .
           </h2>
 
-          <div className="flex justify-end w-full mb-8">
+          <div className="flex justify-end w-full mt-4 lg:mt-0 mb-8">
             <MySocials />
           </div>
         </div>
