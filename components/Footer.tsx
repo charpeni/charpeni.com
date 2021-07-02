@@ -2,8 +2,8 @@ import NextLink from 'next/link';
 
 import MySocials from '@/components/MySocials';
 
-function Separator() {
-  return <span className="px-1">|</span>;
+function Separator({ className }: { className?: string }) {
+  return <span className={`${className} px-1`}>|</span>;
 }
 
 export default function Footer() {
@@ -13,16 +13,18 @@ export default function Footer() {
       <div className="flex justify-center max-w-2xl mx-auto w-full">
         <MySocials />
       </div>
-      <div className="flex justify-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
+      <div className="flex flex-col md:flex-row justify-center items-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
         <span>© {new Date().getFullYear()} Nicolas Charpentier</span>
-        <Separator />
-        <NextLink href="/disclaimer">
-          <a>Disclaimer</a>
-        </NextLink>
-        <Separator />
-        <NextLink href="/privacy-policy">
-          <a>Privacy Policy</a>
-        </NextLink>
+        <div>
+          <Separator className="hidden md:inline" />
+          <NextLink href="/disclaimer">
+            <a>Disclaimer</a>
+          </NextLink>
+          <Separator />
+          <NextLink href="/privacy-policy">
+            <a>Privacy Policy</a>
+          </NextLink>
+        </div>
       </div>
     </footer>
   );
