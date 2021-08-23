@@ -36,10 +36,14 @@ export default function Home({ posts }) {
             </span>
             , and I enjoy removing friction from the developer experience.
             Currently working at{' '}
+            <CompanyName className="hover:bg-shortcut hover:text-white">
+              Shortcut
+            </CompanyName>{' '}
+            (formely{' '}
             <CompanyName className="hover:bg-durple hover:text-white">
               Clubhouse
             </CompanyName>
-            , previously{' '}
+            ), previously{' '}
             <CompanyName className="hover:bg-yellow-400 hover:text-white">
               Classcraft
             </CompanyName>
