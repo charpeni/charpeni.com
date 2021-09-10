@@ -39,7 +39,7 @@ export default function Home({ posts }) {
             <CompanyName className="hover:bg-shortcut hover:text-white">
               Shortcut
             </CompanyName>{' '}
-            (formely{' '}
+            (formerly{' '}
             <CompanyName className="hover:bg-durple hover:text-white">
               Clubhouse
             </CompanyName>
