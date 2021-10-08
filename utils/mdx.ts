@@ -4,6 +4,9 @@ import mdxPrism from 'mdx-prism';
 import path from 'path';
 import readingTime from 'reading-time';
 import renderToString from 'next-mdx-remote/render-to-string';
+import remarkAutolinkHeadings from 'remark-autolink-headings';
+import remarkSlug from 'remark-slug';
+import remarkCodeTitles from 'remark-code-titles';
 
 import MDXComponents from '@/components/MDXComponents';
 
@@ -23,11 +26,7 @@ export async function getPostBySlug(slug) {
   const mdxSource = await renderToString(content, {
     components: MDXComponents,
     mdxOptions: {
-      remarkPlugins: [
-        require('remark-autolink-headings'),
-        require('remark-slug'),
-        require('remark-code-titles'),
-      ],
+      remarkPlugins: [remarkAutolinkHeadings, remarkSlug, remarkCodeTitles],
       rehypePlugins: [mdxPrism],
     },
   });
