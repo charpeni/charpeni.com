@@ -2,11 +2,7 @@ const { spacing, fontFamily } = require('tailwindcss/defaultTheme');
 
 module.exports = {
   mode: 'jit',
-  purge: [
-    './pages/**/*.{js,ts,jsx,tsx}',
-    './components/**/*.{js,ts,jsx,tsx}',
-    './layouts/**/*.{js,ts,jsx,tsx}',
-  ],
+  purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -17,12 +13,7 @@ module.exports = {
         novom: '#B2232F',
       },
       fontFamily: {
-        sans: [
-          // 'Inter',
-          // 'Nunito',
-          'Titillium Web',
-          ...fontFamily.sans,
-        ],
+        sans: ['Titillium Web', ...fontFamily.sans],
       },
       typography: (theme) => ({
         DEFAULT: {
