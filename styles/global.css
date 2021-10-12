@@ -8,6 +8,7 @@
   font-style: normal;
   font-weight: 400;
   src: url(/fonts/titillium-web-v9-latin-regular.woff2) format('woff2');
+  font-display: swap;
 }
 /* titillium-web-600 - latin */
 @font-face {
@@ -15,6 +16,7 @@
   font-style: normal;
   font-weight: 600;
   src: url(/fonts/titillium-web-v9-latin-600.woff2) format('woff2');
+  font-display: swap;
 }
 /* titillium-web-700 - latin */
 @font-face {
@@ -22,6 +24,7 @@
   font-style: normal;
   font-weight: 700;
   src: url(/fonts/titillium-web-v9-latin-700.woff2) format('woff2');
+  font-display: swap;
 }
 /* titillium-web-900 - latin */
 @font-face {
@@ -29,6 +32,7 @@
   font-style: normal;
   font-weight: 900;
   src: url(/fonts/titillium-web-v9-latin-900.woff2) format('woff2');
+  font-display: swap;
 }
 
 ::selection {
