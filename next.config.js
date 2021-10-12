@@ -1,7 +1,11 @@
 module.exports = {
+  experimental: {
+    esmExternals: true,
+  },
   future: {
     strictPostcssConfiguration: true,
   },
+  reactStrictMode: true,
   async headers() {
     return [
       {
