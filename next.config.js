@@ -2,11 +2,6 @@ module.exports = {
   future: {
     strictPostcssConfiguration: true,
   },
-  images: {
-    domains: [
-      'pbs.twimg.com', // Twitter Profile Picture
-    ],
-  },
   async headers() {
     return [
       {
@@ -32,8 +27,8 @@ module.exports = {
 // https://securityheaders.com
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' *.twitter.com;
-  child-src *.google.com *.twitter.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io;
+  child-src *.google.com;
   style-src 'self' 'unsafe-inline' *.googleapis.com;
   img-src * blob: data:;
   media-src 'none';
