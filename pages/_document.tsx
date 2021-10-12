@@ -57,7 +57,16 @@ class MyDocument extends Document {
             href="/static/favicons/safari-pinned-tab.svg"
             rel="mask-icon"
           />
-          <meta content="#ffffff" name="theme-color" />
+          <meta
+            name="theme-color"
+            media="(prefers-color-scheme: light)"
+            content="white"
+          />
+          <meta
+            name="theme-color"
+            media="(prefers-color-scheme: dark)"
+            content="black"
+          />
           <meta content="#ffffff" name="msapplication-TileColor" />
           <meta
             content="/static/favicons/browserconfig.xml"
