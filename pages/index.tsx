@@ -16,6 +16,7 @@ function CompanyName({ children, className }) {
 }
 
 export default function Home({ posts }) {
+  // TODO: Move this to the utils function
   const filteredBlogPosts = posts.sort(
     (a, b) => Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)),
   );

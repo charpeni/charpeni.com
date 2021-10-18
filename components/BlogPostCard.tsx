@@ -1,13 +1,26 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function BlogPostCard({ title, summary, slug, image }) {
+export default function BlogPostCard({
+  title,
+  summary,
+  slug,
+  image,
+  blurDataURL,
+}) {
   return (
     <Link href={`/blog/${slug}`}>
       <a className="w-full mb-8">
         <div className="w-full rounded shadow-md hover:shadow-lg dark:ring-1 dark:ring-gray-500 dark:hover:ring-2 dark:hover:ring-gray-400">
           <div className="relative w-full" style={{ paddingTop: '30%' }}>
-            <Image alt={title} src={image} layout="fill" objectFit="cover" />
+            <Image
+              alt={title}
+              src={image}
+              layout="fill"
+              objectFit="cover"
+              placeholder="blur"
+              blurDataURL={blurDataURL}
+            />
           </div>
           <div className="p-4">
             <div className="flex flex-col md:flex-row justify-between">
