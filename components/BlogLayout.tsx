@@ -1,8 +1,9 @@
+import Image from 'next/image';
 import { parseISO, format } from 'date-fns';
 
 import Container from '@/components/Container';
 
-const editUrl = (slug) =>
+const editUrl = (slug: string) =>
   `https://github.com/charpeni/charpeni.com/edit/main/posts/${slug}.mdx`;
 
 export default function BlogLayout({ children, frontMatter }) {
@@ -29,6 +30,15 @@ export default function BlogLayout({ children, frontMatter }) {
           </p>
         </div>
         <div className="prose dark:prose-dark max-w-none w-full mt-4 mb-8">
+          <Image
+            alt={frontMatter.title}
+            src={frontMatter.image}
+            width={1600}
+            height={800}
+            placeholder="blur"
+            blurDataURL={frontMatter.blurDataURL}
+            priority
+          />
           {children}
         </div>
         <div className="flex justify-end text-sm text-gray-700 dark:text-gray-300">

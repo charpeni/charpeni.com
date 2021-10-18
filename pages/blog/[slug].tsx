@@ -19,7 +19,7 @@ export default function Blog({
 }
 
 export async function getStaticPaths() {
-  const posts = await getPosts();
+  const posts = getPosts();
 
   return {
     paths: posts.map((p) => ({
