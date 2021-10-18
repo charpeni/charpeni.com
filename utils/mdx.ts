@@ -43,7 +43,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   );
 
   const { data, content } = matter(source);
-  const { base64 } = await getPlaiceholder(data.image);
+  const { base64 } = await getPlaiceholder(data.image, { size: 20 });
   const mdxSource = await renderToString(content, {
     components: MDXComponents,
     mdxOptions: {
