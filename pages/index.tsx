@@ -16,11 +16,6 @@ function CompanyName({ children, className }) {
 }
 
 export default function Home({ posts }) {
-  // TODO: Move this to the utils function
-  const filteredBlogPosts = posts.sort(
-    (a, b) => Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)),
-  );
-
   return (
     <Container>
       <div className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16">
@@ -67,8 +62,8 @@ export default function Home({ posts }) {
         <h3 className="font-bold text-2xl md:text-4xl tracking-tight mb-8 text-black dark:text-white">
           Blog Posts
         </h3>
-        {filteredBlogPosts.map((frontMatter) => (
-          <BlogPostCard key={frontMatter.title} {...frontMatter} />
+        {posts.map((post) => (
+          <BlogPostCard key={post.title} {...post} />
         ))}
       </div>
     </Container>

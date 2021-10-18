@@ -9,25 +9,40 @@ import remarkSlug from 'remark-slug';
 import remarkCodeTitles from 'remark-code-titles';
 import { getPlaiceholder } from 'plaiceholder';
 
+import type { ReadTimeResults } from 'reading-time';
+
 import MDXComponents from '@/components/MDXComponents';
+
+type PostFrontMatter = {
+  title: string;
+  publishedAt: string;
+  summary: string;
+  image: string;
+  wordCount: number;
+  readingTime: ReadTimeResults;
+  slug: string;
+  blurDataURL: string;
+};
+
+type Post = {
+  mdxSource: unknown;
+  frontMatter: PostFrontMatter;
+};
 
 const root = process.cwd();
 
-function parsePost(source: string) {
-  return matter(source);
-}
-
-export async function getPosts() {
+export function getPosts() {
   return fs.readdirSync(path.join(root, 'posts'));
 }
 
-export async function getPostBySlug(slug) {
+export async function getPostBySlug(slug: string): Promise<Post> {
   const source = fs.readFileSync(
     path.join(root, 'posts', `${slug}.mdx`),
     'utf8',
   );
 
   const { data, content } = matter(source);
+  const { base64 } = await getPlaiceholder(data.image);
   const mdxSource = await renderToString(content, {
     components: MDXComponents,
     mdxOptions: {
@@ -39,33 +54,29 @@ export async function getPostBySlug(slug) {
   return {
     mdxSource,
     frontMatter: {
+      slug: slug || null,
+      title: data.title,
+      publishedAt: data.publishedAt,
+      summary: data.summary,
+      image: data.image,
+      blurDataURL: base64,
       wordCount: content.split(/\s+/gu).length,
       readingTime: readingTime(content),
-      slug: slug || null,
-      ...data,
     },
   };
 }
 
 export async function getAllPostsFrontMatter() {
-  // TODO: This should be using getPosts
-  const files = fs.readdirSync(path.join(root, 'posts'));
+  const files = getPosts();
 
   return Promise.all(
-    files.map(async (postSlug) => {
-      // TODO: This should be using getPostFrontMatter()
-      const source = fs.readFileSync(
-        path.join(root, 'posts', postSlug),
-        'utf8',
-      );
-      const { data } = await parsePost(source);
-      const { base64 } = await getPlaiceholder(data.image);
-
-      return {
-        ...data,
-        blurDataURL: base64,
-        slug: postSlug.replace('.mdx', ''),
-      };
-    }),
+    files.map(async (file) => getPostBySlug(file.replace('.mdx', ''))),
+  ).then((posts) =>
+    posts
+      .map((post) => post.frontMatter)
+      .sort(
+        (a, b) =>
+          Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)),
+      ),
   );
 }
