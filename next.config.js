@@ -1,4 +1,6 @@
-module.exports = {
+const { withPlaiceholder } = require('@plaiceholder/next');
+
+module.exports = withPlaiceholder({
   experimental: {
     esmExternals: true,
   },
@@ -26,7 +28,7 @@ module.exports = {
 
     return config;
   },
-};
+});
 
 // https://securityheaders.com
 const ContentSecurityPolicy = `

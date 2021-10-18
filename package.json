@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@next/mdx": "11.1.2",
+    "@plaiceholder/next": "^2.1.0",
     "@tailwindcss/typography": "0.4.1",
     "autoprefixer": "^10.3.7",
     "date-fns": "^2.25.0",
@@ -23,6 +24,7 @@
     "next": "11.1.2",
     "next-mdx-remote": "^2.1.4",
     "next-themes": "^0.0.15",
+    "plaiceholder": "^2.0.1",
     "postcss": "^8.3.9",
     "preact": "10.5.14",
     "react": "17.0.2",
@@ -32,6 +34,7 @@
     "remark-autolink-headings": "^7.0.1",
     "remark-code-titles": "^0.1.1",
     "remark-slug": "^7.0.0",
+    "sharp": "^0.29.1",
     "tailwindcss": "2.2.16"
   },
   "devDependencies": {
