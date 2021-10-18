@@ -10,6 +10,7 @@ import remarkCodeTitles from 'remark-code-titles';
 import { getPlaiceholder } from 'plaiceholder';
 
 import type { ReadTimeResults } from 'reading-time';
+import type { MdxRemote } from 'next-mdx-remote/types';
 
 import MDXComponents from '@/components/MDXComponents';
 
@@ -25,7 +26,7 @@ type PostFrontMatter = {
 };
 
 type Post = {
-  mdxSource: unknown;
+  mdxSource: MdxRemote.Source;
   frontMatter: PostFrontMatter;
 };
 

@@ -1,21 +1,14 @@
+import { InferGetStaticPropsType } from 'next';
+
 import Container from '@/components/Container';
+import CompanyName from '@/components/CompanyName';
 import BlogPostCard from '@/components/BlogPostCard';
 import MySocials from '@/components/MySocials';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
 
-function CompanyName({ children, className }) {
-  return (
-    <span
-      className={`${
-        className ? className : ''
-      } font-bold text-black dark:text-white`}
-    >
-      {children}
-    </span>
-  );
-}
-
-export default function Home({ posts }) {
+export default function Home({
+  posts,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <Container>
       <div className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16">
