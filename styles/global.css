@@ -134,3 +134,7 @@ table {
   margin: auto !important;
   max-width: max-content !important;
 }
+
+a {
+  overflow-wrap: break-word;
+}
