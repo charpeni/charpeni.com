@@ -1,5 +1,5 @@
 import { InferGetStaticPropsType } from 'next';
-import hydrate from 'next-mdx-remote/hydrate';
+import { MDXRemote } from 'next-mdx-remote';
 
 import { getPosts, getPostBySlug } from '@/utils/mdx';
 import BlogLayout from '@/components/BlogLayout';
@@ -9,13 +9,11 @@ export default function Blog({
   mdxSource,
   frontMatter,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const content = hydrate(mdxSource, {
-    components: {
-      ...MDXComponents,
-    },
-  });
-
-  return <BlogLayout frontMatter={frontMatter}>{content}</BlogLayout>;
+  return (
+    <BlogLayout frontMatter={frontMatter}>
+      <MDXRemote {...mdxSource} components={MDXComponents} />
+    </BlogLayout>
+  );
 }
 
 export async function getStaticPaths() {
