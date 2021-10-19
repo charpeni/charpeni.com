@@ -3,16 +3,14 @@ import matter from 'gray-matter';
 import mdxPrism from 'mdx-prism';
 import path from 'path';
 import readingTime from 'reading-time';
-import renderToString from 'next-mdx-remote/render-to-string';
+import { serialize } from 'next-mdx-remote/serialize';
 import remarkAutolinkHeadings from 'remark-autolink-headings';
 import remarkSlug from 'remark-slug';
 import remarkCodeTitles from 'remark-code-titles';
 import { getPlaiceholder } from 'plaiceholder';
 
 import type { ReadTimeResults } from 'reading-time';
-import type { MdxRemote } from 'next-mdx-remote/types';
-
-import MDXComponents from '@/components/MDXComponents';
+import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 
 type PostFrontMatter = {
   title: string;
@@ -26,7 +24,7 @@ type PostFrontMatter = {
 };
 
 type Post = {
-  mdxSource: MdxRemote.Source;
+  mdxSource: MDXRemoteSerializeResult;
   frontMatter: PostFrontMatter;
 };
 
@@ -44,8 +42,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
 
   const { data, content } = matter(source);
   const { base64 } = await getPlaiceholder(data.image, { size: 20 });
-  const mdxSource = await renderToString(content, {
-    components: MDXComponents,
+  const mdxSource = await serialize(content, {
     mdxOptions: {
       remarkPlugins: [remarkAutolinkHeadings, remarkSlug, remarkCodeTitles],
       rehypePlugins: [mdxPrism],
