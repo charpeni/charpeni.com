@@ -1,10 +1,10 @@
-import { InferGetStaticPropsType } from 'next';
-
 import Container from '@/components/Container';
 import CompanyName from '@/components/CompanyName';
 import BlogPostCard from '@/components/BlogPostCard';
 import MySocials from '@/components/MySocials';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
+
+import type { InferGetStaticPropsType } from 'next';
 
 export default function Home({
   posts,

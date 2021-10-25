@@ -1,9 +1,10 @@
 import '@/styles/global.css';
 import '@/styles/prism-vsc-dark-plus.css';
 
-import { AppProps } from 'next/app';
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
+
+import type { AppProps } from 'next/app';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
