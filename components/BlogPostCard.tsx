@@ -22,6 +22,7 @@ export default function BlogPostCard({
         <div className="w-full rounded shadow-md hover:shadow-lg dark:ring-1 dark:ring-gray-500 dark:hover:ring-2 dark:hover:ring-gray-400">
           <div className="relative w-full" style={{ paddingTop: '30%' }}>
             <Image
+              className="rounded-t"
               alt={title}
               src={image}
               layout="fill"
