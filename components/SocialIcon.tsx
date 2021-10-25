@@ -1,9 +1,11 @@
-import { SocialIcon } from 'react-social-icons';
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
 
-export default function CustomSocialIcon(props) {
+import type { SocialIconProps } from 'react-social-icons';
+
+export default function SocialIcon(props: SocialIconProps) {
   return (
     <div className="rounded-full hover:bg-gray-100">
-      <SocialIcon
+      <ReactSocialIcon
         bgColor="transparent"
         fgColor="#757575"
         target="_blank"

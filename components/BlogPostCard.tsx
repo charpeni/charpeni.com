@@ -1,13 +1,21 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+type Props = {
+  title: string;
+  summary: string;
+  slug: string;
+  image: string;
+  blurDataURL: string;
+};
+
 export default function BlogPostCard({
   title,
   summary,
   slug,
   image,
   blurDataURL,
-}) {
+}: Props) {
   return (
     <Link href={`/blog/${slug}`}>
       <a className="w-full mb-8">

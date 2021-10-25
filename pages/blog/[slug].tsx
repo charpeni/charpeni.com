@@ -1,9 +1,10 @@
-import { InferGetStaticPropsType } from 'next';
 import { MDXRemote } from 'next-mdx-remote';
 
 import { getPosts, getPostBySlug } from '@/utils/mdx';
 import BlogLayout from '@/components/BlogLayout';
 import MDXComponents from '@/components/MDXComponents';
+
+import type { InferGetStaticPropsType } from 'next';
 
 export default function Blog({
   mdxSource,
