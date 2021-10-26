@@ -1,12 +1,10 @@
 const { withPlaiceholder } = require('@plaiceholder/next');
 
 module.exports = withPlaiceholder({
-  experimental: {
-    esmExternals: true,
-  },
   future: {
     strictPostcssConfiguration: true,
   },
+  swcMinify: true,
   reactStrictMode: true,
   async headers() {
     return [
