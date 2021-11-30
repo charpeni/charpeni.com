@@ -64,10 +64,9 @@ import type { GatsbyLinkProps } from 'gatsby';
 
 // This is coming from Gatsby's internals: https://github.com/gatsbyjs/gatsby/blob/2975c4d1271e3da52b531ad2f49261c362e5ae13/packages/gatsby-link/src/index.js#L42-L46.
 const isExternalLink = (path: string) =>
-  path &&
-  (path.startsWith(`http://`) ||
-    path.startsWith(`https://`) ||
-    path.startsWith(`//`));
+  path?.startsWith(`http://`) ||
+  path?.startsWith(`https://`) ||
+  path?.startsWith(`//`);
 
 export default function Link<TState>({
   children,
