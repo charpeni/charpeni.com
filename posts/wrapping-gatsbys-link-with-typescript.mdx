@@ -21,7 +21,7 @@ The naive way of solving this is to add a condition based on the link value to e
 
 So, one way to simplify links within Gatsby is to wrap Gatsby's `<Link>` component to handle both external and internal links instead of adding a condition on each link.
 
-We can import `GatsbyLinkProps` from `gatsby`, but as soon as we try to mirror those props on our custom `<Link>` component, errors start to raise, like the following component:
+We can import [`GatsbyLinkProps`](https://github.com/gatsbyjs/gatsby/blob/a7f3f85dc64377ff6fadc865155aeb878c7cf97f/packages/gatsby-link/index.d.ts#L5-L21) from `gatsby`, but as soon as we try to mirror those props on our custom `<Link>` component, errors start to raise, like the following component:
 
 ```tsx
 import { Link as GatsbyLink } from 'gatsby';
@@ -93,6 +93,6 @@ export default function Link<TState>({
 }
 ```
 
-From there, you can always use this custom drop-in `<Link>` component instead of Gatsby's one while keeping the typing and don't even worry about external links anymore.
+From there, you can always use this custom drop-in `<Link>` component instead of Gatsby's one while keeping the typing and don't even have to worry about external links anymore.
 
 Happy linking!
