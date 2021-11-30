@@ -1,0 +1,97 @@
+---
+title: "Wrapping Gatsby's <Link> with TypeScript"
+publishedAt: '2021-11-30'
+summary: "How to properly wrap Gatsby's <Link> component while preserving GatsbyLinkProps type."
+image: '/static/images/wrapping-gatsbys-link-with-typescript/banner.webp'
+---
+
+If you came across this article, it's probably because you're wondering how to handle external and internal links with Gatsby properly.
+
+> 🧰 Written on Gatsby v3, TypeScript 4.4, and React 17.
+
+Gatsby includes a built-in `<Link>` component for creating links between internal pages. This component is a wrapper around [@reach/router’s Link component](https://reach.tech/router/api/Link) that adds useful enhancements specific to Gatsby. All props are passed through to `@reach/router`’s Link component.
+
+We shouldn't use it for internal links because Gatsby is doing performance optimizations like preloading to prefetch page resources depending on user interactions to eliminate the latency. If you don't respect this, you'll end up with warnings like:
+
+> ⚠️ External link https://google.com was detected in a Link component. Use the Link component only for internal links. See: https://gatsby.dev/internal-links
+
+## Problematic
+
+The naive way of solving this is to add a condition based on the link value to either use `<a>` tag or `<Link>` component. This is working okay for known links—even though this is adding useless complexity to your code—but it won't scale further if you're getting your data from a CMS (like Prismic) that could return a lot of links.
+
+So, one way to simplify links within Gatsby is to wrap Gatsby's `<Link>` component to handle both external and internal links instead of adding a condition on each link.
+
+We can import [`GatsbyLinkProps`](https://github.com/gatsbyjs/gatsby/blob/a7f3f85dc64377ff6fadc865155aeb878c7cf97f/packages/gatsby-link/index.d.ts#L5-L21) from `gatsby`, but as soon as we try to mirror those props on our custom `<Link>` component, errors start to raise, like the following component:
+
+```tsx
+import { Link as GatsbyLink } from 'gatsby';
+import type { GatsbyLinkProps } from 'gatsby';
+
+function Link<TState>(props: GatsbyLinkProps<TState>) {
+  return <GatsbyLink {...props} />;
+}
+```
+
+Will produce the following error:
+
+```
+No overload matches this call.
+  Overload 1 of 2, '(props: GatsbyLinkProps<TState> | Readonly<GatsbyLinkProps<TState>>): GatsbyLink<TState>', gave the following error.
+    Type '{ children: ReactNode; activeClassName?: string; activeStyle?: object; onClick?: (event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void; ... 267 more ...; onTransitionEndCapture?: TransitionEventHandler<...>; }' is not assignable to type 'IntrinsicClassAttributes<GatsbyLink<TState>>'.
+      Types of property 'ref' are incompatible.
+        Type 'LegacyRef<HTMLAnchorElement>' is not assignable to type 'LegacyRef<GatsbyLink<TState>>'.
+          Type '(instance: HTMLAnchorElement) => void' is not assignable to type 'LegacyRef<GatsbyLink<TState>>'.
+            Type '(instance: HTMLAnchorElement) => void' is not assignable to type '(instance: GatsbyLink<TState>) => void'.
+              Types of parameters 'instance' and 'instance' are incompatible.
+                Type 'GatsbyLink<TState>' is missing the following properties from type 'HTMLAnchorElement': charset, coords, download, hreflang, and 298 more.
+  Overload 2 of 2, '(props: GatsbyLinkProps<TState>, context: any): GatsbyLink<TState>', gave the following error.
+    Type '{ children: ReactNode; activeClassName?: string; activeStyle?: object; onClick?: (event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void; ... 267 more ...; onTransitionEndCapture?: TransitionEventHandler<...>; }' is not assignable to type 'IntrinsicClassAttributes<GatsbyLink<TState>>'.
+      Types of property 'ref' are incompatible.
+        Type 'LegacyRef<HTMLAnchorElement>' is not assignable to type 'LegacyRef<GatsbyLink<TState>>'.ts(2769)
+```
+
+Even though the error is verbose, it doesn't say much about what to do except that types are incompatible, especially the property `ref`.
+
+## Solution
+
+There are some threads on the Internet about this specific issue (e.g. [gatsbyjs/gatsby#16682](https://github.com/gatsbyjs/gatsby/issues/16682)) that suggested removing the `ref` property with a bunch of custom types.
+
+The truth is, there's a better solution. In TypeScript, we can use [`React.PropsWithoutRef<T>`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1349b640d4d07f40aa7c1c6931f18e3fbf667f3a/types/react/index.d.ts#L807-L813) to remove the `ref` property component's props.
+
+```tsx
+import { Link as GatsbyLink } from 'gatsby';
+import type { GatsbyLinkProps } from 'gatsby';
+
+// This is coming from Gatsby's internals: https://github.com/gatsbyjs/gatsby/blob/2975c4d1271e3da52b531ad2f49261c362e5ae13/packages/gatsby-link/src/index.js#L42-L46.
+const isExternalLink = (path: string) =>
+  path?.startsWith(`http://`) ||
+  path?.startsWith(`https://`) ||
+  path?.startsWith(`//`);
+
+export default function Link<TState>({
+  children,
+  ...props
+}: React.PropsWithoutRef<GatsbyLinkProps<TState>>) {
+  if (props.target === '_blank') {
+    return (
+      <a {...props} href={props.to} rel="noopener noreferrer" target="_blank">
+        {children}
+      </a>
+    );
+  }
+
+  if (isExternalLink(props.to)) {
+    return (
+      <a {...props} href={props.to}>
+        {children}
+      </a>
+    );
+  }
+
+  return <GatsbyLink<TState> {...props}>{children}</GatsbyLink>;
+}
+```
+
+From there, you can always use this custom drop-in `<Link>` component instead of Gatsby's one while keeping the typing and you don't even have to worry about external links anymore.
+
+Happy linking!
