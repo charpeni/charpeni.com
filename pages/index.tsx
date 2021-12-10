@@ -25,26 +25,15 @@ export default function Home({
             </span>
             , and I enjoy removing friction from the developer experience.
             Currently working at{' '}
-            <CompanyName className="hover:bg-shortcut hover:text-white">
-              Shortcut
-            </CompanyName>{' '}
+            <CompanyName className="decoration-shortcut">Shortcut</CompanyName>{' '}
             (formerly{' '}
-            <CompanyName className="hover:bg-durple hover:text-white">
-              Clubhouse
-            </CompanyName>
+            <CompanyName className="decoration-durple">Clubhouse</CompanyName>
             ), previously{' '}
-            <CompanyName className="hover:bg-yellow-400 hover:text-white">
+            <CompanyName className="decoration-yellow-400">
               Classcraft
             </CompanyName>
-            ,{' '}
-            <CompanyName className="hover:bg-sherweb hover:text-white">
-              SherWeb
-            </CompanyName>
-            , and{' '}
-            <CompanyName className="hover:bg-novom hover:text-white">
-              Novom
-            </CompanyName>
-            .
+            , <CompanyName className="decoration-sherweb">SherWeb</CompanyName>,
+            and <CompanyName className="decoration-novom">Novom</CompanyName>.
           </h2>
 
           <div className="flex justify-end w-full mt-4 lg:mt-0 mb-8">

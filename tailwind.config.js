@@ -8,7 +8,7 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
-      backgroundColor: {
+      colors: {
         shortcut: '#58B1E4',
         durple: '#452B5B',
         sherweb: '#0061AA',

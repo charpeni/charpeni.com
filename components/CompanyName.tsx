@@ -1,11 +1,19 @@
-export default function CompanyName({ children, className }) {
+type Props = {
+  children: string;
+  className?: string;
+};
+
+export default function CompanyName({
+  children: companyName,
+  className,
+}: Props) {
   return (
     <span
-      className={`${
+      className={`font-bold text-black dark:text-white underline decoration-2 ${
         className ? className : ''
-      } font-bold text-black dark:text-white`}
+      }`}
     >
-      {children}
+      {companyName}
     </span>
   );
 }
