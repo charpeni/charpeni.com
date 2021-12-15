@@ -1,0 +1,151 @@
+---
+title: 'Array.prototype.groupBy to the rescue!'
+publishedAt: '2021-12-15'
+summary: 'Ever wondered how to do array grouping properly with JavaScript? Good news, Array.prototype.groupBy is coming soon.'
+image: '/static/images/array-prototype-group-by-to-the-rescue/banner.webp'
+---
+
+Have you ever wondered how to do array grouping properly with JavaScript? And let me guess, you were not quite satisfied with the outcome?
+
+Array grouping is an extremely common operation and there are multiple ways to achieve this, but until recently, there was no native implementation and all the ways to accomplish this were kinda of... verbose and difficult to read?
+
+Well, good news, as of December 2021, the [Arrow Grouping proposal](https://github.com/tc39/proposal-array-grouping), which is introducing `Array.prototype.groupBy`, was promoted to Stage 3! 🎉
+
+We will explore how to group by until now and then how the proposal will simplify everything.
+
+## Setup
+
+Let's say we have the following array `items`:
+
+```javascript
+const items = [
+  {
+    type: 'fruit',
+    value: '🍎',
+  },
+  {
+    type: 'fruit',
+    value: '🍇',
+  },
+  {
+    type: 'fruit',
+    value: '🍊',
+  },
+  {
+    type: 'vegetable',
+    value: '🥦',
+  },
+  {
+    type: 'vegetable',
+    value: '🥕',
+  },
+  {
+    type: 'vegetable',
+    value: '🌶️',
+  },
+];
+```
+
+And from that array, we would like to group those items by `type`. So, we would expect the following output:
+
+```json
+{
+  "fruit": [
+    {
+      "type": "fruit",
+      "value": "🍎"
+    },
+    {
+      "type": "fruit",
+      "value": "🍇"
+    },
+    {
+      "type": "fruit",
+      "value": "🍊"
+    }
+  ],
+  "vegetable": [
+    {
+      "type": "vegetable",
+      "value": "🥦"
+    },
+    {
+      "type": "vegetable",
+      "value": "🥕"
+    },
+    {
+      "type": "vegetable",
+      "value": "🌶️"
+    }
+  ]
+}
+```
+
+## Previous ways to Group By
+
+### Reduce
+
+Using [`Array.protoype.reduce`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce) was probably the proper way to achieve a grouping, even though thoughts on reducers are often mitigated as the syntax tends to make it harder to read.
+
+```javascript
+items.reduce(
+  (acc, item) => ({
+    ...acc,
+    [item.type]: [...(acc[item.type] ?? []), item],
+  }),
+  {},
+);
+```
+
+### Filter
+
+Using multiple [`Array.prototype.filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)s like this was probably the easiest solution to read, but it wasn't really performant as it would be a lot of work to filter the array multiple times and you had to manually do it for each group.
+
+```javascript
+const groupedBy = {
+  fruit: items.filter((item) => item.type === 'fruit'),
+  vegetable: items.filter((item) => item.type === 'vegetable'),
+};
+```
+
+### Chaining pure functions
+
+> ⚠️ Please don't do this! This is purely for demonstration purposes.
+
+It could get ridiculous quickly if we want to stay with functional programming while avoiding reducers. Even [GitHub Copilot: Labs](https://github.com/github/feedback/discussions/8308) has trouble explaining this.
+
+Let's say we want to grab all the possible types for `items`, turn that into an object, then iterate over the object's values to turn the value into a key and to fill the value with items grouped by that type with a `filter`. 😵‍💫
+
+```javascript
+Object.values({
+  ...Array.from(new Set(items.map(({ type }) => type))),
+}).map((type) => ({ [type]: items.filter((item) => item.type === type) }));
+```
+
+### for...of statement
+
+> ⚠️ This example goes against immutability as we're mutating the object, but it was worth the example as a fair usage of a group by.
+
+```javascript
+const groupedBy = {};
+
+for (const item of items) {
+  if (!groupedBy[item.type]) {
+    groupedBy[item.type] = [];
+  }
+
+  groupedBy[item.type].push(item);
+}
+```
+
+## Array.prototype.groupBy
+
+[TC39 committee](https://tc39.es/) is introducing the [Arrow Grouping proposal](https://github.com/tc39/proposal-array-grouping) (⚠️ Stage 3). 🎉
+
+To start using this today, you will need a spec-compliant shim/polyfill for the `Array.prototype.groupBy` method: https://github.com/es-shims/Array.prototype.groupBy. It should also soon be available as part of `stage-3` preset.
+
+```javascript
+items.groupBy(({ type }) => type);
+```
+
+Simple, isn't it? What else to say. I can't wait for this to be released as part of ES2022 and adopted by TypeScript and browsers.
