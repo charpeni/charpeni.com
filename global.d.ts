@@ -1,3 +1,3 @@
 declare namespace pa {
-  function track(event: { [key: string]: string } & { name: string }): void;
+  function track(event: { name: string } & { [key: string]: string }): void;
 }
