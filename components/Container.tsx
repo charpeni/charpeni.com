@@ -11,6 +11,7 @@ export default function Container(props) {
     title: 'Nicolas Charpentier – Website',
     description: 'My personal website and blog.',
     type: 'website',
+    twitterUsername: '@charpeni_',
     ...customMeta,
   };
 
@@ -25,17 +26,23 @@ export default function Container(props) {
           content={`https://charpeni.com${router.asPath}`}
         />
         <link rel="canonical" href={`https://charpeni.com${router.asPath}`} />
+
         <meta property="og:type" content={meta.type} />
         <meta property="og:site_name" content="Nicolas Charpentier" />
         <meta property="og:description" content={meta.description} />
         <meta property="og:title" content={meta.title} />
+        <meta property="og:image" content={meta.image} />
+
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@charpeni_" />
+        <meta name="twitter:site" content={meta.twitterUsername} />
+        <meta name="twitter:creator" content={meta.twitterUsername} />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
-        {meta.date && (
+        <meta name="twitter:image" content={meta.image} />
+
+        {meta.date ? (
           <meta property="article:published_time" content={meta.date} />
-        )}
+        ) : null}
       </Head>
       <Header />
       <main
