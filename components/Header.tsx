@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import NextLink from 'next/link';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useTheme } from 'next-themes';
 
 function Sun() {
@@ -46,6 +47,7 @@ function Moon() {
 export default function Header() {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
 
   // After mounting, we have access to the theme
   useEffect(() => setMounted(true), []);
@@ -61,9 +63,16 @@ export default function Header() {
         {mounted ? resolvedTheme === 'dark' ? <Sun /> : <Moon /> : null}
       </button>
       <div>
-        <NextLink href="/">
-          <a className="p-2 sm:p-4 text-gray-900 dark:text-gray-100">Home</a>
-        </NextLink>
+        <Link href="/">
+          <a
+            className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
+            onClick={() =>
+              pa?.track({ name: 'PressingHome', from: router.asPath })
+            }
+          >
+            Home
+          </a>
+        </Link>
       </div>
     </nav>
   );
