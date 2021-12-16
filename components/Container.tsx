@@ -33,7 +33,7 @@ export default function Container(props) {
         <meta property="og:title" content={meta.title} />
         <meta property="og:image" content={meta.image} />
 
-        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content={meta.twitterUsername} />
         <meta name="twitter:creator" content={meta.twitterUsername} />
         <meta name="twitter:title" content={meta.title} />
