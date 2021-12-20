@@ -147,9 +147,12 @@ It could get ridiculous quickly if we want to stay with functional programming w
 Let's say we want to grab all the possible types for `items`, turn that into an object, then iterate over the object's values to turn the value into a key and to fill the value with items grouped by that type with a `filter`. 😵‍💫
 
 ```javascript
-Object.values({
-  ...Array.from(new Set(items.map(({ type }) => type))),
-}).map((type) => ({ [type]: items.filter((item) => item.type === type) }));
+Object.fromEntries(
+  Array.from(new Set(items.map(({ type }) => type))).map((type) => [
+    type,
+    items.filter((item) => item.type === type),
+  ]),
+);
 ```
 
 ## Array.prototype.groupBy
