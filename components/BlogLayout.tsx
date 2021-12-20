@@ -12,7 +12,13 @@ function ShareSocialIcon({ network }: { network: string }) {
     height: socialIconWidth,
   };
 
-  return <ReactSocialIcon network={network} style={socialIconStyle} />;
+  return (
+    <ReactSocialIcon
+      network={network}
+      style={socialIconStyle}
+      fgColor="white"
+    />
+  );
 }
 
 const editUrl = (slug: string) =>
