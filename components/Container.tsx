@@ -11,6 +11,7 @@ export default function Container(props) {
     title: 'Nicolas Charpentier – Website',
     description: 'My personal website and blog.',
     type: 'website',
+    author: 'Nicolas Charpentier',
     twitterUsername: '@charpeni_',
     ...customMeta,
   };
@@ -21,6 +22,7 @@ export default function Container(props) {
         <title>{meta.title}</title>
         <meta name="robots" content="follow, index" />
         <meta content={meta.description} name="description" />
+        <meta name="author" content={meta.author} />
         <meta
           property="og:url"
           content={`https://charpeni.com${router.asPath}`}

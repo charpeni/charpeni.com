@@ -1,12 +1,26 @@
 import Image from 'next/image';
 import { parseISO, format } from 'date-fns';
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
 
 import Container from '@/components/Container';
+import { openWindow } from '@/utils/openWindow';
+
+function ShareSocialIcon({ network }: { network: string }) {
+  const socialIconWidth = 40;
+  const socialIconStyle = {
+    width: socialIconWidth,
+    height: socialIconWidth,
+  };
+
+  return <ReactSocialIcon network={network} style={socialIconStyle} />;
+}
 
 const editUrl = (slug: string) =>
   `https://github.com/charpeni/charpeni.com/edit/main/posts/${slug}.mdx`;
 
 export default function BlogLayout({ children, frontMatter }) {
+  const postUrl = `https://charpeni.com/blog/${frontMatter.slug}`;
+
   return (
     <Container
       title={`${frontMatter.title} | Nicolas Charpentier`}
@@ -41,7 +55,36 @@ export default function BlogLayout({ children, frontMatter }) {
           />
           {children}
         </div>
-        <div className="flex justify-end text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex justify-between items-baseline text-sm text-gray-700 dark:text-gray-300">
+          <div className="flex flex-row items-baseline space-x-2">
+            <span className="underline decoration-2 decoration-yellow-400 pr-2">
+              Share on:
+            </span>
+            <button
+              title="Share on Twitter"
+              onClick={() => {
+                const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                  `${frontMatter.title} by @charpeni_
+
+${postUrl}`,
+                )}`;
+                openWindow(url);
+              }}
+            >
+              <ShareSocialIcon network="twitter" />
+            </button>
+            <button
+              title="Share on LinkedIn"
+              onClick={() => {
+                const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                  postUrl,
+                )}`;
+                openWindow(url);
+              }}
+            >
+              <ShareSocialIcon network="linkedin" />
+            </button>
+          </div>
           <a
             href={editUrl(frontMatter.slug)}
             target="_blank"
