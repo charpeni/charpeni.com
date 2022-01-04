@@ -23,8 +23,10 @@ export default function Home({
             <span className="highlight dark:text-white">
               open source enthusiast
             </span>
-            , and I enjoy removing friction from the developer experience.
-            Currently working at{' '}
+            , and I enjoy removing friction from the developer experience. I
+            often describe myself as someone doing the &quot;backend&quot; work
+            of the frontend: frontend architecture and infrastructure. Currently
+            working at{' '}
             <CompanyName className="decoration-shortcut">Shortcut</CompanyName>{' '}
             (formerly{' '}
             <CompanyName className="decoration-durple">Clubhouse</CompanyName>
