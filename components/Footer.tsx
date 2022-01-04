@@ -13,10 +13,8 @@ export default function Footer() {
       <div className="flex justify-center max-w-2xl mx-auto w-full">
         <MySocials />
       </div>
-      <div className="flex flex-col md:flex-row justify-center items-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
-        <span>© {new Date().getFullYear()} Nicolas Charpentier</span>
-        <div>
-          <Separator className="hidden md:inline" />
+      <div className="flex flex-col justify-center items-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
+        <div className="mb-2">
           <NextLink href="/disclaimer">
             <a>Disclaimer</a>
           </NextLink>
@@ -24,6 +22,10 @@ export default function Footer() {
           <NextLink href="/privacy-policy">
             <a>Privacy Policy</a>
           </NextLink>
+        </div>
+        <div className="flex flex-col md:flex-row items-center">
+          <span className="mr-1">© 2021-present Nicolas Charpentier.</span>{' '}
+          <span>All Rights Reserved.</span>
         </div>
       </div>
     </footer>
