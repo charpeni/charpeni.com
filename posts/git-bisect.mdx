@@ -1,0 +1,81 @@
+---
+title: 'Git Bisect'
+publishedAt: '2022-01-07'
+summary: 'TODO'
+image: '/static/images/array-prototype-group-by-to-the-rescue/banner.webp'
+---
+
+As developers, we often have to track down bugs in our code. Some of them could be quite tedious to track down, especially within big codebases.
+
+**How could we be more effective in finding the cause and fixing them?**
+
+Well, there are a lot of effective tools these days, but we often forget how powerful git is. In this blog post, we will cover how to use `git bisect` to simplify our bug tracking sessions and how to automate this with tests.
+
+## First things to do with a bug
+
+One of the first thing I do when I need to tackle a bug is to understand what's going on (of course) and how to reproduce it. Then, write tests to assert expected behaviors.
+
+By default, we often try to fix it first, then write a test later to prevent further regressions. But what if we could leverage those tests to help us fix them in the first place?
+
+Writing tests is super helpful, even early. This is especially true in the open source community, even if you don't know how to properly fix a bug, sending a pull request with tests will be a great help. Of course, they will be failing at first but they will become an excellent indicator to know when everything is working as expected and someone else could easily pick it up from there.
+
+From there, how do we find how the bug was introduced? Let's say we don't have a stacktrace and we don't have any knowledge of the codebase. Where do we start? That's exactly where `git bisect` comes in.
+
+## Preamble
+
+As an example for this blog post, we'll refer to the following workshop: <a>TODO</a>.
+
+It's a small JavaScript library that does two simple math operations: sum and multiplication.
+
+```javascript
+import { sum, multiply } from './math';
+
+console.log(sum(1, 2));
+console.log(multiply(3, 4);
+```
+
+Unfortunately, the latest version of the library has a bug that causes the multiplication operation to return the wrong result. We know it was working fine previously, but we don't know when the bug was introduced or where to fix it.
+
+If we want to write a test asserting the behavior of `multiply`, we could write the following test:
+
+> ⚠️ Be careful to not commit the test yet, otherwise it won't be available on previous commits during a bisecting session.
+
+```javascript
+const { multiply } = require('./math');
+
+describe('multiply', () => {
+  it('the sum of 3 and 4 should equal 12', () => {
+    expect(multiply(3, 4)).toBe(12);
+  });
+});
+```
+
+## Bisecting
+
+In the past, I used to dig through the git history to understand what happened. But that's not always the best way to go and it could be quite tedious to manually checkout every commit to check if the bug is still there.
+
+Git offers a better alternative: a command named `bisect` that uses binary search to find the commit that introduced a bug.
+
+You specify the last good commit you know and a bad commit (the one with the bug, usually your current commit), then the command will do a binary search through all the in-between commits to ask you if the selected commit has the bug or not (if the commit is either bad or good). We will cover how to automate this later.
+
+TODO: Image of git history
+
+TODO: Commands to start git bisect and select a bad and a good commit
+
+```bash
+git bisect start
+git bisect bad # this will select the current commit as the bad commit
+git bisect good <commit>
+```
+
+TODO: Image of a git bisect session start and bad. First
+
+TODO: How to test a commit, either manual steps or tests
+
+TODO: Image of a git bisect session
+
+TODO: Output when `git bisect` finds the commit that introduced the bug
+
+## Automating the bisecting process
+
+TODO
