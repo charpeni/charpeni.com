@@ -84,12 +84,14 @@ export default function BlogLayout({ children, frontMatter }) {
             <button
               title="Share on Twitter"
               onClick={() => {
-                const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                const url = new URL('https://twitter.com/intent/tweet');
+                url.searchParams.set(
+                  'text',
                   `${frontMatter.title} by @charpeni_
 
 ${postUrl}`,
-                )}`;
-                openWindow(url);
+                );
+                openWindow(url.toString());
               }}
             >
               <ShareSocialIcon network="twitter" />
@@ -97,10 +99,12 @@ ${postUrl}`,
             <button
               title="Share on LinkedIn"
               onClick={() => {
-                const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                  postUrl,
-                )}`;
-                openWindow(url);
+                const url = new URL(
+                  'https://www.linkedin.com/sharing/share-offsite',
+                );
+                url.searchParams.set('url', postUrl);
+
+                openWindow(url.toString());
               }}
             >
               <ShareSocialIcon network="linkedin" />
