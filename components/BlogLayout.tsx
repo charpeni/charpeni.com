@@ -40,14 +40,29 @@ export default function BlogLayout({ children, frontMatter }) {
           {frontMatter.title}
         </h1>
         <div className="flex flex-row justify-between items-start md:items-center w-full mt-2">
-          <div className="flex items-center">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {format(parseISO(frontMatter.publishedAt), 'MMMM dd, yyyy')}
-            </p>
+          <div className="flex flex-row">
+            <div className="flex items-center">
+              <Image
+                className="rounded-full"
+                src="/static/images/nicolas_charpentier.jpeg"
+                alt="Picture of the author"
+                width="35"
+                height="35"
+                quality={100}
+              />
+            </div>
+            <div className="flex flex-col ml-2">
+              <span className="text-base text-gray-700 dark:text-gray-300">
+                Nicolas Charpentier
+              </span>
+              <span className="text-sm text-gray-500">
+                {format(parseISO(frontMatter.publishedAt), 'MMMM dd, yyyy')}
+              </span>
+            </div>
           </div>
-          <p className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 self-end">
             {frontMatter.readingTime.text}
-          </p>
+          </span>
         </div>
         <div className="prose dark:prose-dark max-w-none w-full mt-4 mb-8">
           <Image
