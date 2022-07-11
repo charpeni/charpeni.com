@@ -1,0 +1,12 @@
+---
+title: 'Stop Doing Shared Components'
+publishedAt: '2022-05-17'
+summary: 'TODO'
+image: '/static/images/stop-doing-shared-components/banner.jpeg'
+---
+
+You're probably wondering what the hell I'm talking about and what's the nonsense of this blog post, but while I have your attention, let me tell you why I believe we should stop doing shared components by default. Don't get me wrong, I believe in shared components, especially for primitives components like a design system would provide. Unfortunately, I think we should stop doing shared components by default. I promise it will make some sense to you toward the end; just give me a few minutes.
+
+You probably already worked on shared components, and if you feel like those were a success, it's probably because you worked on the first few iterations, and you weren't the one maintaining it in the long run. Over time, shared components tend to grow, and props are getting added to support new use cases and new product visions. Months are passing, and the shared component that used to be small and neat is now being seen as a monster. It's expecting a wide variety of props, which aren't segmented by use cases ([union types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types)), and it's hard to know which one should be combined with others. Those props are probably being drilled down to many inner components, and it's getting harder to track their usage. A few components once used the shared component, it was easy to test the changes directly within the app, but as the app is growing, we lost track of where it was getting used. Then, when we're adding new features, it seems like we're flipping a switch: a fix something for my use case that will break another one that I'm not aware of, someone else will fix that while broking my new use case. It's like playing Jenga but in code.
+
+> `shared/` is the new `utils/` folder.
