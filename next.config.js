@@ -1,6 +1,10 @@
 const { withPlaiceholder } = require('@plaiceholder/next');
 
 module.exports = withPlaiceholder({
+  experimental: {
+    legacyBrowsers: false,
+    browsersListForSwc: true,
+  },
   swcMinify: true,
   reactStrictMode: true,
   async headers() {
