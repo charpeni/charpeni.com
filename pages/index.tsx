@@ -47,7 +47,7 @@ export default function Home({
           Blog Posts
         </h3>
         {posts.map((post) => (
-          <BlogPostCard key={post.title} {...post} />
+          <BlogPostCard key={post.slug} {...post} />
         ))}
       </div>
     </Container>
