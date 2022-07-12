@@ -66,9 +66,14 @@ export default function Header() {
         <Link href="/">
           <a
             className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
-            onClick={() =>
-              pa?.track({ name: 'PressingHome', from: router.asPath })
-            }
+            onClick={() => {
+              try {
+                pa?.track({ name: 'PressingHome', from: router.asPath });
+              } catch (e) {
+                // Too bad.
+                console.error(e);
+              }
+            }}
           >
             Home
           </a>
