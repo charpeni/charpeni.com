@@ -12,7 +12,7 @@ export default function Blog({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <BlogLayout frontMatter={frontMatter}>
-      <MDXRemote {...mdxSource} components={MDXComponents} />
+      <MDXRemote {...mdxSource} components={MDXComponents as any} />
     </BlogLayout>
   );
 }
