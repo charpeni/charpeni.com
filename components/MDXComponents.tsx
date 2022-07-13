@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-const CustomLink = (props) => {
-  const href = props.href;
-  const isInternalLink = href && (href.startsWith('/') || href.startsWith('#'));
+function CustomLink(props: React.HTMLProps<HTMLAnchorElement>) {
+  const { href } = props;
+
+  const isInternalLink = href?.startsWith('/') || href?.startsWith('#');
 
   if (isInternalLink) {
     return (
@@ -14,7 +15,7 @@ const CustomLink = (props) => {
   }
 
   return <a target="_blank" rel="noopener noreferrer" {...props} />;
-};
+}
 
 const MDXComponents = {
   Image,
