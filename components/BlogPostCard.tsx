@@ -20,7 +20,7 @@ export default function BlogPostCard({
     <Link href={`/blog/${slug}`}>
       <a className="w-full mb-8">
         <div className="w-full rounded shadow-md hover:shadow-lg dark:ring-1 dark:ring-gray-500 dark:hover:ring-2 dark:hover:ring-gray-400 transition-all">
-          <div className="relative w-full" style={{ paddingTop: '30%' }}>
+          <div className="relative w-full pt-[30%]">
             <Image
               className="rounded-t"
               alt={title}
