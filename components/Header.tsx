@@ -71,7 +71,6 @@ export default function Header() {
                 pa?.track({ name: 'PressingHome', from: router.asPath });
               } catch (e) {
                 // Too bad.
-                console.error(e);
               }
             }}
           >
