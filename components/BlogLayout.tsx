@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from 'next/legacy/image';
 import { parseISO, format } from 'date-fns';
 import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
 
