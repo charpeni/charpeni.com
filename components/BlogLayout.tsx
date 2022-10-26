@@ -1,4 +1,4 @@
-import Image from 'next/legacy/image';
+import Image from 'next/image';
 import { parseISO, format } from 'date-fns';
 import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
 
@@ -49,6 +49,10 @@ export default function BlogLayout({ children, frontMatter }) {
                 width="35"
                 height="35"
                 quality={100}
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                }}
               />
             </div>
             <div className="flex flex-col ml-2">
@@ -73,6 +77,10 @@ export default function BlogLayout({ children, frontMatter }) {
             placeholder="blur"
             blurDataURL={frontMatter.blurDataURL}
             priority
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+            }}
           />
           {children}
         </div>

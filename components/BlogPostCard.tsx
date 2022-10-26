@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/legacy/image';
+import Image from 'next/image';
 
 type Props = {
   title: string;
@@ -24,10 +24,13 @@ export default function BlogPostCard({
             className="rounded-t"
             alt={title}
             src={image}
-            layout="fill"
-            objectFit="cover"
             placeholder="blur"
             blurDataURL={blurDataURL}
+            fill
+            sizes="100vw"
+            style={{
+              objectFit: 'cover',
+            }}
           />
         </div>
         <div className="p-4">
