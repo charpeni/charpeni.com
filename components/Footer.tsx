@@ -15,13 +15,9 @@ export default function Footer() {
       </div>
       <div className="flex flex-col justify-center items-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
         <div className="mb-2">
-          <NextLink href="/disclaimer">
-            <a>Disclaimer</a>
-          </NextLink>
+          <NextLink href="/disclaimer">Disclaimer</NextLink>
           <Separator />
-          <NextLink href="/privacy-policy">
-            <a>Privacy Policy</a>
-          </NextLink>
+          <NextLink href="/privacy-policy">Privacy Policy</NextLink>
         </div>
         <div className="flex flex-col md:flex-row items-center">
           <span className="mr-1">© 2021-present Nicolas Charpentier.</span>{' '}

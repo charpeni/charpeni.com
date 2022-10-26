@@ -63,19 +63,18 @@ export default function Header() {
         {mounted ? resolvedTheme === 'dark' ? <Sun /> : <Moon /> : null}
       </button>
       <div>
-        <Link href="/">
-          <a
-            className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
-            onClick={() => {
-              try {
-                pa?.track({ name: 'PressingHome', from: router.asPath });
-              } catch (e) {
-                // Too bad.
-              }
-            }}
-          >
-            Home
-          </a>
+        <Link
+          href="/"
+          className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
+          onClick={() => {
+            try {
+              pa?.track({ name: 'PressingHome', from: router.asPath });
+            } catch (e) {
+              // Too bad.
+            }
+          }}
+        >
+          Home
         </Link>
       </div>
     </nav>
