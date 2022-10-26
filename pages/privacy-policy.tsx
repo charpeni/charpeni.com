@@ -29,10 +29,8 @@ export default function PrivacyPolicy() {
             different privacy policies and terms which are beyond control of the
             author of <a href="https://charpeni.com">https://charpeni.com</a>.
             See this website&apos;s{' '}
-            <NextLink href="/disclaimer">
-              <a>Legal Disclaimer</a>
-            </NextLink>{' '}
-            for more information.
+            <NextLink href="/disclaimer">Legal Disclaimer</NextLink> for more
+            information.
           </p>
         </div>
       </div>
