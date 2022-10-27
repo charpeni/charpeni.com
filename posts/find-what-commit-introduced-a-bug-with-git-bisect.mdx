@@ -92,7 +92,7 @@ Then, the bisecting session begin.
 
 What happened here is that the binary search split commits in two parts from the good one to the bad one and it checkout the middle commit.
 
-Then, we need to test this comment to check if whether this is a good or a bad commit. We could test it manually, or even better if we reuse our previous test. To do so, we need to copy the test above and paste it into the workshop repository as `test.spec.js`. If this was an application, we would have to either start the application and test it manually or write an integration / E2E test.
+Then, we need to test this comment to check if whether this is a good or a bad commit. We could test it manually, or even better if we reuse our previous test. To do so, we need to copy the test above and paste it into the workshop repository as `test.spec.js`. If it was an application, we would have to either start the application and test it manually or write an integration / E2E test.
 
 Then we can run the test with `yarn test` and assert if the test is passing or not.
 
