@@ -11,15 +11,15 @@ As developers, we often have to track down bugs and sometimes, they could be qui
 
 Well, there are a lot of effective tools these days, but we often forget how powerful git is. In this blog post, we will cover how to use `git bisect` to simplify our bug tracking sessions and how to automate this with tests.
 
-## First things to do with a bug
+## First thing to do with a bug
 
-One of the first thing I do when I need to tackle a bug is to understand what's going—obviously—and how to reproduce it. Then, write tests to assert expected behaviors.
+One of the first things I do when I need to tackle a bug is to understand what's going on—obviously—and how to reproduce it. Then, write tests to assert expected behaviors.
 
 By default, we often try to fix it first, then later we write a test to prevent further regressions. But what if we could leverage those tests to help us fix them in the first place?
 
-Writing tests is super helpful, even early. This is especially true in the open source community, even if you don't know how to properly fix a bug, sending a pull request with tests will be a great help. Of course, they will be failing at first but they will become an excellent indicator to know when everything is working as expected and someone else could easily pick it up from there.
+Writing tests is super helpful, even early. This is especially true in the open source community, even if you don't know how to properly fix a bug, sending a pull request with tests will be a great help. Of course, they will fail at first but they will become an excellent indicator to know when everything is working as expected and someone else could easily pick it up from there.
 
-From there, how do we find how the bug was introduced? Let's say we don't have a stacktrace and we don't have any knowledge of the codebase. Where do we start? That's exactly where `git bisect` comes in.
+From there, how do we find out how the bug was introduced? Let's say we don't have a stacktrace and we don't have any knowledge of the codebase. Where do we start? That's precisely where `git bisect` comes in.
 
 ## Preamble
 
@@ -34,7 +34,7 @@ console.log(sum(1, 2));
 console.log(multiply(3, 4);
 ```
 
-Unfortunately, the latest version of the library has a bug that causes the multiplication operation to return the wrong result. We know it was working fine previously, but we don't know when the bug was introduced or where to fix it.
+Unfortunately, the latest version of the library has a bug that causes the multiplication operation to return the wrong result. We know it was working fine previously, but we need to know when the bug has been introduced or where to fix it.
 
 If we want to write a test asserting the behavior of `multiply`, we could write the following test:
 
@@ -52,15 +52,15 @@ describe('multiply', () => {
 
 ## Bisecting
 
-In the past, I used to dig through the git history to understand what happened. But that's not always the best way to go and it could be quite tedious to manually checkout every commit to check if the bug is still there.
+In the past, I used to dig through the git history to understand what happened. But there are better ways to go, and it could be quite tedious to manually checkout every commit, checking if the bug is still there.
 
-Git offers a better alternative: a command named `bisect` that uses binary search to find the commit that introduced a bug.
+Git offers a better alternative: a `bisect` command that uses binary search to find the commit that introduced a bug.
 
-You specify the last good commit you know and a bad commit (the one with the bug, usually your current commit), then the command will do a binary search through all the in-between commits to ask you if the selected commit has the bug or not (if the commit is either bad or good). We will cover how to automate this later.
+You specify the last good commit you know and a bad commit (the one with the bug, usually your current commit), then the command will do a binary search through all the in between commits to ask you if the selected commit has the bug or not (if the commit is either bad or good). We will cover how to automate this later.
 
 > ℹ️ The following content is coming and executed from the workshop repository mentioned above.
 
-From the following git history, we know that the library used to work at least on the second commit (`Initial setup`) but something broke in-between the first commit and the last one.
+From the following git history, we know that the library used to work at least on the second commit (`Initial setup`) but something broke in between the first commit and the last one.
 
 TODO: Image of git history
 
@@ -82,7 +82,7 @@ TODO: How to test a commit, either manual steps or tests
 
 Then, we need to test this comment to check if whether this is a good or a bad commit. We could test it manually, or even better if we reuse our previous test. To do so, we need to copy the test above and paste it into the workshop repository as `test.spec.js`. If this was an application, we would have to either start the application and test it manually or write an integration / E2E test.
 
-Then we can run the test with `yarn test` and assert if the test are passing or not.
+Then we can run the test with `yarn test` and assert if the test is passing or not.
 
 In this case, it was failing, so we marked it as a bad commit, so we can continue the bisecting session by splitting another series of commits.
 
