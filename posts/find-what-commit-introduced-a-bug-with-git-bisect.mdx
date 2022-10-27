@@ -1,6 +1,6 @@
 ---
 title: 'Find What Commit Introduced a Bug With Git Bisect'
-publishedAt: '2022-01-07'
+publishedAt: '2022-11-01'
 summary: 'TODO'
 image: '/static/images/find-what-commit-introduced-a-bug-with-git-bisect/banner.png'
 ---
@@ -25,18 +25,18 @@ From there, how do we find out how the bug was introduced? Let's say we don't ha
 
 As an example for this blog post, we'll refer to the following workshop: [github:charpeni/git-bisect-workshop](https://github.com/charpeni/git-bisect-workshop).
 
-It's a small JavaScript library that does two simple math operations: sum and multiplication.
+It's a small JavaScript library that does two simple math operations: summation and multiplication.
 
 ```javascript
 import { sum, multiply } from './math';
 
-console.log(sum(1, 2));
-console.log(multiply(3, 4);
+console.log(sum(1, 2));     // Output: 3
+console.log(multiply(3, 4); // Output: 24!?
 ```
 
 Unfortunately, the latest version of the library has a bug that causes the multiplication operation to return the wrong result. We know it was working fine previously, but we need to know when the bug has been introduced or where to fix it.
 
-If we want to write a test asserting the behavior of `multiply`, we could write the following test:
+Moving forward, if we would like to prevent any regressions, we could write a test asserting the behavior of `multiply`:
 
 > ⚠️ Be careful to not commit the test yet, otherwise it won't be available on previous commits during a bisecting session.
 
@@ -62,7 +62,14 @@ You specify the last good commit you know and a bad commit (the one with the bug
 
 From the following git history, we know that the library used to work at least on the second commit (`Initial setup`) but something broke in between the first commit and the last one.
 
-TODO: Image of git history
+<div className="img-center">
+  <Image
+    alt={`git bisect step 1`}
+    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-1.png`}
+    width={468}
+    height={80}
+  />
+</div>
 
 So, we can find the commit that introduced the bug by starting a bisect session:
 
@@ -74,19 +81,46 @@ git bisect good 52095727dd1afc8517cc9dda06568ae21f9b5850 # this is telling git t
 
 Then, the bisecting session begin.
 
-TODO: Image of a git bisect session start and bad. First
+<div className="img-center">
+  <Image
+    alt={`git bisect step 2`}
+    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-2.png`}
+    width={468}
+    height={80}
+  />
+</div>
 
 What happened here is that the binary search split commits in two parts from the good one to the bad one and it checkout the middle commit.
-
-TODO: How to test a commit, either manual steps or tests
 
 Then, we need to test this comment to check if whether this is a good or a bad commit. We could test it manually, or even better if we reuse our previous test. To do so, we need to copy the test above and paste it into the workshop repository as `test.spec.js`. If this was an application, we would have to either start the application and test it manually or write an integration / E2E test.
 
 Then we can run the test with `yarn test` and assert if the test is passing or not.
 
+```
+git bisect bad
+```
+
 In this case, it was failing, so we marked it as a bad commit, so we can continue the bisecting session by splitting another series of commits.
 
-TODO: Image of a git bisect session
+<div className="img-center">
+  <Image
+    alt={`git bisect step 3`}
+    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-3.png`}
+    width={468}
+    height={80}
+  />
+</div>
+
+Then, we repeat the last steps until we find the commit that introduced the bug.
+
+<div className="img-center">
+  <Image
+    alt={`git bisect step 4`}
+    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-4.png`}
+    width={468}
+    height={80}
+  />
+</div>
 
 TODO: Output when `git bisect` finds the commit that introduced the bug
 
