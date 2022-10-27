@@ -84,31 +84,6 @@ pre {
   @apply block -mx-4 px-4 bg-gray-100 dark:bg-gray-800 border-l-4 border-blue-500;
 }
 
-/* Remove Safari input shadow on mobile */
-input[type='text'],
-input[type='email'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
-.metric-card > a {
-  @apply no-underline;
-}
-
-.metric-card > p {
-  @apply my-2;
-}
-
-.step > h3 {
-  @apply my-0;
-}
-
-.prose .tweet a {
-  text-decoration: inherit;
-  font-weight: inherit;
-}
-
 table {
   display: block;
   overflow-y: scroll;
@@ -129,7 +104,7 @@ table {
   box-decoration-break: clone;
 }
 
-.img-center > div {
+.img-center {
   display: block !important;
   margin: auto !important;
   max-width: max-content !important;
