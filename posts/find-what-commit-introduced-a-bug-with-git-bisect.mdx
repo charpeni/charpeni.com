@@ -145,4 +145,8 @@ Date:   Thu Aug 25 14:51:39 2022 -0400
 
 ## Automation
 
-TODO
+We can even push `git bisect` a little further if we want, we could entierly automate the process with `git bisect run`, it will run a command for each commit and will mark it as a good or bad commit depending on the exit code of the command.
+
+```
+git bisect run yarn test
+```
