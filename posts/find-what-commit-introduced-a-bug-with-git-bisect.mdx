@@ -122,7 +122,26 @@ Then, we repeat the last steps until we find the commit that introduced the bug.
   />
 </div>
 
-TODO: Output when `git bisect` finds the commit that introduced the bug
+```
+a324657c88fff30475f8fbea102d5c69ac56b6c7 is the first bad commit
+commit a324657c88fff30475f8fbea102d5c69ac56b6c7
+Author: Nicolas Charpentier <nicolas.charpentier079@gmail.com>
+Date:   Thu Aug 25 14:51:39 2022 -0400
+
+    Third commit
+
+ math.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+
+<div className="img-center">
+  <Image
+    alt={`party popper`}
+    src={`/static/images/party-popper.png`}
+    width={120}
+    height={120}
+  />
+</div>
 
 ## Automation
 
