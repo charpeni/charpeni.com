@@ -191,3 +191,57 @@ function Layout(hideHeader?: boolean) {
 Layout(); // Output: Show header (default)
 Layout(false); // Output: Hide header
 ```
+
+### Optional chaining operator
+
+The [optional chaining operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining) (`?.`) accesses an object's property or calls a function. If the object is `undefined` or `null`, it returns `undefined` instead of throwing an error.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return entity?.relationships;
+}
+
+getRelationships(); // Output: undefined
+```
+
+### Nullish coalescing operator
+
+The [nullish coalescing operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator) (`??`) is a logical operator that returns its right-hand side operand when its left-hand side operand is `null` or `undefined`, and otherwise returns its left-hand side operand.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return (entity ?? {}).relationships;
+}
+
+getRelationships(); // Output: undefined
+```
+
+Or, we could even combined the nullish coalescing operator with the previous optional chaining operator if we would like to return a default value for `relationships`:
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return entity?.relationships ?? [];
+}
+```
+
+### Early return
+
+The two previous operators are useful, but they could be quite tedious to use within a function with many usages of optional parameters.
+
+In those cases, we would prefer to narrow the type down by using an early return, so we don't have to wrap all usages with an operator.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  //                      ^? (parameter) entity: Record<string, unknown> | undefined
+
+  if (!entity) {
+    // ^? (parameter) entity: Record<string, unknown> | undefined
+    return;
+  }
+
+  // Starting from here, we excluded the possibiliy of `entity` being undefined or null.
+
+  return entity.relationships;
+  //     ^? (parameter) entity: Record<string, unknown>
+}
+```
