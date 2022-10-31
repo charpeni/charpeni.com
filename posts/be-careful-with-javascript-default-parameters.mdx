@@ -52,7 +52,7 @@ Layout(false); // Output: Hide header
 Layout(undefined); // Output: Show header (same as default)
 ```
 
-By using the default parameter to `true` on `showHeader`, we're saying that if no value is passed, we want to set `showHeader` to `true` by default. So, we're expecting a boolean, but we're also saying that if no value is passed, we want to set it to `true` by default.
+By using the default parameter to `true` on `showHeader`, we're saying that we're expecting a boolean, but if no value is passed, we want to set `showHeader` to `true` by default.
 
 We're also using strict checks to make sure we're not getting any unexpected values as TypeScript tells us we can only get a boolean out of `showHeader`. If we're not getting `true` or `false`, we're logging `Unexpected path`.
 
