@@ -96,11 +96,11 @@ Then, we need to test this comment to check if whether this is a good or a bad c
 
 Then we can run the test with `yarn test` and assert if the test is passing or not.
 
+In this case, it was failing, so we can mark it as a bad commit, then we continue the bisecting session by splitting another series of commits.
+
 ```
 git bisect bad
 ```
-
-In this case, it was failing, so we marked it as a bad commit, so we can continue the bisecting session by splitting another series of commits.
 
 <div className="img-center">
   <Image
@@ -111,7 +111,7 @@ In this case, it was failing, so we marked it as a bad commit, so we can continu
   />
 </div>
 
-Then, we repeat the last steps until we find the commit that introduced the bug.
+Run the app or the tests, is it working or not? Let git know and move on automatically to the next step. Then, we repeat the last steps until we find the commit that introduced the bug by narrowing them down.
 
 <div className="img-center">
   <Image
