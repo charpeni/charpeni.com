@@ -1,0 +1,247 @@
+---
+title: 'Be Careful With JavaScript Default Parameters!'
+publishedAt: '2022-11-03'
+summary: 'In JavaScript and TypeScript, we often rely on default parameters to define optional parameters, but should we?'
+image: '/static/images/be-careful-with-javascript-default-parameters/banner.png'
+---
+
+In JavaScript and TypeScript, we often rely on [default parameters](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/Default_parameters) to define optional parameters, but should we?
+
+> **Default function parameters** allow named parameters to be initialized with default values if no value or `undefined` is passed.
+
+We can use default parameters, but we need to be careful! In this article, we will see how default parameters work and how they can be dangerous, especially combined with [GraphQL nullability](https://www.apollographql.com/blog/graphql/basics/using-nullability-in-graphql/).
+
+## Boolean usages
+
+Let's start with a boolean, let's say we have the following function:
+
+```typescript
+function Layout(showHeader?: boolean) {
+  //            ^? (parameter) showHeader: boolean | undefined
+  if (showHeader === true) {
+    console.log('Show header');
+  } else {
+    console.log('Hide header by default');
+  }
+}
+
+Layout(); // Output: Hide header (default)
+Layout(true); // Output: Show header
+Layout(false); // Output: Hide header
+```
+
+We expect an optional `showHeader` parameter that is a boolean. So, the function is checking if `showHeader` is `true` and if so we're logging `Show header`, otherwise, it's the default behavior.
+
+Now, what if we want to set `showHeader` to `true` by default? We could do something like this:
+
+```typescript
+function Layout(showHeader = true) {
+  //            ^? (parameter) showHeader: boolean
+  if (showHeader === true) {
+    console.log('Show header');
+  } else if (showHeader === false) {
+    console.log('Hide header');
+  } else {
+    console.log('Unexpected path');
+  }
+}
+
+Layout(); // Output: Show header (default)
+Layout(true); // Output: Show header
+Layout(false); // Output: Hide header
+Layout(undefined); // Output: Show header (same as default)
+```
+
+By using the default parameter to `true` on `showHeader`, we're saying that we're expecting a boolean, but if no value is passed, we want to set `showHeader` to `true` by default.
+
+We're also using strict checks to make sure we're not getting any unexpected values as TypeScript tells us we can only get a boolean out of `showHeader`. If we're not getting `true` or `false`, we're logging `Unexpected path`.
+
+We can see that it's working as expected, but what if we pass `null` instead? This could be from JavaScript usages or external APIs untyped or wrongly typed, or even GraphQL nullability.
+
+```typescript
+Layout(null); // Output: Unexpected path
+```
+
+Oops! We're logging `Unexpected path`! But TypeScript says it could only be a boolean!?
+
+## Object usages
+
+We can reproduce the exact same with Objects instead. Let's say we have the following function:
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  //                      ^? (parameter) entity: Record<string, unknown> | undefined
+  return entity.relationships;
+}
+
+getRelationships(); // Output: Cannot read property 'relationships' of undefined
+```
+
+We're expecting an optional `entity` parameter that is an object. So, the function is returning `entity.relationships`. If `entity` is `undefined`, we're getting an error.
+
+So, one of the solutions here could be to handle this with a default parameter:
+
+```typescript
+function getRelationships(entity = {}) {
+  //                      ^? (parameter) entity: {}
+  return entity.relationships;
+}
+
+getRelationships(); // Output: undefined
+```
+
+It seems to be working as expected, but then if we call `getRelationships` with `null`, we'll end up with the following error—again:
+
+```typescript
+getRelationships(null); // Output: Cannot read property 'relationships' of null
+```
+
+## Array usages
+
+Again, we can reproduce the exact same with Arrays instead. Let's say we have the following function:
+
+```typescript
+function normalize(array = []) {
+  //               ^? (parameter) array: any[]
+  return array.map((item) => item.toLowerCase());
+}
+
+normalize(); // Output: []
+normalize(null); // Output: Cannot read property 'map' of null
+```
+
+## Solutions and best practices
+
+### strictNullChecks
+
+If you're using TypeScript, enable [`strictNullChecks`](https://www.typescriptlang.org/tsconfig#strictNullChecks).
+
+> When `strictNullChecks` is `false`, `null` and `undefined` are effectively ignored by the language. This can lead to unexpected errors at runtime.
+
+> When `strictNullChecks` is `true`, `null` and `undefined` have their own distinct types and you'll get a type error if you try to use them where a concrete value is expected.
+
+Setting `strictNullChecks` to `true` will raise an error that you have not made a guarantee that `entity` exists before trying to use it:
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return entity.relationships; // TypeScript output: Object is possibly 'undefined'.
+}
+
+// ...
+
+function getRelationships(entity = {}) {
+  return entity.relationships;
+}
+
+getRelationships(null); // TypeScript output: Argument of type 'null' is not assignable to parameter...
+```
+
+### Prefer loose equality checks
+
+Even though a boolean should always be only a boolean, we can't always make sure this is the case (`undefined` and `null`), and that's why we should prefer loose equality checks instead of strict equality checks.
+
+Rather than handling booleans as `true` and `false` values, handle them as truthy and falsy values.
+
+❌ Don't:
+
+```typescript
+function Layout(showHeader?: boolean) {
+  // It doesn't handle `undefined` and `null` values
+  if (showHeader === false) {
+    hideHeader();
+  }
+}
+```
+
+✅ Do:
+
+```typescript
+function Layout(showHeader?: boolean) {
+  if (!showHeader) {
+    hideHeader();
+  }
+}
+```
+
+ℹ️ If you would prefer to use strict boolean expressions instead, consider enabling the following ESLint rule: [`strict-boolean-expressions`](https://typescript-eslint.io/rules/strict-boolean-expressions) to forbid the usage of non-boolean types in expressions where a boolean is expected. I tend to prefer strict boolean expressions and I believe we should always prefer them, but it's not always possible and I found this harder to scale in an existing application.
+
+### Optional parameters should be falsy by default
+
+Optional parameters should express non-default behaviors.
+
+Omitting the optional parameter will be falsy and therefore express the default behavior (e.g., we want to show the header by default, the optional parameter is to hide it).
+
+❌ Don't:
+
+```typescript
+function Layout(showHeader = true) {
+  // ...
+}
+
+Layout(); // Output: Show header (default)
+```
+
+✅ Do:
+
+```typescript
+function Layout(hideHeader?: boolean) {
+  // ...
+}
+
+Layout(); // Output: Show header (default)
+Layout(false); // Output: Hide header
+```
+
+### Optional chaining operator
+
+The [optional chaining operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining) (`?.`) accesses an object's property or calls a function. If the object is `undefined` or `null`, it returns `undefined` instead of throwing an error.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return entity?.relationships;
+}
+
+getRelationships(); // Output: undefined
+```
+
+### Nullish coalescing operator
+
+The [nullish coalescing operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator) (`??`) is a logical operator that returns its right-hand side operand when its left-hand side operand is `null` or `undefined`, and otherwise returns its left-hand side operand.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return (entity ?? {}).relationships;
+}
+
+getRelationships(); // Output: undefined
+```
+
+Or, we could even combined the nullish coalescing operator with the previous optional chaining operator if we would like to return a default value for `relationships`:
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  return entity?.relationships ?? [];
+}
+```
+
+### Early return
+
+The two previous operators are useful, but they could be quite tedious to use within a function with many usages of optional parameters.
+
+In those cases, we would prefer to narrow the type down by using an early return, so we don't have to wrap all usages with an operator.
+
+```typescript
+function getRelationships(entity?: Record<string, unknown>) {
+  //                      ^? (parameter) entity: Record<string, unknown> | undefined
+
+  if (!entity) {
+    // ^? (parameter) entity: Record<string, unknown> | undefined
+    return;
+  }
+
+  // Starting from here, we excluded the possibiliy of `entity` being undefined or null.
+
+  return entity.relationships;
+  //     ^? (parameter) entity: Record<string, unknown>
+}
+```
