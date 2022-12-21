@@ -12,8 +12,6 @@ module.exports = {
       colors: {
         shortcut: '#58B1E4',
         durple: '#452B5B',
-        sherweb: '#0061AA',
-        novom: '#B2232F',
       },
       fontFamily: {
         sans: ['Titillium Web', ...fontFamily.sans],

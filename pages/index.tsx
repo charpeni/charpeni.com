@@ -30,12 +30,7 @@ export default function Home({
             <CompanyName className="decoration-shortcut">Shortcut</CompanyName>{' '}
             (formerly{' '}
             <CompanyName className="decoration-durple">Clubhouse</CompanyName>
-            ), previously{' '}
-            <CompanyName className="decoration-yellow-400">
-              Classcraft
-            </CompanyName>
-            , <CompanyName className="decoration-sherweb">SherWeb</CompanyName>,
-            and <CompanyName className="decoration-novom">Novom</CompanyName>.
+            ).
           </h2>
 
           <div className="flex justify-end w-full mt-4 lg:mt-0 mb-8">
