@@ -1,17 +1,22 @@
 const { withPlaiceholder } = require('@plaiceholder/next');
-
-module.exports = withPlaiceholder({
-  swcMinify: true,
-  reactStrictMode: true,
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
-    ];
-  },
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
 });
+
+module.exports = withBundleAnalyzer(
+  withPlaiceholder({
+    swcMinify: true,
+    reactStrictMode: true,
+    async headers() {
+      return [
+        {
+          source: '/(.*)',
+          headers: securityHeaders,
+        },
+      ];
+    },
+  }),
+);
 
 // https://securityheaders.com
 const ContentSecurityPolicy = `
