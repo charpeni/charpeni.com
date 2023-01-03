@@ -27,7 +27,9 @@ export default function BlogPostCard({
             placeholder="blur"
             blurDataURL={blurDataURL}
             fill
-            sizes="100vw"
+            sizes="(min-width: 768px) 85vw,
+                    (min-width: 1280px) 50vw,
+                    33vw"
             style={{
               objectFit: 'cover',
             }}
