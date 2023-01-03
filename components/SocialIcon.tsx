@@ -1,4 +1,18 @@
-import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
+import {
+  SocialIcon as ReactSocialIcon,
+  SocialIconDatabase,
+} from 'react-social-icons/build/react-social-icons-lite';
+
+// Supported network icons
+import GitHub from 'react-social-icons/build/networks/github';
+import Twitter from 'react-social-icons/build/networks/twitter';
+import LinkedIn from 'react-social-icons/build/networks/linkedin';
+import MailTo from 'react-social-icons/build/networks/mailto';
+
+SocialIconDatabase.importNetwork(GitHub)
+  .importNetwork(Twitter)
+  .importNetwork(LinkedIn)
+  .importNetwork(MailTo);
 
 import type { SocialIconProps } from 'react-social-icons';
 

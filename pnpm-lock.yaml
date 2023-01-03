@@ -27,7 +27,7 @@ specifiers:
   prettier: 2.8.1
   react: 18.2.0
   react-dom: 18.2.0
-  react-social-icons: ^5.6.1
+  react-social-icons: github:pfernandom/react-social-icons#87b43147c1a16753c443507c0856985e44589ee9
   reading-time: ^1.5.0
   rehype: ^12.0.1
   remark-autolink-headings: ^7.0.1
@@ -57,7 +57,7 @@ dependencies:
   postcss: 8.4.20
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
-  react-social-icons: 5.6.1_react@18.2.0
+  react-social-icons: github.com/pfernandom/react-social-icons/87b43147c1a16753c443507c0856985e44589ee9_react@18.2.0
   reading-time: 1.5.0
   remark-autolink-headings: 7.0.1
   remark-code-titles: 0.1.2
@@ -618,6 +618,10 @@ packages:
   /@types/ms/0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
     dev: true
+
+  /@types/node/10.17.60:
+    resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
+    dev: false
 
   /@types/node/18.11.17:
     resolution: {integrity: sha512-HJSUJmni4BeDHhfzn6nF0sVmd1SMezP7/4F0Lq+aXzmp2xm9O7WXrUtHW/CHlYVtZUbByEvWidHqRtcJXGF2Ng==}
@@ -3609,15 +3613,6 @@ packages:
   /react-is/16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  /react-social-icons/5.6.1_react@18.2.0:
-    resolution: {integrity: sha512-gQJgBBn0GnV+e+IiZecTfuH2OPGV22G1yWD/ieCUhkHxJWZF2DhRtkTpOpe5+Ao+uWkOf3/jO2u2MjYdTEWFdA==}
-    peerDependencies:
-      react: 15.x.x || 16.x.x || 17.x.x
-    dependencies:
-      prop-types: 15.8.1
-      react: 18.2.0
-    dev: false
-
   /react/18.2.0:
     resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
     engines: {node: '>=0.10.0'}
@@ -4626,3 +4621,16 @@ packages:
   /zwitch/2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
     dev: true
+
+  github.com/pfernandom/react-social-icons/87b43147c1a16753c443507c0856985e44589ee9_react@18.2.0:
+    resolution: {tarball: https://codeload.github.com/pfernandom/react-social-icons/tar.gz/87b43147c1a16753c443507c0856985e44589ee9}
+    id: github.com/pfernandom/react-social-icons/87b43147c1a16753c443507c0856985e44589ee9
+    name: react-social-icons
+    version: 5.15.0
+    peerDependencies:
+      react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
+    dependencies:
+      '@types/node': 10.17.60
+      prop-types: 15.8.1
+      react: 18.2.0
+    dev: false
