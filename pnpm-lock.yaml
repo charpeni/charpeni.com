@@ -27,7 +27,7 @@ specifiers:
   prettier: 2.8.1
   react: 18.2.0
   react-dom: 18.2.0
-  react-social-icons: pfernandom/react-social-icons#87b43147c1a16753c443507c0856985e44589ee9
+  react-social-icons: git+https://github.com/pfernandom/react-social-icons.git#87b43147c1a16753c443507c0856985e44589ee9
   reading-time: ^1.5.0
   rehype: ^12.0.1
   remark-autolink-headings: ^7.0.1
