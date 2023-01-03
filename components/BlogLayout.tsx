@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { parseISO, format } from 'date-fns';
-import { SocialIcon as ReactSocialIcon } from 'react-social-icons/build/react-social-icons-lite';
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
 
 import Container from '@/components/Container';
 import { openWindow } from '@/utils/openWindow';
