@@ -27,7 +27,7 @@ specifiers:
   prettier: 2.8.1
   react: 18.2.0
   react-dom: 18.2.0
-  react-social-icons: ^5.6.1
+  react-social-icons: ^5.15.0
   reading-time: ^1.5.0
   rehype: ^12.0.1
   remark-autolink-headings: ^7.0.1
@@ -57,7 +57,7 @@ dependencies:
   postcss: 8.4.20
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
-  react-social-icons: 5.6.1_react@18.2.0
+  react-social-icons: 5.15.0_react@18.2.0
   reading-time: 1.5.0
   remark-autolink-headings: 7.0.1
   remark-code-titles: 0.1.2
@@ -3609,10 +3609,10 @@ packages:
   /react-is/16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  /react-social-icons/5.6.1_react@18.2.0:
-    resolution: {integrity: sha512-gQJgBBn0GnV+e+IiZecTfuH2OPGV22G1yWD/ieCUhkHxJWZF2DhRtkTpOpe5+Ao+uWkOf3/jO2u2MjYdTEWFdA==}
+  /react-social-icons/5.15.0_react@18.2.0:
+    resolution: {integrity: sha512-khfDgUiUwEBe34T6br2+mkXQg3hLVDdviVjexxZoVCsogMgxTy/m8+KlX/j6Wa7P2BPxgZ7yZ2jXw3X06pUUFQ==}
     peerDependencies:
-      react: 15.x.x || 16.x.x || 17.x.x
+      react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
