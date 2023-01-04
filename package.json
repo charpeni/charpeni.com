@@ -57,5 +57,10 @@
     "typescript": "4.9.4",
     "unified": "^10.1.2",
     "unist-util-visit": "^4.1.1"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "react-social-icons@5.15.0": "patches/react-social-icons@5.15.0.patch"
+    }
   }
 }

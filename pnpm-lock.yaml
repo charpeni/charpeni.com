@@ -1,5 +1,10 @@
 lockfileVersion: 5.4
 
+patchedDependencies:
+  react-social-icons@5.15.0:
+    hash: hjo7eyj4vcaztink7735d6jpga
+    path: patches/react-social-icons@5.15.0.patch
+
 specifiers:
   '@next/bundle-analyzer': ^13.1.1
   '@next/mdx': 12.2.2
@@ -57,7 +62,7 @@ dependencies:
   postcss: 8.4.20
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
-  react-social-icons: 5.15.0_react@18.2.0
+  react-social-icons: 5.15.0_hjo7eyj4vcaztink7735d6jpga_react@18.2.0
   reading-time: 1.5.0
   remark-autolink-headings: 7.0.1
   remark-code-titles: 0.1.2
@@ -3609,7 +3614,7 @@ packages:
   /react-is/16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
-  /react-social-icons/5.15.0_react@18.2.0:
+  /react-social-icons/5.15.0_hjo7eyj4vcaztink7735d6jpga_react@18.2.0:
     resolution: {integrity: sha512-khfDgUiUwEBe34T6br2+mkXQg3hLVDdviVjexxZoVCsogMgxTy/m8+KlX/j6Wa7P2BPxgZ7yZ2jXw3X06pUUFQ==}
     peerDependencies:
       react: 15.x.x || 16.x.x || 17.x.x || 18.x.x
@@ -3617,6 +3622,7 @@ packages:
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
+    patched: true
 
   /react/18.2.0:
     resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
