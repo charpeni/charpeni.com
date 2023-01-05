@@ -1,6 +1,4 @@
-import NextLink from 'next/link';
-
-import MySocials from '@/components/MySocials';
+import MySocials from './MySocials';
 
 function Separator({ className }: { className?: string }) {
   return <span className={`${className} px-1`}>|</span>;
@@ -15,9 +13,9 @@ export default function Footer() {
       </div>
       <div className="flex flex-col justify-center items-center max-w-2xl mx-auto w-full mt-2 text-sm text-gray-400 dark:text-gray-600">
         <div className="mb-2">
-          <NextLink href="/disclaimer">Disclaimer</NextLink>
+          <a href="/disclaimer">Disclaimer</a>
           <Separator />
-          <NextLink href="/privacy-policy">Privacy Policy</NextLink>
+          <a href="/privacy-policy">Privacy Policy</a>
         </div>
         <div className="flex flex-col md:flex-row items-center">
           <span className="mr-1">© 2021-present Nicolas Charpentier.</span>{' '}

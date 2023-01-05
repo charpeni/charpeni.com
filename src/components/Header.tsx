@@ -1,7 +1,4 @@
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useTheme } from 'next-themes';
 
 function Sun() {
   return (
@@ -46,11 +43,19 @@ function Moon() {
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
-  const { resolvedTheme, setTheme } = useTheme();
-  const router = useRouter();
+  const [theme, setTheme] = useState(localStorage.getItem('theme') ?? 'light');
 
   // After mounting, we have access to the theme
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   return (
     <nav className="flex justify-between items-center max-w-4xl w-full p-8 my-0 md:my-8 mx-auto bg-white dark:bg-black">
@@ -58,24 +63,26 @@ export default function Header() {
         aria-label="Toggle Dark Mode"
         type="button"
         className="bg-gray-200 dark:bg-gray-800 rounded p-3 dark:p-2.5 h-10 w-10"
-        onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+        onClick={() => {
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+        }}
       >
-        {mounted ? resolvedTheme === 'dark' ? <Sun /> : <Moon /> : null}
+        {mounted ? theme === 'dark' ? <Sun /> : <Moon /> : null}
       </button>
       <div>
-        <Link
+        <a
           href="/"
           className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
           onClick={() => {
             try {
-              pa?.track({ name: 'PressingHome', from: router.asPath });
+              pa?.track({ name: 'PressingHome', from: 'TODO' });
             } catch (e) {
               // Too bad.
             }
           }}
         >
           Home
-        </Link>
+        </a>
       </div>
     </nav>
   );

@@ -1,0 +1,110 @@
+---
+import { Image, Picture } from '@astrojs/image/components';
+import { parseISO, format } from 'date-fns';
+import readingTime from 'reading-time';
+
+import BaseHead from '../components/BaseHead.astro';
+import Body from '../components/Body.astro';
+import Container from '../components/Container.astro';
+
+export interface Props {
+  content: {
+    title: string;
+    description: string;
+    publishedAt?: string;
+    image?: {
+      path: string;
+      aspectRatio: string | number;
+    };
+  };
+}
+
+const {
+  frontmatter: { title, description, publishedAt, image },
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <BaseHead
+      title={`${title} | Nicolas Charpentier`}
+      description={description}
+    />
+  </head>
+  <Body>
+    <Container>
+      <article
+        class="flex flex-col justify-center max-w-2xl mx-auto mb-4 w-full"
+      >
+        <h1
+          class="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white"
+        >
+          {title}
+        </h1>
+        <div
+          class="flex flex-row justify-between items-start md:items-center w-full mt-2"
+        >
+          <div class="flex flex-row">
+            <div class="flex items-center">
+              <Picture
+                className="rounded-full"
+                src="./src/images/nicolas_charpentier.jpeg"
+                alt="Picture of the author"
+                width="35"
+                height="35"
+                widths={[96]}
+                aspectRatio={1}
+                sizes="100vw"
+                quality={100}
+                style={{
+                  maxWidth: '100%',
+                  height: 'auto',
+                }}
+              />
+            </div>
+            <div class="flex flex-col ml-2">
+              <span class="text-base text-gray-700 dark:text-gray-300">
+                Nicolas Charpentier
+              </span>
+              <span class="text-sm text-gray-500">
+                {format(parseISO(publishedAt), 'MMMM dd, yyyy')}
+              </span>
+            </div>
+          </div>
+          <span class="text-sm text-gray-500 self-end">
+            <!-- {readingTime(Astro.props.compiledContent())} -->
+            TODO
+          </span>
+        </div>
+        <div class="prose dark:prose-dark max-w-none w-full mt-4 mb-8">
+          <Image
+            alt={title}
+            src={image.path}
+            aspectRatio={image.aspectRatio}
+            width={800}
+            placeholder="blur"
+            priority
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+            }}
+          />
+          <slot />
+        </div>
+        <div
+          class="flex justify-between items-baseline text-sm text-gray-700 dark:text-gray-300"
+        >
+          <div class="flex flex-row items-baseline space-x-2">
+            <span class="underline decoration-2 decoration-yellow-400 pr-2">
+              Share on:
+            </span>
+          </div>
+          <a href={'TODO'} target="_blank" rel="noopener noreferrer">
+            {'📝 Edit on GitHub'}
+          </a>
+        </div>
+      </article>
+    </Container>
+  </Body>
+</html>

@@ -1,0 +1,15 @@
+---
+import Header from './Header';
+import Footer from './Footer';
+---
+
+<div class="bg-white dark:bg-black">
+  <Header client:visible />
+  <main
+    id="skip"
+    class="flex flex-col justify-center bg-white dark:bg-black px-8"
+  >
+    <slot />
+    <Footer />
+  </main>
+</div>

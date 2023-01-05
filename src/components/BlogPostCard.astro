@@ -1,0 +1,44 @@
+---
+import { Picture } from '@astrojs/image/components';
+
+export interface Props {
+  title: string;
+  summary: string;
+  image: {
+    path: string;
+    aspectRatio: string | number;
+  };
+  url: string;
+}
+
+const { title, summary, image, url } = Astro.props;
+---
+
+<a href={url} class="w-full mb-8">
+  <div
+    class="w-full rounded shadow-md hover:shadow-lg dark:ring-1 dark:ring-gray-500 dark:hover:ring-2 dark:hover:ring-gray-400 transition-all"
+  >
+    <div class="relative w-full pt-[30%]">
+      <Picture
+        className="rounded-t"
+        style="position: absolute; height: 100%; width: 100%; inset: 0px; color: transparent; object-fit: cover;"
+        alt={title}
+        src={image.path}
+        fit="fill"
+        aspectRatio={image.aspectRatio}
+        widths={[256, 384, 640, 750]}
+        sizes="min-width: 768px) 85vw, (min-width: 1280px) 50vw, 33vw"
+      />
+    </div>
+    <div class="p-4">
+      <div class="flex flex-col md:flex-row justify-between">
+        <h4
+          class="text-lg md:text-xl font-medium mb-2 w-full text-gray-900 dark:text-gray-100"
+        >
+          {title}
+        </h4>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">{summary}</p>
+    </div>
+  </div>
+</a>

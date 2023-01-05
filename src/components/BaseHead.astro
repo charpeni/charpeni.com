@@ -1,0 +1,125 @@
+---
+// Import the global.css file here so that it is included on
+// all pages through the use of the <BaseHead /> component.
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description: string;
+  image?: string;
+}
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const { title, description, image } = Astro.props;
+---
+
+<!-- Global Metadata -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<!-- Canonical URL -->
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={Astro.url} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={new URL(image, Astro.url)} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:title" content={title} />
+<meta property="twitter:description" content={description} />
+<meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+<link
+  rel="preload"
+  href="/fonts/titillium-web-v9-latin-regular.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin="anonymous"
+/>
+<link
+  rel="preload"
+  href="/fonts/titillium-web-v9-latin-600.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin="anonymous"
+/>
+<link
+  rel="preload"
+  href="/fonts/titillium-web-v9-latin-700.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin="anonymous"
+/>
+<link
+  rel="preload"
+  href="/fonts/titillium-web-v9-latin-900.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin="anonymous"
+/>
+<link href="/static/favicons/favicon.ico" rel="shortcut icon" />
+<link href="/static/favicons/site.webmanifest" rel="manifest" />
+<link
+  href="/static/favicons/apple-touch-icon.png"
+  rel="apple-touch-icon"
+  sizes="180x180"
+/>
+<link
+  href="/static/favicons/favicon-32x32.png"
+  rel="icon"
+  sizes="32x32"
+  type="image/png"
+/>
+<link
+  href="/static/favicons/favicon-16x16.png"
+  rel="icon"
+  sizes="16x16"
+  type="image/png"
+/>
+<link
+  color="#4a9885"
+  href="/static/favicons/safari-pinned-tab.svg"
+  rel="mask-icon"
+/>
+<meta
+  name="theme-color"
+  media="(prefers-color-scheme: light)"
+  content="white"
+/>
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black" />
+<meta content="#ffffff" name="msapplication-TileColor" />
+<meta
+  content="/static/favicons/browserconfig.xml"
+  name="msapplication-config"
+/>
+
+<script is:inline>
+  const theme = (() => {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+      return localStorage.getItem('theme');
+    }
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  })();
+
+  if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.classList.add('dark');
+  }
+  window.localStorage.setItem('theme', theme);
+</script>

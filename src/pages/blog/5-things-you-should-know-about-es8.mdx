@@ -1,9 +1,14 @@
 ---
+layout: '../../layouts/BlogPost.astro'
 title: '5 Things You Should Know About ES8'
 publishedAt: '2017-07-14'
 summary: 'ECMAScript 2017 8th edition (ES2017/ES8) has been officially released and published a few weeks ago, let’s figure it out some important changes. All of these are available with Node 8 and with the latest version of browsers without babel or any polyfills.'
-image: '/static/images/5-things-you-should-know-about-es8/banner.jpeg'
+image:
+  path: './src/images/5-things-you-should-know-about-es8/banner.jpeg'
+  aspectRatio: '1600:300'
 ---
+
+import { Image } from '@astrojs/image/components';
 
 ECMAScript 2017 8th edition (ES2017/ES8) has been officially released and published a few weeks ago, let’s figure it out some important changes. All of these are available with Node 8 and with the latest version of browsers without babel or any polyfills.
 
@@ -99,8 +104,8 @@ The `padEnd()` method pads the current string with a given string (repeated, if 
 
 <div className="img-center">
   <Image
-    alt={`A pad thai`}
-    src={`/static/images/5-things-you-should-know-about-es8/pad-thai.jpeg`}
+    alt="A pad thai"
+    src="./src/images/5-things-you-should-know-about-es8/pad-thai.jpeg"
     width={400}
     height={267}
   />
@@ -110,24 +115,6 @@ Just a delicious pad thai.
 
 ## Trailing commas in function parameter lists
 
-<!-- prettier-ignore-start -->
-```javascript
-function abc(a, b, c,) {} // <- OK
-function abc(
-  a,
-  b,
-  c, // <- OK
-) {
-  // some code
-}
-
-abc('', '', '',); // <- OK
-abc(
-  '',
-  '',
-  '', // <- OK
-);
-```
-<!-- prettier-ignore-end -->
+TODO
 
 Enjoy ES2017!

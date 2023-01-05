@@ -1,9 +1,14 @@
 ---
+layout: '../../layouts/BlogPost.astro'
 title: 'Find What Commit Introduced a Bug With Git Bisect'
 publishedAt: '2022-11-01'
 summary: "Let's see how to efficiently track down a bug even without knowing the codebase."
-image: '/static/images/find-what-commit-introduced-a-bug-with-git-bisect/banner.png'
+image:
+  path: './src/images/find-what-commit-introduced-a-bug-with-git-bisect/banner.png'
+  aspectRatio: '1630:750'
 ---
+
+import { Picture, Image } from '@astrojs/image/components';
 
 As developers, we often have to track down bugs and sometimes, they could be quite tedious to track down, especially within big codebases.
 
@@ -30,8 +35,8 @@ It's a small JavaScript library that does two simple math operations: summation 
 ```javascript
 import { sum, multiply } from './math';
 
-console.log(sum(1, 2));     // Output: 3
-console.log(multiply(3, 4); // Output: 24!?
+console.log(sum(1, 2)); // Output: 3
+console.log(multiply(3, 4)); // Output: 24!?
 ```
 
 Unfortunately, the latest version of the library has a bug that causes the multiplication operation to return the wrong result. We know it was working fine previously, but we need to know when the bug has been introduced or where to fix it.
@@ -63,11 +68,13 @@ You specify the last good commit you know and a bad commit (the one with the bug
 From the following git history, we know that the library used to work at least on the second commit (`Initial setup`) but something broke in between the first commit and the last one.
 
 <div className="img-center">
-  <Image
-    alt={`git bisect step 1`}
-    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-1.png`}
-    width={468}
-    height={80}
+  <Picture
+    alt="git bisect step 1"
+    src={import(
+      '../../images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-1.png'
+    )}
+    widths={[800]}
+    sizes="100vw"
   />
 </div>
 
@@ -82,11 +89,13 @@ git bisect good 52095727dd1afc8517cc9dda06568ae21f9b5850 # this is telling git t
 Then, the bisecting session begin.
 
 <div className="img-center">
-  <Image
-    alt={`git bisect step 2`}
-    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-2.png`}
-    width={468}
-    height={80}
+  <Picture
+    alt="git bisect step 2"
+    src={import(
+      '../../images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-2.png'
+    )}
+    widths={[800]}
+    sizes="100vw"
   />
 </div>
 
@@ -103,22 +112,26 @@ git bisect bad
 ```
 
 <div className="img-center">
-  <Image
-    alt={`git bisect step 3`}
-    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-3.png`}
-    width={468}
-    height={80}
+  <Picture
+    alt="git bisect step 3"
+    src={import(
+      '../../images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-3.png'
+    )}
+    widths={[800]}
+    sizes="100vw"
   />
 </div>
 
 Run the app or the tests, is it working or not? Let git know and move on automatically to the next step. Then, we repeat until we find the commit that introduced the bug by narrowing them down. Don't forget that git is tracking the state of each commit that was tested so you don't have to.
 
 <div className="img-center">
-  <Image
-    alt={`git bisect step 4`}
-    src={`/static/images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-4.png`}
-    width={468}
-    height={80}
+  <Picture
+    alt="git bisect step 4"
+    src={import(
+      '../../images/find-what-commit-introduced-a-bug-with-git-bisect/git-bisect-step-4.png'
+    )}
+    widths={[800]}
+    sizes="100vw"
   />
 </div>
 
@@ -135,11 +148,11 @@ Date:   Thu Aug 25 14:51:39 2022 -0400
 ```
 
 <div className="img-center">
-  <Image
-    alt={`party popper`}
-    src={`/static/images/party-popper.png`}
-    width={120}
-    height={120}
+  <Picture
+    alt="party popper"
+    src={import('../../images/party-popper.png')}
+    widths={[240]}
+    sizes="100vw"
   />
 </div>
 
