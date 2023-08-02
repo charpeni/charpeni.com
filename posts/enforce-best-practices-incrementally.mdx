@@ -1,0 +1,77 @@
+---
+title: 'Enforce Best Practices Incrementally'
+publishedAt: '2023-08-02'
+summary: 'Using Betterer to adopt, enforce, and teach best practices incrementally without having to refactor the whole codebase.'
+image: '/static/images/enforce-best-practices-incrementally/banner.png'
+---
+
+You probably already heard something along the lines of:
+
+> If we can't lint it, then we can't enforce it
+
+But how do you start linting for something without having to refactor the whole codebase first to fix all existing issues? Honorable mention to fixable rules, but unfortunately, it is not always the case and there's not always value in fixing all those issues at once.
+
+For situations where we want to adopt, enforce, and teach best practices incrementally without having to refactor the whole codebase, we need a tool that allows us to enable rules without having to fix all the issues first. Kind of like saying, "_As of today, here's the best practice we want to enforce, but tolerate the code from before_". Adding them as warnings could be helpful, but how do we keep track of new additions? This is where [Betterer](https://phenomnomnominal.github.io/betterer/) comes in.
+
+Betterer is built on the idea of snapshot testing, kind of like Jest would snapshot the output of a function or an HTML snapshot. Betterer can run an [ESLint rule](https://phenomnomnominal.github.io/betterer/docs/eslint-test), a [RegExp](https://phenomnomnominal.github.io/betterer/docs/regexp-test), [TypeScript](https://phenomnomnominal.github.io/betterer/docs/typescript-test), or even [TSQuery](https://phenomnomnominal.github.io/betterer/docs/tsquery-test), then snapshot the result into a result file so it can keep track of known violations as it changes over time.
+
+
+Here are the instructions on how to get started with Betterer: https://phenomnomnominal.github.io/betterer/docs/installation.
+
+If you still need to be convinced, here are some tests that were useful for us.
+
+### Prefer named exports
+
+We used to rely on default exports, but preferred to use named exports instead. This is how we enforced it:
+
+```js:.betterer.js
+const { eslint } = require('@betterer/eslint');
+
+module.exports = {
+  'should use named exports': () =>
+      eslint({ 'import/no-default-export': 'error' })
+        .include('**/*.{js,jsx,ts,tsx}'),
+  // ...
+};
+```
+
+### Prefer strict-mode TypeScript
+
+We do use strict mode with TypeScript, except for a few files where we disabled it via `@ts-strict-ignore` and the goal is to incrementally adopt strict mode without adding new files that don't respect it. This is how we enforced it:
+
+```js:.betterer.js
+const { regexp } = require('@betterer/regexp');
+
+module.exports = {
+  'should write more strict-mode Typescript': () => regexp(/(\/\/\s*@ts-strict-ignore)/i).include('**/*.{ts,tsx}'),
+  // ...
+};
+```
+
+### Prefer TypeScript over JavaScript
+
+We do prefer TypeScript over JavaScript, but like many projects, it started with JavaScript and not everything has been migrated over. We want to continue the incremental adoption of TypeScript, but we also want to prevent new files from being created in JavaScript. This is how we enforced it:
+
+```js:.betterer.js
+const { BettererFileTest } = require('@betterer/betterer');
+
+function countFiles(issue) {
+  return new BettererFileTest(async (filePaths, fileTestResult) => {
+    filePaths.forEach((filePath) => {
+      // In this case the file contents don't matter:
+      const file = fileTestResult.addFile(filePath, '');
+      // Add the issue to the first character of the file:
+      file.addIssue(0, 0, issue);
+    });
+  });
+}
+
+module.exports = {
+  'should use typescript': () => countFiles('use typescript instead of javascript').include('**/*.{js,jsx}'),
+  // ...
+};
+```
+
+### Bonus: Instant Feedback in the IDE
+
+Unfortunately, Betterer doesn't provide feedback in the IDE when you write violations to rules specified in `.betterer.js`. However, if the rule is an ESLint rule, what we do to get instant feedback is to enable the rule, but as a warning rather than an error so it doesn't block the CI, and does provide feedback for newly added violations as well as existing ones that will need to be migrated.
