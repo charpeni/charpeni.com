@@ -1,0 +1,46 @@
+---
+title: 'Use Custom Merge Driver to Simplify Git Conflicts'
+publishedAt: '2023-08-03'
+summary: "Tired of solving merge conflicts manually when it could be automated? Let's leverage Git's custom merge driver to simplify the process."
+image: '/static/images/use-custom-merge-driver-to-simplify-git-conflicts/banner.gif'
+---
+
+If you check generated files under source control, you'll probably end up dealing with merge conflicts. Those conflicts are easy to resolve because all you have to do is to generate those files again, but still, having to resolve those conflicts manually could be quite disruptive.
+
+Before we jump into custom merge drivers, let's share context on how I discovered this feature and how helpful it has been for me.
+
+### Preamble to the custom merge driver
+
+We use [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) to generate TypeScript types based on our GraphQL, and as we're scaling GraphQL usages within our codebase, it means that we're starting to have a significant number of generated types. Therefore, generated files are getting changed by multiple people at the same time and multiple pull requests. Everything worked well at first, but as we continued to scale, we hit a point where we always had to rebase our branches to fix conflicts on generated files.
+
+GraphQL Code Generator is used here to bring the concept, but the same thing could be applied to any generated files, think of lock files (e.g., `yarn.lock`, `package-lock.json`, or `pnpm-lock.yaml`).
+
+### But how do we solve conflicts with generated files?
+
+The only way to fix it, which is to re-execute the command used to generate those files. Manually editing them would be non-sense because the command should be deterministic based on the input, and it's much easier just to regenerate them since the input/source changed.
+
+> 💡 Did you know the official way to solve merge conflicts within `yarn.lock` is to run `yarn install` again? Known as the [auto-merge feature](https://github.com/yarnpkg/yarn/pull/3544).
+
+### Can we automate this?
+
+That's where using a Git custom merge driver is handy! You can define a [custom merge driver](https://git-scm.com/docs/gitattributes#_defining_a_custom_merge_driver) and let Git handle it for you!
+
+Again, we'll use GraphQL Code Generator as an example, but the same thing could be applied to your package manager as well.
+
+The first thing we need to do is to define a custom merge driver in your `.gitconfig` file. Ideally, we would also like to install fresh dependencies to make sure we're using the latest version of the codegen, so we'll use `yarn install` (or your alternative command) as part of the merge driver, then the command used to generate the files, in this context: `yarn generate`:
+
+```ini:.gitconfig
+[merge "graphql-codegen"]
+    name = "graphql codegen merge driver"
+    driver = yarn install && yarn generate
+```
+
+Finally, we need to associate the merge driver with the generated files. For GraphQL Code Generator, generated files are located in `__generated_graphql_types__/`.
+
+We can do that by adding the following to your `.gitattributes` file:
+
+```ini:.gitattributes
+__generated_graphql_types__/** merge=graphql-codegen
+```
+
+From now on, every time Git encounter a merge conflict related to the generated files, it will run our custom merge driver behind the scene. You won't even notice it anymore!
