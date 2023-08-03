@@ -1,8 +1,8 @@
 ---
-title: 'Enforce Best Practices Incrementally'
+title: 'Enforce Best Practices Incrementally With Betterer'
 publishedAt: '2023-08-02'
 summary: 'Using Betterer to adopt, enforce, and teach best practices incrementally without having to refactor the whole codebase.'
-image: '/static/images/enforce-best-practices-incrementally/banner.png'
+image: '/static/images/enforce-best-practices-incrementally-with-betterer/banner.png'
 ---
 
 You probably already heard something along the lines of:
@@ -14,7 +14,6 @@ But how do you start linting for something without having to refactor the whole 
 For situations where we want to adopt, enforce, and teach best practices incrementally without having to refactor the whole codebase, we need a tool that allows us to enable rules without having to fix all the issues first. Kind of like saying, "_As of today, here's the best practice we want to enforce, but tolerate the code from before_". Adding them as warnings could be helpful, but how do we keep track of new additions? This is where [Betterer](https://phenomnomnominal.github.io/betterer/) comes in.
 
 Betterer is built on the idea of snapshot testing, kind of like Jest would snapshot the output of a function or an HTML snapshot. Betterer can run an [ESLint rule](https://phenomnomnominal.github.io/betterer/docs/eslint-test), a [RegExp](https://phenomnomnominal.github.io/betterer/docs/regexp-test), [TypeScript](https://phenomnomnominal.github.io/betterer/docs/typescript-test), or even [TSQuery](https://phenomnomnominal.github.io/betterer/docs/tsquery-test), then snapshot the result into a result file so it can keep track of known violations as it changes over time.
-
 
 Here are the instructions on how to get started with Betterer: https://phenomnomnominal.github.io/betterer/docs/installation.
 
