@@ -1,0 +1,147 @@
+---
+title: 'Properly type Object.keys and Object.entries'
+publishedAt: '2023-08-07'
+summary: "Have you ever noticed that Object.keys and Object.entries are a little bit tricky to work with in TypeScript? They won't return what you would expect. Here's how to properly type them."
+image: '/static/images/properly-type-object-keys-and-object-entries/banner.png'
+---
+
+Have you ever noticed that [`Object.keys`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/keys) and [`Object.entries`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/entries) are a little bit tricky to work with in TypeScript? They won't return what you would expect, even with a [readonly object](https://www.typescriptlang.org/docs/handbook/utility-types.html#readonlytype).
+
+Let's have a peek at it.
+
+For the following object combined to a [`const` assertion](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) to allow TypeScript to take the most specific type of the expression and set properties to `readonly`:
+
+```typescript
+const data = {
+  a: 'value-a',
+  b: 'value-b',
+  c: 'value-c',
+} as const;
+```
+
+You would expect [`Object.values`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/values) to return the literal values of the object, and you'll be right:
+
+```typescript
+const values = Object.values(data);
+//    ^? const values: ("value-a" | "value-b" | "value-c")[]
+```
+
+But what about `Object.keys` and `Object.entries`?
+
+## Object.keys
+
+Calling `Object.keys` with our object returns `string[]`:
+
+```typescript
+const keys = Object.keys(data);
+//    ^? const keys: string[]
+```
+
+And this is by design! `Object.keys` **always** returns `string[]`:
+
+```typescript
+/**
+ * Returns the names of the enumerable string properties and methods of an object.
+ * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+ */
+keys(o: {}): string[];
+```
+
+[🔗 Source](https://github.com/microsoft/TypeScript/blob/36ac4eb700ce596033762b821545753753d13444/src/lib/es2015.core.d.ts#L301-L305).
+
+This is because types are intentionally open-ended in TypeScript so it can't always guarantee that your object types don't contain excess properties, even when defined with a `const` assertion. 😥
+
+It may be be different when [`Record`](https://github.com/tc39/proposal-record-tuple) (a deeply immutable Object-like structure) lands. 🤞
+
+### Solution
+
+Fortunately, TypeScript offers a [`keyof` type operator](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html) that returns the type of the keys of a given type:
+
+> ⚠️ Be mindful that this is only effective if you know the object is immutable and won't contain any extra properties.
+
+```typescript
+// Type is followed by `& {}` so we could simplify the type as the actual content rather than just displaying `Keys`
+type Keys = (keyof typeof data)[] & {};
+//   ^? type Keys = ("a" | "b" | "c")[]
+```
+
+Then, once we captured what are the possible values of the keys, we can cast the result of `Object.keys` to our type:
+
+```typescript
+const typedKeys = Object.keys(data) as Keys;
+//    ^? const typedKeys: ("a" | "b" | "c")[]
+```
+
+Or alternatively, the inlined version:
+
+```typescript
+const typedKeys = Object.keys(data) as (keyof typeof data)[];
+//    ^? const typedKeys: ("a" | "b" | "c")[]
+```
+
+We can even push it a little bit further and create a generic function that will wrap this up for us:
+
+```typescript
+function keysFromObject<T extends object>(object: T): (keyof T)[] {
+  return Object.keys(object) as (keyof T)[];
+}
+
+const typedKeys = keysFromObject(data);
+//    ^? const typedKeys: ("a" | "b" | "c")[]
+```
+
+## Object.entries
+
+The same thing applies to `Object.entries`.
+
+`value` works as expected, but `key` is typed as a `string`:
+
+```typescript
+const entries = Object.entries(data).map(
+  ([key, value]) => [key, value],
+  // ^? (parameter) key: string
+);
+```
+
+### Solution
+
+We can still leverage the `keyof` type operator combined with a generic type to capture the keys of the object and then cast the result of `Object.entries` to our type:
+
+```typescript
+type Entries<T> = {
+  [K in keyof T]: [K, T[K]];
+}[keyof T][];
+
+const typedEntries = (Object.entries(data) as Entries<typeof data>).map(
+  ([key, value]) => [key, value],
+  // ^? (parameter) key: "a" | "b" | "c"
+);
+```
+
+Again, we can push this a little further by either using [`Entries`](https://github.com/sindresorhus/type-fest/blob/main/source/entries.d.ts) from [`type-fest`](https://github.com/sindresorhus/type-fest):
+
+```typescript
+import type { Entries } from 'type-fest';
+
+const typedEntries = (Object.entries(data) as Entries<typeof data>).map(
+  ([key, value]) => [key, value],
+  // ^? (parameter) key: "a" | "b" | "c"
+);
+```
+
+Or by creating our own generic function:
+
+```typescript
+function entriesFromObject<T extends object>(object: T): Entries<T> {
+  return Object.entries(object) as Entries<T>;
+}
+
+const typedEntries2 = entriesFromObject(data).map(
+  ([key, value]) => [key, value],
+  // ^? (parameter) key: "a" | "b" | "c"
+);
+```
+
+## TypeScript Playground
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?ssl=63&ssc=3&pln=56&pc=1#code/MYewdgzgLgBAJgQygmBeGBvAUDGCBcMA5AG4IA2ArgKYC0CRANDjAEaGkU22tMvAcyVOsD4BfPBBihIUANxYsAegBUKnCpgB5VgCtqwKADohNCBqWKZ0GKepT0O-YZNd7ACkTIAlAqVLcXAA9AH5FVU0NbT0DYwBragBPKQsrcBsE5LRo53ikiE8kBF9lAMDQ8ICAFUSAB2oYAEspADMQcnIQAHdqODZEmAADADJMMUGYCBAYHukQSnI+iEaAW1ryRpaBqAALBqg6hoQpXaPDSgo5sChqa5gAJyQ9+5hdhDAYXUobOGb1hESjTAAHMhgBpfKDLAHeowCFZdDuTIgFqvQ4o+BFbwAbQAujBRhgxH4yjAKlhrLAYb14Q4crEjJkCl5ipI4fkSYEyWEKekqYc4LSAEzZJwMpmFHxspFJDHUjEsnG4znlHktShgQyNcAwJkAMXuIBWYsMAB4qjBqAAPG5gOBSEAxQwAPncjtyhCq3kIMsSGK9eMwLHu1CglHuHxNeWSbqdUG80uRqIDyqwYjSsjR9UF+QAzNl9YbjXHJcUVcEeREolGjLcoPdGvZUrzM3WG-ZRXHa9d28ysUYVghau4WO5sZlGLY3LiE6hnTAxxOp8IZyx-NysCVoYcYABRHuNiDm+fobC4bFgpofJMwKq4wgXydVC+41Nicey5O4vEKFs2alwPu9aHtk7g1m2h6lgmxx7ge9imvKqIss63gDkOI64IuSSTnYM5oPOWGJDh07eGuAQVFu6qalA2ofBB9gGkaUbmpaNq3PaMDurErpcYYnrerBwHwVU85ng8obhpGXb0QUvHxmyQG9seCjpn+-LZoph4iugMmMcWuRQWhw6jh+RHLjQeFzgupnESupG4OuFEKEAA).
