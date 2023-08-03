@@ -15,6 +15,16 @@ module.exports = withBundleAnalyzer(
         },
       ];
     },
+    async redirects() {
+      return [
+        {
+          source: '/blog/enforce-best-practices-incrementally',
+          destination:
+            '/blog/enforce-best-practices-incrementally-with-betterer',
+          permanent: true,
+        },
+      ];
+    },
   }),
 );
 
