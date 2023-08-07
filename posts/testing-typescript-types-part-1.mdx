@@ -1,0 +1,149 @@
+---
+title: 'Testing TypeScript Types: Part 1'
+publishedAt: '2023-08-08'
+summary: 'Preamble and early solution to start testing TypeScript types.'
+image: '/static/images/testing-typescript-types-part-1/banner.png'
+---
+
+We often test our JavaScript or TypeScript code, but what about TypeScript types?
+
+As we start using [type assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)—which could be a bit confusing at first because it doesn't assert anything, it tells the compiler to trust us—we might want to test them to ensure it is the case today and tomorrow.
+
+Before we jump into details of how to test TypeScript types, let's see what led me there.
+
+> ℹ️ If you're not interested in the preamble and want to jump directly to the advanced solutions, you can [go to part 2 right away](/blog/testing-typescript-types-part-2).
+
+## Preamble
+
+We had a specific context where we were migrating from a REST API to a GraphQL API, the data on the REST API was represented as an [enum](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#enums), but the GraphQL API used a union of [string literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types):
+
+```typescript
+enum OldEnum {
+  Apple = 'apple',
+  Orange = 'orange',
+}
+
+type NewUnion = 'apple' | 'orange';
+//   ^? type NewUnion = "apple" | "orange"
+```
+
+We can see that they are both equivalent because they will both contain the same values, but the compiler doesn't know that, or not quite yet.
+
+If we have a function that takes an `OldEnum` as a parameter, we can't pass a `NewUnion` to it because the compiler doesn't know that they are equivalent:
+
+```typescript
+function doSomethingWithOldEnum(param: OldEnum) {
+  console.log(param);
+}
+
+doSomethingWithOldEnum(OldEnum.Apple); // OK
+doSomethingWithOldEnum('apple');
+// ^ Argument of type '"apple"' is not assignable to parameter of type 'OldEnum'.(2345)
+```
+
+Doing the reverse situation would have been possible because we can validate an enum value against a union of string literals:
+
+```typescript
+function doSomethingWithNewUnion(param: NewUnion) {
+  console.log(param);
+}
+
+doSomethingWithNewUnion('apple'); // OK
+doSomethingWithNewUnion(OldEnum.Apple); // OK
+```
+
+But how do we pass `NewUnion` to a function that expects an `OldEnum`?
+
+We'll need to use a [type assertion](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) to tell the compiler to trust us because we visually confirmed that they are both equivalent, and therefore we're letting the compiler know:
+
+```typescript
+function convertNewUnionToOldEnum(param: NewUnion) {
+  return param as OldEnum;
+}
+
+const value = convertNewUnionToOldEnum('apple');
+//    ^? const value: OldEnum
+
+doSomethingWithOldEnum(value); // OK
+```
+
+As of today, we know that both types are equivalent, and that's why we can use a type assertion to tell the compiler to trust us. But what about tomorrow? What if we add a new value to the `OldEnum`? What if we remove one? What if we rename one? They won't be 1:1 anymore.
+
+This is where a test for a TypeScript type could be useful!
+
+## Early Solution
+
+Here, I'll present the early solution I adopted for this use case because I couldn't find a better one at the time. I believe it is still useful, but could be a little bit confusing at first. I will explain why.
+
+First thing we need to do, is exactly like we did previously, we need to assert that both types are equivalent. But how to compare them?
+
+First, we can convert the enum into a union of string literals using a [template literal](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html):
+
+```typescript
+// We can convert the old enum into a union with template literal
+type OldEnumAsUnion = `${OldEnum}`;
+//   ^? type OldEnumAsUnion = "apple" | "orange"
+```
+
+Then, we can visually assert that they are equivalent:
+
+```typescript
+type NewUnion = 'apple' | 'orange';
+//   ^? type NewUnion = "apple" | "orange"
+```
+
+From here, all we have to do is to turn this in a TypeScript error if they are not.
+
+Here's a helper type we can create to do that, it will check if the two provided types are contrained with each other:
+
+```typescript
+/**
+ * Helper type to assert that a type is exactly equal to another type.
+ *
+ * @example
+ * type Example = IsExact<NewUnion, 'apple' | 'orange'>;
+ * //   ^? type Example = true
+ */
+export type IsExact<T, U> = [T] extends [U]
+  ? [U] extends [T]
+    ? true
+    : false
+  : false;
+```
+
+Since it's a type and can't be used as-is, we need to combine it to an assert function. The name here could be a little bit confusing because it doesn't assert anything at runtime (the function body is empty), actually, the function will be totally no-op at runtime. Also, it has **nothing** to do with [assertion functions](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) from TypeScript.
+
+```typescript
+/**
+ * A function to assert a type is exactly equal to another type at compile time (no-op at runtime).
+ *
+ * Initially introduced for GraphQL <> REST API adapters as we used to have enums to represent values,
+ * and we now rely on union types. In most cases, values expressed by enums are the same as the union types,
+ * but we want to ensure that we don't drift away from the original values so we can safely cast them.
+ *
+ * @param expectTrue - A boolean value that should be true if the type is exactly equal to another type.
+ *
+ * @example
+ * assertType<IsExact<NewUnion, 'apple' | 'orange'>>(true);
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- this is expected as the function doesn't do anything at runtime
+export function assertType<T extends true | false>(expectTrue: T) {}
+```
+
+Finally, we can go back to the convert function we created earlier and use the `assertType` function to turn the type assertion into a **type-safe assertion**!
+
+```typescript
+function convertNewUnionToOldEnum(param: NewUnion) {
+  assertType<IsExact<NewUnion, OldEnumAsUnion>>(true);
+
+  return param as OldEnum;
+}
+```
+
+Doing such will make sure that it is always safe to cast `NewUnion` to `OldEnum` and that we won't drift away from the original values.
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/KYOwrgtgBA8gNgEwKLmgbwFBSgQQA55zBQC8UA5AIYFHkA0WsATpSAObFnkD2L7w5DAF8MGAC4BPPMQBywAO4BVEAEtuIUhWqEBUAD4VerDuQDcGAPQXsUAHoB+URYBUzrM9iIUkKAFoAfFBySqrq7haiAGZgIADGYmoaCNwAytwQwGIAFirsAOoq2cHKiQAUeJQsEABcQQol6gCUUJjYseoAztxEAHRw3GzllZQQjeYiGMlpGdm5bAVF9aEgpVQ0AmOTqemZOfmFWcXLpfDIqD34OpuWru51IYl+gafeEOEY0XEJ6lBTO7P7bIvVBDKq1YGQZqtKDtEBdXr9QYVKqbCZ-GZ7eYHCEQE5ec6XIibdG7OYLLI41baWibKx2XBMNiQUBiKDcSJQSTSCgAImpwB55CgKg6UBA3FZlA6HRUbBAlAARkROdwoMiRplgEw2RyucRyDjyD1SgAmADMABYAKyNJy3KAeRQy9hQSicqTEKUdLXfDRiVWxKWsgAGR0SweFIH9UGDOOD7w+MXij1hADcfWH1AAVbiU9U1e4NEBQxhMTJgJgafOu0U48aiWEdVmpyhwMCcGHqdNMMSZkA5ylrHTkWnWGwOUQkgFYoH4yClFtt4DXFxuB1QJCVOASKBpNu+hN0vLEQMaNM+zlZYjdBBQUA+XLRt0xR7yA6c4AQQiUMTEOCFLVW3ED1PDOSAcA6ItNGDAASNAcSEYNzDpbAJxuNcPAACWAOBpG1PUVRrb0e0vH9XXdbkRTvAAPSh4m3O8AEcwFbQjWAlK98I9Hp3DuAABYBaK-Ig7gIpAhJ0TQAEkOnEuixAAHj7OgtHWIUDB4PgTH8cx1xQux7Ao4g5OEjsxCYdt3kEvBeFZAiZLk+IFKzFTFECMgAG0swAXRo38QAQUUPMUbzGEM4LfME-zAqgLzQpsKBDPMyyEtqSJW29Rg0oy4BzHQu4cCgT5kx+J9pQvN0CKowT5IY4BmNYp9xWyLUjNdVl2i-FRlQSDIoFKcVfG4PB2qgCyoxUDJGh4h07ik1QElbBjHyYbgEDAWJgFvSJeCgABxFg8CyABFAAZKAFMCAAlJAUizXAAAUpNdBBqF-JhRSlKB5GIMBvVvaMskodM71QUVozLPAy29KMoEXdsOgYddWFvH6xW4eQxpwncfhfUqPQ6HooHmqAIG4JsYSlYBEbh1sEZoqHqf+qAFR3e8IE+stL2IDoNRrbmoDxv0CaRjwFTAVk0fkVg7NVUAOgrYhsjItHkhAchWQQJgVEiSVpZ3SJVugFq2W1thclY+HqagLpvpPVgbcoSJscpimWogGaMKgPjq2s4B4izCziF8XAWe4bpgAdq3SNZDosm4MBEBZpWg+FXUrza6raPotmGrgNjms4ozPf4mrTLuL0fSzD0FIc7PFJSf0mAkavpBU8hnZ-RX1IocW2B78hYnjstyH8fxSmS5ddOcCI6Wp-8o18BARUVIhfBAKLfAX4g+L1DpYm1vAxF8efHwsQaYj+rbfBbD6-BD2ZRSz6R4i2-mTeK31fm4an1c11VWASGnKNcavVgAYGsrZIqSYv6Vx7K3YAzk-KgBipPfQRUcrjz9gHIOtQsxQgmHAsQCDa6yXrkpJYiQVI4ggkWMeE8g6bCISQuu8kKEPHUNQucEBaHLHQeQLoGI5gnzgN6Ue49J5jCAA).
+
+Even though the solution described here could be convenient, it had some cons as well. It's a little bit weird to see a no-op function called at runtime for TypeScript, the assert function won't change anything to types, and therefore it could be silently removed. It will generate an error at compile-time if both types aren't matching, but it would be more discoverable if it was part of the test suite rather than the compilation process.
+
+Read the [second part](/blog/testing-typescript-types-part-2) to learn more about advanced solutions.

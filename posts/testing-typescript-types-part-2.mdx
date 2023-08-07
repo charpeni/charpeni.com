@@ -1,0 +1,115 @@
+---
+title: 'Testing TypeScript Types: Part 2 (Advanced Solutions)'
+publishedAt: '2023-08-09'
+summary: 'Advanced solutions to test TypeScript types.'
+image: '/static/images/testing-typescript-types-part-2/banner.png'
+---
+
+The [first part of this series](/blog/testing-typescript-types-part-1) covered the preamble as well as an early solution used to test TypeScript types, it had some flaws, like not being run as part of a test suite.
+
+Let's cover some advanced solutions that will make the integration of type testing into your project a breeze.
+
+## expect-type
+
+📚 https://github.com/mmkal/expect-type (193 ⭐ — 67,276 weekly downloads)
+
+> Compile-time tests for types. Useful to make sure types don't regress into being overly-permissive as changes go in over time.
+
+My ✨ favorite ✨ and also used by [Type Fest](https://github.com/search?q=repo%3Asindresorhus%2Ftype-fest%20expect-type&type=code), [Apollo Client](https://github.com/apollographql/apollo-client/blob/1ac6ddab2410b5a25ef58a58176ff6d677f4fb1b/package.json#L136), [Prisma Client](https://github.com/prisma/prisma/blob/c197739f32f864c3a4b9b3e009b1e683008d648c/packages/client/package.json#L107), and [tRPC](https://github.com/trpc/trpc/blob/340df3132b60384e0c932b59653b847875cf8064/packages/client/package.json#L87).
+
+Quite easy to use and could be used directly within your existing test files—or any other type-checked files.
+
+```typescript
+import { expectTypeOf } from 'expect-type';
+import { foo, bar } from '../foo';
+
+test('foo types', () => {
+  // make sure `foo` has type {a: number}
+  expectTypeOf(foo).toMatchTypeOf<{ a: number }>();
+
+  // make sure `bar` is a function taking a string:
+  expectTypeOf(bar).parameter(0).toBeString();
+  expectTypeOf(bar).returns.not.toBeAny();
+});
+```
+
+If we follow the test case from the preamble, we can write the following test:
+
+```typescript:convertNewUnionToOldEnum.test.ts
+import { expectTypeOf } from 'expect-type';
+import { convertNewUnionToOldEnum, type NewUnion, type OldEnumAsUnion } from '../convertNewUnionToOldEnum';
+
+describe('convertNewUnionToOldEnum', () => {
+  it('should cast to an equivalent type', () => {
+    expectTypeOf<NewUnion>().toEqualTypeOf<OldEnumAsUnion>();
+  });
+});
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/KYOwrgtgBA8gNgEwKLmgbwFBSgQQA55zBQC8UA5AIYFHkA0WsATpSAObFnkD2L7w5DAF8MGAC4BPPMQBywAO4BVEAEtuIUhWqEBUAD4VerDuQDcGAPQXsUAHoB+UVagB1YgGNWUd+oBuwJjEoMQALYm5EKFBIKBUQMW4oSigwVXUoeRVQ4OAIQkoxYjgsgMo4cSlieGRUHABnZTUNMgADABI0apRIIRbzZ2wHJwAqYaxhqIAPaXcxAFpJaXGLURU83iC0KZmxABVKmAAzKCEoQ6ZuaHJgaeBZhcqzURud-ekjgB45JTSQAD4ABQASgAdAkkABHMBlN7AT5dWoNX6AoHmF53PYHQ5fBSNdQosHcSHQuCw+GIboQep4jQGch1S7AUJxNhzYBwOoCFHmIA).
+
+## tsd
+
+📚 https://github.com/SamVerschueren/tsd (2,100 ⭐ — 118,463 weekly downloads)
+
+> Check TypeScript type definitions.
+>
+> This tool lets you write tests for your type definitions (i.e. your .d.ts files) by creating files with the .test-d.ts extension.
+
+Used by [Type Fest](https://github.com/sindresorhus/type-fest/blob/f63c3437bc483e7532698d14548494802c04f372/package.json#L39), [Puppeteer](https://github.com/puppeteer/puppeteer/blob/8b8770c004ba842496e0ca4845642fe82a211051/package.json#L166), [Socket.IO](https://github.com/socketio/socket.io/blob/c332643ad8b2eff3a9edee432bfd53fb37559280/package.json#L69), [Bun](https://github.com/oven-sh/bun/blob/5ce393aab815f38ce9594d8a7d481a608ee8524c/packages/bun-types/package.json#L7), [VueJS](https://github.com/vuejs/core/blob/3be4e3cbe34b394096210897c1be8deeb6d748d8/packages/dts-test/utils.d.ts#L10), and [Prisma Client](https://github.com/prisma/prisma/blob/bd7cacbf3ca950ee70f350b2d64cf597b5a991a4/packages/client/package.json#L140).
+
+```typescript:index.test-d.ts
+import {expectType} from 'tsd';
+import concat from '.';
+
+expectType<string>(concat('foo', 'bar'));
+expectType<string>(concat(1, 2));
+```
+
+## ts-expect
+
+📚 https://github.com/TypeStrong/ts-expect (175 ⭐ — 95,554 weekly downloads)
+
+> Checks values in TypeScript match expectations.
+>
+> **TS Expect** exports a function, named `expectType`, that does nothing at all. Instead, it depends on the TypeScript compiler and a generic to test the type of a "value" passed to `expectType` is assignable to its generic in the type system.
+
+Used by [Chart.js](https://github.com/chartjs/Chart.js/blob/095a9849f4e2c9a9acc134d107050b6d374fa1b8/test/integration/typescript-node-next/package.json#L13), [Prettier](https://github.com/prettier/prettier/blob/5e1deda8ddc471d73c0219567d0ebd2b692c594e/package.json#L153), [Marked](https://github.com/markedjs/marked/blob/9c5721ecd00a4ef60b4510d316bb767523b9c87b/package.json#L72), and [Jotai](https://github.com/pmndrs/jotai/blob/3a1a8f18aa5aea4242385d3a34a6289f8878a193/package.json#L161).
+
+Quite similar to the early solution I shared in part 1:
+
+```typescript
+import { expectType } from 'ts-expect';
+
+expectType<string>('test');
+expectType<number>(123);
+expectType<number>('test'); // Compiler error!
+```
+
+It even has the equivalent of `isExact`:
+
+```typescript
+import { expectType, TypeEqual } from 'ts-expect';
+import { add } from './adder';
+
+expectType<number>(add(1, 2));
+expectType<TypeEqual<number, ReturnType<typeof add>>>(true);
+expectType<TypeEqual<[number, number], Parameters<typeof add>>>(true);
+```
+
+## type-plus
+
+📚 https://github.com/unional/type-plus (264 ⭐ — 2,903 weekly downloads)
+
+> Additional types and types adjusted utilities for TypeScript.
+
+This is the most complicated one here, but I thought it was worth sharing because it's way bigger and more complete than the other alternatives. `type-plus` is in fact more than 200 type utilises for TypeScript, useful not only for tests, but also at the application level.
+
+Here's an example with `assertType` that provides a generic assertion function:
+
+```typescript
+const s: unknown = 1;
+
+// TypeError: subject fails to satisfy s => typeof s === 'boolean'
+assertType<boolean>(s, (s) => typeof s === 'boolean');
+```
