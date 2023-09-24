@@ -1,0 +1,69 @@
+---
+title: 'Graphite: The End of Mammoth Pull Requests? My Experience'
+publishedAt: '2023-09-25'
+summary: 'Ever felt trapped by colossal pull requests or tangled in merge conflicts? Dive into my experience with Graphite, the game-changer in code reviews. Discover the power of stacking, stay unblocked, and embrace a smoother Git journey. 🚀'
+image: '/static/images/graphite-the-end-of-mammoth-pull-requests-my-experience/banner.png'
+---
+
+Have you ever felt overwhelmed by a huge pull request? Or maybe that colossal pull request was yours? So, you tried to split it up manually in multiple pull requests, but as soon as you merged one, they all started conflicting because it was squashed, and other branches don't recognize the original commit anymore? 😵‍💫 We've all been there. But what if there was a tool that could change the game?
+
+Enter [Graphite](https://graphite.dev/), a tool that's revolutionizing the way developers work with pull requests.
+
+## Why Graphite?
+
+Picture this: No more waiting ages for reviews. Instead, you craft smaller pull requests that are a breeze to check. Oh, and what if you don't have to wait for them to be merged before continuing your work? Sounds like a dream? That's the Graphite way.
+
+Graphite's goal is simple: Make pull requests smaller, keep developers moving, and get code out there faster. And the best part? It's built to work smoothly with GitHub & VS Code.
+
+## The Power of Stacking
+
+Graphite introduces us to "stacking." Top-notch engineers are already using this method. It's about building on existing code without waiting for it to merge first. Think of it as layering changes, where each layer is a neat, focused change. It reminds me of [Phabricator](https://www.phacility.com/phabricator/) (used by Meta and many others).
+
+<div className="img-center">
+  <Image
+    alt={`Graphite example of stacking pull requests`}
+    src={`/static/images/graphite-the-end-of-mammoth-pull-requests-my-experience/graphite_example.png`}
+    width={600}
+    height={239}
+  />
+</div>
+
+I've seen people reviewing pull requests by looking at individual commits, unfortunately, GitHub doesn't make it easier as you'll often leave comments on individual commits rather than the pull request. Also, you'll probably have to read through WIP (if not squashed) and back and forth between ramifications, while just using stacked PRs will easily split the line between relevant changes.
+
+By keeping pull requests small, Graphite makes sure they're easy to understand. It's way simpler to spot issues in a short change than in a long, winding one.
+
+## Stay Unblocked and Ship Faster
+
+Being held up by pending reviews? Graphite's got your back. It speeds up the process, merging changes as soon as they get the green light. And if you've got a bunch of changes ready to roll? One click, and they're all merged, thanks to the merge queue, which will merge your stacked pull requests one by one and also rebase them automatically for you.
+
+## My Experience
+
+**For instance**, imagine working on a feature that requires a database change, a backend adjustment, and a frontend update. Instead of one massive PR encompassing all these changes, you can have three stacked PRs with Graphite. The first PR handles the database, the second builds on the first and tweaks the backend, and the third updates the frontend based on the second. Each PR is concise, focused, and easier to review.
+
+Some other examples where stacking PRs are useful are when you're introducing something new but also want to refactor something else to make it more concise. They are both related, but it doesn't make sense for the reviewer to review both changes in the same pull request. Therefore, stacking them is useful, and you can then continue your work based on the later pull request.
+
+One last example of where Graphite was useful is with a library we had to upgrade, and we were multiple versions behind with a significant number of breaking changes. We made a stacked pull request for every major bump. Therefore, it was a breeze to review as you just had to check the release notes and migration guides and compare the diff rather than reading ten migration guides and tracking relevant changes within a single pull request.
+
+## A Fresh Take on Git
+
+For those who love diving into commands, meet the Graphite CLI. It's all about making common tasks simpler and managing branches like a pro. And for the VS Code fans, there's a treat: the Graphite VS Code extension. It brings the power of the CLI right into your editor. Rebasing, making changes, sorting out merge issues—it's all there.
+
+I won't dive in into commands because they tend to change often (pre V1) and I don't want to write outdated information here, but I can talk a little bit about principles.
+
+First, you need to track a branch and when starting to track it, Graphite will ask you what's the parent branch. If you already branched of another branch, well, Graphite is smart enough to suggest it as the parent. Then, you can start stacking pull requests on top of it. You can also track a branch that's already tracking another branch, and it will automatically stack it on top of the parent branch. You changed something in one of those branches? No worries, Graphite got you covered, you can easily restack your pull requests so they are all up-to-date. No need to manually call `git rebase` on them and have to deal with non-sense conflicts.
+
+My workflow is usually:
+
+1. Track branch, parent from `main`
+1. Create a new branch
+1. Track the new branch, parent from the previous branch
+1. Repeat step 2 and 3 until I'm done with my feature
+1. Submit my stack to GitHub via the CLI—which will automatically create all pull requests on GitHub with the proper target branch.
+
+If you merged the first pull request of the stack, you can easily sync your repo, which will delete merged branches and restack pull requests that were based on the merged branch. If you would like to merge multiple pull requests from the same stack, well lucky you, I mentioned the merge queue earlier, which will merge them one by one for you and even rebase them automatically so you don't have to wait for your CI (always taking forever) to run again.
+
+## Wrapping Up
+
+Graphite isn't just another tool—it's a whole new way to think about code reviews. By focusing on clear, concise pull requests and giving us the tools to speed up reviews or at least, not turning them in blockers, Graphite lets us do what we love: code.
+
+For those eager to jump on board, Graphite is now live on [Product Hunt](https://www.producthunt.com/posts/graphite-6). Join the ranks of the fastest developers and be unstoppable!
