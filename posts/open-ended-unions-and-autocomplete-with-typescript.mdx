@@ -1,0 +1,97 @@
+---
+title: 'Open-Ended Unions and Autocomplete With TypeScript'
+publishedAt: '2023-09-26'
+summary: "Let's see how to achieve an open-ended union in TypeScript to provide autocomplete on literal string unions."
+image: '/static/images/open-ended-unions-and-autocomplete-with-typescript/banner.png'
+---
+
+In TypeScript, types are typically precise, leaving little room for ambiguity. While this exactness is beneficial for objects, it can sometimes feel restrictive for unions. In this post, we'll explore how to craft open-ended unions in TypeScript.
+
+Unions shine when you need flexibility in parameter types or when working with literal values. They're especially handy when you aim to type something broadly, like a string, but also wish to offer specific value suggestions or autocompletions.
+
+Take colors, for instance. You could type them simply as strings, but why not also provide a union of potential color options?
+
+```typescript
+type Colors = 'red' | 'blue' | 'yellow';
+//   ^? type Colors = "red" | "blue" | "yellow"
+
+function paint(color: Colors) {
+  console.log(color);
+}
+
+paint('red'); // Works as expected
+paint('green'); // Argument of type '"green"' is not assignable to parameter of type 'Colors'.
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAwg9gGzgJwM5QLxQOTIgE2ygB8cAjBAVwiNOxAgSQHdsBuAKAHouo+A9APwcOAM0oA7AMbAAlnAlQwAQ1kTgACimIUALlg60ASigBvDn20TUiCADokAcy2GjnAL4iVazbgLY3KB4oAHUUAGt0ZXQIAA9IGQIOb3UNbEc8CAkAtiDeAEFkR0oAWyzgKDhRKFBIHAAiDIgs+qJZdAk4CujUWUcJZQpoYDglZWRlMuAIZErq2uhseCQ0bDsgA)
+
+It works well, but as soon as someone will try to use a new color, it won't be assignable to the `Colors` type. This is where open-ended unions come in handy, what if the actual type is a string, but we would like to provide a few suggestions?
+
+A naive way of doing it could be to use a union of literal strings and then `string`:
+
+```typescript
+type Colors = 'red' | 'blue' | 'yellow' | string;
+//   ^? type Colors = string
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAwg9gGzgJwM5QLxQOTIgE2ygB8cAjBAVwiNOxAgSQHdapVhkBLAOwHMA3ACgA9CKgSAegH4hQgGaUeAY2Bc4PKGACGvYAApliFAC5YxtAEooAbyESjPVIggA6JH0MXLwgL5ydPX1cAmwfKDEoAHUUAGt0bXQIAA9IVQIhQJ4DbD48CB4wgQjxAEFkPkoAWwLgKDh5KFBIHAAiPIgC1qIudB44OsTULj4ebQpoYDgtbWRtGuAIZHrG5uhseCQ0bFcgA)
+
+Unfortunately, it is not yet supported by TypeScript ([see Literal String Union Autocomplete #29729](https://github.com/microsoft/TypeScript/issues/29729)—but it's scheduled in TypeScript 5.3! 🤞).
+
+Doing that will simplify `Colors` as `string` because they are ultimately all extending `string`, so the compiler aggressively reduces such unions to `string`.
+
+## Solution
+
+Use `string & {}` instead:
+
+```ts
+type Colors = 'red' | 'blue' | 'yellow' | (string & {});
+//   ^? type Colors = (string & {}) | "red" | "blue" | "yellow"
+
+function paint(color: Colors) {
+  console.log(color);
+}
+
+paint('red'); // Works as expected
+paint('green'); // Works as expected
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAwg9gGzgJwM5QLxQOTIgE2ygB8cAjBAVwiNOxAgSQHdaoAKVYZASwDsA5lABkUAN4BfAJQBuAFAB6BVBUA9APxy5AM0p8AxsB5w+UMAEN+wdvsQoAXLDtop4uStt9UiCADokAjbOsnISWhZW7LgE2LJQSlAA6igA1ujm6BAAHpCGBHIRfNbYAngQfLEy8crJyGlQGVDZucAEQA)
+
+It works! 🎉 It's a way to achieve loose autocomplete on literal string unions:
+
+<div className="img-center">
+  <Image
+    alt={`IntelliSense working`}
+    src={`/static/images/open-ended-unions-with-typescript/intellisense.png`}
+    width={475}
+    height={75}
+  />
+</div>
+
+The reason behind it is that in order to prevent literal types from being squashed as `string`, we can use the base type `string` and make an intersection with `{}` or `Record<never, never>` (matches any non-null and non-undefined type) and therefore literal types will be treated as distinguishable types as they are seen as different by the compiler `string` vs. `string & {}`. Technically speaking, `string` and `string & {}` are the same, but it tricks the compiler to not eagerly reduce them:
+
+```typescript
+type AreTheSame = string extends string & {} ? true : false;
+//   ^? type AreTheSame = true
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAggThAKgCwgZQIYFtoF4oDOwcAlgHYDmUEAHsBGQCYGHHlUBkUA3gL5QB+KMQCu0AFxQAZhgA2BCAG4AUAHpVUTQD0BQA)
+
+> ⚠️ Be careful, empty intersections will be reduced to `never` (e.g., `string & number`).
+
+The same thing could be done for `number`:
+
+```typescript
+type Gap = 0 | 8 | 16 | (number & {});
+//   ^? type Gap = 0 | (number & {}) | 8 | 16
+
+function doSomething(gap: Gap) {
+  console.log(gap);
+}
+
+doSomething(0); // Works as expected
+doSomething(100); // Works as expected
+```
+
+[🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBA4ghmKBeKAGKAfKAOTUCMAbHgBQB2ArgLYBGEATlAGRQDeAvgJQDcAUAPT8owgHoB+XrwBmFMgGNgASwD2ZKABNlAZWVUIwABaKyAcxImEALlgJObXsLmqAzsoA2EAHRvlZi2B5edklNHT1DYzNUHihBKAB1ZXoAa2coODSIAA9IBQh1XlDdfSNTEnxUaO5YoUSUtIyobNzgfKA)
