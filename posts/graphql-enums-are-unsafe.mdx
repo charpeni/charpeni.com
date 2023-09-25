@@ -1,0 +1,190 @@
+---
+title: 'GraphQL Enums Are Unsafe'
+publishedAt: '2023-09-26'
+summary: "We often talk about how we shouldn't introduce breaking changes in GraphQL, but fail to mention how enums in GraphQL are, by nature, almost always introducing breaking changes. Let's go over best practices to write resilient GraphQL applications."
+image: '/static/images/graphql-enums-are-unsafe/banner.png'
+---
+
+We often talk about how we shouldn't introduce breaking changes in GraphQL, but fail to mention how enums in GraphQL are, by nature, almost always introducing breaking changes.
+
+## What are enums in GraphQL
+
+Enumeration types are a special kind of scalar that is restricted to a particular set of allowed values, which could be useful in case you want to be more specific than `String` or `Int`. They are useful for keeping data values consistent.
+
+Example:
+
+```graphql
+enum DayofWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+```
+
+## The issue
+
+By their nature, GraphQL enums are a finite set of values, but not quite exactly...
+
+As soon as you write an enum in the schema, it's probably because the backend currently supports those values, so that's a finite set of values supported by the backend as of now. Then, the frontend will implement the enum as a finite set of values, and it could cause serious crashes in production if followed blindly... because an enum is a non-exhaustive set of values on the client!
+
+GraphQL services often expand in capabilities and may return new enum values in the future, and in order to be future-proof, clients should account for this possibility! Changing the type of a field or even turning a field nullable are considered server-breaking changes, but expanding an enum isn't considered as such.
+
+My previous example of an enum isn't the best example because `DayOfWeek` is unlikely to expand—if it does, we'll have bigger problems than GraphQL enums. So, let's replace the example with the following enum, let's say we have an enum of Icon known by the backend:
+
+```graphql
+enum Icon {
+  A
+  B
+  C
+}
+```
+
+If we were to implement this on the frontend as a finite set of values, then we would blindly hook up the value as such. But what if the backend were to add a new value, let's say `D`? Then the frontend would hopefully end up with a type-error because the function/component doesn't know how to handle `D`, but in most cases where we weren't defensive enough, it would crash with an unexpected newly added value that isn't yet implemented on the client! A finite set of values, eh!?
+
+```typescript
+type Icon = 'A' | 'B' | 'C';
+
+export type IconProps = {
+  icon: Icon;
+};
+
+export function Component({ icon }: IconProps) {
+  return <Icon icon={icon} />;
+}
+```
+
+The usual flow around adding new enum values is (depending on how close the backend and frontend are):
+
+1. Backend implementation
+1. Schema changes
+1. Frontend introspection (generate new schema and types)
+1. Frontend implementation
+
+It means that as soon as the schema changes, the frontend will be receiving the new enum values, and if the frontend isn't defensive enough, it will crash.
+
+We used the icon example, but it could be anything else, like a status enum where we would want to add a new value, e.g., `PLANNED`:
+
+```graphql
+enum Status {
+  UNSTARTED
+  STARTED
+  COMPLETED
+}
+```
+
+That's why we need to be careful with enums in GraphQL and **treat them as a non-finite set of values!**
+
+## Best practices regarding enums
+
+**GraphQL enums are unsafe** should be treated as a non-exhaustive set of values in order to be future-proof. Here are some best practices to follow:
+
+- **Anticipate Change**: Always assume that enums can change over time. Even if you have control over the GraphQL server and believe that no new values will be added, it's a good practice to code defensively.
+- **Handle Unknown Enum Values Gracefully**: On the client side, always have a default or fallback behavior for unexpected enum values. This ensures that if the server introduces a new enum value that the client isn't aware of, the application won't crash.
+- **Sync Schema Regularly**: If you're using tools like Relay Compiler or GraphQL Code Generator, regularly sync your local schema with the server's schema. This ensures that you're always working with the latest types and can catch enum changes early. If you don't, start looking into it!
+- **Communication**: If you're working in a team or if multiple teams are using the GraphQL API, ensure clear communication about any changes to enums. This can prevent unexpected behaviors and bugs in client applications.
+- **Monitoring and Logging**: Monitor the usage of unknown/fallback enum values in real-time. If an unexpected value is frequently being used or causing errors, it can be quickly addressed.
+
+### Open-ended unions
+
+One issue is that enums are often expressed as canned values and one way to bring more visibility to expect more values in the future is to type it as such.
+
+In reality, the type for `Icon` should be an open-ended string union: `A`, `B`, `C`, **or any other string**, which could be expressed as such with TypeScript:
+
+```typescript
+type Icon = 'A' | 'B' | 'C' | (string & {});
+```
+
+One downside of this, is that we could pass anything as an icon as long as it's a string it will be valid. We'll see this example later in detail, one another solution is to add one entry to the union with something specific that doesn't exist but is there to get visibility on the fact that it's an open-ended string union.
+
+```typescript
+type Icon = 'A' | 'B' | 'C' | '%future added value';
+```
+
+### Be defensive on the client
+
+In order to be defensive on the client, we need to stop blindly trusting enums. Enums are values supported by the backend, it doesn't mean they are supported by the client.
+
+> **Note**: Don't forget that your client changes aren't propagated to everyone unless you have a mechanism to stop old GraphQL clients from querying, then old client code will still be executing the query and receiving the new enum values.
+
+One way to solve this—or at least a variant—is to keep a list of supported values on the frontend too! This way, we can check if the value is supported before using it.
+
+```typescript
+type Icon = 'A' | 'B' | 'C';
+
+const supportedIcons = ['A', 'B', 'C'];
+
+export type IconProps = {
+  icon: Icon;
+};
+
+export function Component({ icon }: IconProps) {
+  if (!supportedIcons.includes(icon)) {
+    // Unsupported icon
+    return;
+  }
+
+  return <Icon icon={icon} />;
+}
+```
+
+### Use a catch all
+
+Depending on your context, you may be able to add a catch all. It really depends on your context, because we rarely use switch cases or anything like this in TypeScript/React, but it's a good way to be defensive. Unfortunately, TypeScript doesn't offer something like this out of the box where it would enforce enums to use catch all cases.
+
+```typescript
+export function Component({ icon }: IconProps) {
+  switch (icon) {
+    case 'A':
+      return <IconA />;
+    case 'B':
+      return <IconB />;
+    case 'C':
+      return <IconC />;
+    default:
+      // Unsupported icon
+      return null;
+  }
+}
+```
+
+### Solution with Relay
+
+When using Relay, Relay Compiler will add an additional value to enums: `%future added value` to make them future-proof.
+
+```typescript
+type Icon = 'A' | 'B' | 'C' | '%future added value';
+```
+
+### Solution with GraphQL Code Generator
+
+GraphQL Code Generator offers a configuration to enable future-proof enums, which will add an additional value to enums: `%future added value` to make them future-proof.
+
+See [`futureProofEnums`](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#futureproofenums).
+
+> This option controls whether or not a catch-all entry is added to enum type definitions for values that may be added in the future. This is useful if you are using `relay` [even useful when not using Relay too].
+
+```typescript
+import type { CodegenConfig } from '@graphql-codegen/cli';
+
+const config: CodegenConfig = {
+  // ...
+  generates: {
+    'path/to/file.ts': {
+      plugins: ['typescript'],
+      config: {
+        enumsAsTypes: true,
+        futureProofEnums: true,
+      },
+    },
+  },
+};
+export default config;
+```
+
+## Conclusion
+
+In the ever-evolving world of software development, it's essential to anticipate changes and ensure our applications can handle them gracefully. While GraphQL's approach to enums might seem peculiar at first, it's a reminder of the importance of forward compatibility. By understanding these nuances and aligning them with best practices from other technologies like TypeScript, we can build more resilient and future-proof applications.
