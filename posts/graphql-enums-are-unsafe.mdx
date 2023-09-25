@@ -1,6 +1,6 @@
 ---
 title: 'GraphQL Enums Are Unsafe'
-publishedAt: '2023-09-26'
+publishedAt: '2023-09-26 12:00'
 summary: "We often talk about how we shouldn't introduce breaking changes in GraphQL, but fail to mention how enums in GraphQL are, by nature, almost always introducing breaking changes. Let's go over best practices to write resilient GraphQL applications."
 image: '/static/images/graphql-enums-are-unsafe/banner.png'
 ---
@@ -24,6 +24,8 @@ enum DayofWeek {
   SATURDAY
 }
 ```
+
+It is also worth mentioning that they are two types of enums: enums used as query arguments and enums returned as fields. In this article, we'll mostly cover enums returned by the server.
 
 ## The issue
 
@@ -97,6 +99,8 @@ In reality, the type for `Icon` should be an open-ended string union: `A`, `B`, 
 ```typescript
 type Icon = 'A' | 'B' | 'C' | (string & {});
 ```
+
+📚 Detailed explaination here: [Open-Ended Unions and Autocomplete With TypeScript](/blog/open-ended-unions-and-autocomplete-with-typescript).
 
 One downside of this, is that we could pass anything as an icon as long as it's a string it will be valid. We'll see this example later in detail, one another solution is to add one entry to the union with something specific that doesn't exist but is there to get visibility on the fact that it's an open-ended string union.
 
