@@ -31,11 +31,11 @@ In most cases, that's exactly what we want, meaning that if the query is loading
 
 **It all depends on what you're building**. If you're fetching something else, then you probably don't want to keep the previous data. But if you're refetching the same query or a variant of it (e.g., changing something in the input), then you probably want to keep the previous data.
 
-Be aware that it means you won't have a loading state anymore, so triggering a query that takes a little while to resolve could be a bad UX. For those cases, then an overlay loading state or any kind of loading indicator would be useful. At the end, it alls come back to what you want: hard loading state or soft loading state via an indicator or overlay.
+Be aware that it means you won't have a loading state anymore, so triggering a query that takes a little while to resolve could be a bad UX. For those cases, then an overlay loading state or any kind of loading indicator would be useful. At the end, it all comes back to what you want: hard loading state or soft loading state via an indicator or overlay.
 
 ## Solution
 
-We need to conditionnaly display the loading state.
+We need to display the loading state conditionnally.
 
 ### My Experience
 
