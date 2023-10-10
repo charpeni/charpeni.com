@@ -1,0 +1,100 @@
+---
+title: 'UI Flickering With Apollo Client: Previous Data to the Rescue!'
+publishedAt: '2023-10-10'
+summary: "Have you ever noticed that using Apollo Client could lead to some UI flickers within your app? Especially when you refetch. Let's see how using previousData could help solve this bad UX."
+image: '/static/images/ui-flickering-with-apollo-client-previous-data-to-the-rescue/banner.gif'
+---
+
+Have you ever noticed that using [Apollo Client](https://www.apollographql.com/docs/react) could lead to some UI flickers within your app? Especially when you refetch.
+
+The reason behind this is how we usually build components consuming Apollo Client, we'll likely end up with something like this:
+
+```jsx
+function Component() {
+  const { loading, error, data } = useQuery(...);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error!</div>;
+  }
+
+  return <div>{data}</div>;
+}
+```
+
+Noticed the first check we usually do is to check whether the query is loading or not? This is the reason why we see the UI flickers.
+
+In most cases, that's exactly what we want, meaning that if the query is loading we don't want to display anything to the user (including stale data), but in some cases, we might want to keep the current state and update it if something changed when the query resolves.
+
+**It all depends on what you're building**. If you're fetching something else, then you probably don't want to keep the previous data. But if you're refetching the same query or a variant of it (e.g., changing something in the input), then you probably want to keep the previous data.
+
+Be aware that it means you won't have a loading state anymore, so triggering a query that takes a little while to resolve could be a bad UX. For those cases, then an overlay loading state or any kind of loading indicator would be useful. At the end, it all comes back to what you want: hard loading state or soft loading state via an indicator or overlay.
+
+## Solution
+
+We need to display the loading state conditionnally.
+
+### My Experience
+
+#### Before
+
+<div className="img-center">
+  <Image
+    alt={`Before`}
+    src={`/static/images/ui-flickering-with-apollo-client-previous-data-to-the-rescue/before.webp`}
+    width={475}
+    height={75}
+  />
+</div>
+
+#### After
+
+<div className="img-center">
+  <Image
+    alt={`After`}
+    src={`/static/images/ui-flickering-with-apollo-client-previous-data-to-the-rescue/after.webp`}
+    width={475}
+    height={75}
+  />
+</div>
+
+Apollo Client offers an underdocumented operation data result called [`previousData`](https://www.apollographql.com/docs/react/data/queries/#previousdata) that we can use to achieve this, `previousData` exposes the result of the previous query executed, so we can use this as a fallback in case we're loading and that `data` is `undefined`:
+
+```jsx
+function Component() {
+  const { loading, error, data, previousData } = useQuery(...);
+
+  if (loading && !previousData) { // Here
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error!</div>;
+  }
+
+  const targetData = loading && previousData ? previousData : data;
+
+  return <div>{targetData}</div>; // And here
+}
+```
+
+> Note: It used to be done automatically by Apollo Client, but it changed in v3 as they stopped delivering previous data in unrelated loading results, see [apollographql/apollo-client#6566](https://github.com/apollographql/apollo-client/pull/6566).
+>
+> Now, `data` will most likely be `undefined` while `loading` is `true`, unless your cache and the fetch policy is configured to use the cache even while loading, but it really depends on how you trigger the query and your configuration.
+
+Be careful, we can't just fallback to `previousData` as a query could return `null` and therefore the fallback won't be working as intended as we would be expecting to use `data` here:
+
+```jsx
+doSomething(data ?? previousData);
+```
+
+It is better to be explicit here that we only want to fallback to `previousData` if we're loading:
+
+```jsx
+doSomething(loading && previousData ? previousData : data);
+```
+
+By doing so, we're making sure that we're only using `previousData` if we're loading and if `previousData` is truthy, otherwise we're using the `data` returned by the query. It also means we can leverage the cache in case `previousData` is `undefined` (first loading), `loading` is `true`, and `data` has something in it from the cache.
