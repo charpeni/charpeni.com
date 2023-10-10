@@ -1,6 +1,6 @@
 ---
 title: 'UI Flickering With Apollo Client: Previous Data to the Rescue!'
-publishedAt: '2023-10-09'
+publishedAt: '2023-10-10'
 summary: "Have you ever noticed that using Apollo Client could lead to some UI flickers within your app? Especially when you refetch. Let's see how using previousData could help solve this bad UX."
 image: '/static/images/ui-flickering-with-apollo-client-previous-data-to-the-rescue/banner.gif'
 ---
@@ -61,7 +61,7 @@ We need to display the loading state conditionnally.
   />
 </div>
 
-Apollo Client offers an underdocumented operation data result called [`previousData`](https://www.apollographql.com/docs/react/data/queries/#previousdata) that we can use to achieve this:
+Apollo Client offers an underdocumented operation data result called [`previousData`](https://www.apollographql.com/docs/react/data/queries/#previousdata) that we can use to achieve this, `previousData` exposes the result of the previous query executed, so we can use this as a fallback in case we're loading and that `data` is `undefined`:
 
 ```jsx
 function Component() {
