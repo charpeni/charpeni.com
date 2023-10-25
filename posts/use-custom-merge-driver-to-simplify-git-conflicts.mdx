@@ -27,9 +27,11 @@ That's where using a Git custom merge driver is handy! You can define a [custom 
 
 Again, we'll use GraphQL Code Generator as an example, but the same thing could be applied to your package manager as well.
 
-The first thing we need to do is to define a custom merge driver in your `.gitconfig` file. Ideally, we would also like to install fresh dependencies to make sure we're using the latest version of the codegen, so we'll use `yarn install` (or your alternative command) as part of the merge driver, then the command used to generate the files, in this context: `yarn generate`:
+The first thing we need to do is to define a custom merge driver in your git config. The location of it depends if you prefer to install them globally or locally. Globally, `~/.gitconfig` is the file you're looking for, and locally, it's `.git/config`. Unfortunately, the local file isn't versioned, meaning that you'll have to re-define the merge driver for each project and make sure that everyone on your team does the same. To solve this limitation, I created [`merge-drivers`](https://github.com/charpeni/merge-drivers-cli) a command-line interface to conveniently manage custom git merge drivers.
 
-```ini:.gitconfig
+Ideally, we would also like to install fresh dependencies to make sure we're using the latest version of the codegen, so we'll use `yarn install` (or your alternative command) as part of the merge driver, then the command used to generate the files, in this context: `yarn generate`:
+
+```ini:~/.gitconfig
 [merge "graphql-codegen"]
     name = "graphql codegen merge driver"
     driver = yarn install && yarn generate
