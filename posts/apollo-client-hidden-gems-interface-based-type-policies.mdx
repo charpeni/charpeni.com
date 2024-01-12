@@ -1,0 +1,129 @@
+---
+title: "Apollo Client's Hidden Gems: Interface-Based Type Policies"
+publishedAt: '2024-01-16'
+summary: 'Did you know that type policies can also be applied to interfaces and not just to "types"!? 🤯'
+image: '/static/images/apollo-client-hidden-gems-interface-based-type-policies/banner.png'
+---
+
+We can use Apollo Client Type Policies for a variety of things, like a common one is to define a **field policy** with:
+
+- A [read function](https://www.apollographql.com/docs/react/caching/cache-field-behavior/#the-read-function) that specifies what happens when the field's cached value is read. Which can be useful for example to transform the data before it's returned without changing the data in the cache (such as rounding floating-point values to the nearest integer), or even deriving [local-only fields](https://www.apollographql.com/docs/react/local-state/managing-state-with-field-policies/) (such as deriving an `age` field from a `birthDate` field).
+- A [merge function](https://www.apollographql.com/docs/react/caching/cache-field-behavior/#the-merge-function) that specifies what happens when field's cached value is written. Which can be useful for merging non-normalized data, or even normalize individual fields at write-time (such as normalizing a string or number).
+
+## But did you know that type policies can also be applied to interfaces and not just to "types"!? 🤯
+
+Applying type policies to interfaces can be really useful when you have a repeating pattern and you end up having to define the same field policy each time.
+
+## Interfaces and TypePolicy inheritance
+
+I recently leveraged that pattern where we had multiple `*_DataPoint` types that all shared a common field: `sampledAt`, from which we need to derive the value into a local-only field containing the epoch representation of `sampledAt` as `sampledAtEpoch`. 
+
+So, instead of defining the same field policy for each `DataPoint`, I extracted the common field to an interface and defined the field policy on the interface instead:
+
+```graphql
+# Server schema
+interface DataPoint {
+  sampledAt: DateTime!
+}
+
+type A_DataPoint implements DataPoint {
+  sampledAt: DateTime!
+  value: Float!
+}
+
+type B_DataPoint implements DataPoint {
+  sampledAt: DateTime!
+  value: Float!
+}
+
+# Client schema
+# Since this is a local-only field, which isn't known to the server,
+# we need to define it on the client schema
+extend type A_DataPoint {
+  sampledAtEpoch: Int!
+}
+
+extend type B_DataPoint {
+  sampledAtEpoch: Int!
+}
+```
+
+You may notice that in order to type our local-only field `sampledAtEpoch`, we need to extend both implementers: `A_DataPoint` and `B_DataPoint`. It would be useful to be able to extend the interface rather than each implementer, unfortunately, this is a [limitation of GraphQL with interfaces](https://github.com/apollographql/apollo-client/issues/8756).
+
+Good news is that we can rely on the [inheritence of type and fields policies via `possibleTypes`](https://www.apollographql.com/docs/react/caching/advanced-topics/#typepolicy-inheritence). This means that we can define a type policy on the interface and it will be inherited by the implementers:
+
+```ts
+const cache = new InMemoryCache({
+  possibleTypes: {
+    DataPoint: ["A_DataPoint", "B_DataPoint"],
+  },
+
+  typePolicies: {
+    DataPoint: {
+      fields: {
+        // Derives the `sampledAtEpoch` field from the `sampledAt` field,
+        // by turning a `Date` into an Epoch.
+        sampledAtEpoch: {
+          read(_, { readField }) {
+            const sampledAt = readField('sampledAt');
+
+            if (!sampledAt) return null;
+
+            return Date.parse(sampledAt);
+          },
+        },
+      },
+  },
+  },
+});
+```
+
+> ⚠️ `possibleTypes` field needs to be filled in, otherwise, Apollo Client won't know about the interface implementers and won't be able to inherit the type policy. But I highly encourage you to look into generating it automatically.
+>
+> See:
+> - [Defining possibleTypes manually](https://www.apollographql.com/docs/react/data/fragments/#defining-possibletypes-manually)
+> - [Generating possibleTypes automatically](https://www.apollographql.com/docs/react/data/fragments/#generating-possibletypes-automatically)
+>
+> 👋 If you're using [GraphQL Code Generator](https://the-guild.dev/graphql/codegen), this is what you're looking for: https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher. Either way, I highly encourage you to look into GraphQL Code Generator.
+
+## Deserializing a Date
+
+It doesn't need to be combined with a local-only field, once we've set up `possibleTypes`, it could be used for simpler use cases too that only requires a read/merge function.
+
+One example of this would be the deserialization of a `DateTime` scalar. Let's say we have a `DateTime` scalar on our server schema and we would like to deserialize it from a string to a `Date` object on the client.
+
+Let's pick our previous example with `sampledAt` field being a `DateTime`, but rather parsed as a string. We can define a type policy on the interface to deserialize the `sampledAt` field as a `Date` object via a read function:
+
+```ts
+const cache = new InMemoryCache({
+  possibleTypes: {
+    DataPoint: ["A_DataPoint", "B_DataPoint"],
+  },
+
+  typePolicies: {
+    DataPoint: {
+      fields: {
+        // Deserializes the `sampledAt` field from a string to a `Date` object.
+        sampledAt: {
+          read(sampledAt) {
+            return Date(sampledAt);
+          },
+        }
+      },
+  },
+  },
+});
+```
+
+That way, everytime we're querying for `sampledAt` from `DataPoint` interface, it will be deserialized as a `Date` object rather than a string!
+
+There are multiple other possibilities with interfaces and type policies, but I hope this gives you a good idea of what's possible!
+
+## 📚 References
+
+- [Local only fields in Apollo Client](https://www.apollographql.com/docs/react/local-state/managing-state-with-field-policies/)
+- [Customizing the behavior of cached fields](https://www.apollographql.com/docs/react/caching/cache-field-behavior/)
+- [`TypePolicy` field](https://www.apollographql.com/docs/react/caching/cache-configuration/#typepolicy-fields)
+- [GraphQL Interfaces](https://graphql.org/learn/schema/#interfaces)
+- [TypePolicy inheritence](https://www.apollographql.com/docs/react/caching/advanced-topics/#typepolicy-inheritence)
+- [Polymorphic relationships](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces)
