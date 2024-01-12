@@ -18,7 +18,7 @@ Applying type policies to interfaces can be really useful when you have a repeat
 
 I recently leveraged that pattern where we had multiple `*_DataPoint` types that all shared a common field: `sampledAt`, from which we need to derive the value into a local-only field containing the epoch representation of `sampledAt` as `sampledAtEpoch`. 
 
-So, instead of defining the same field policy for each `DataPoint`, I extracted the common field to an interface and defined the field policy on the interface instead:
+So, instead of defining the same field policy for each `DataPoint` implementer, I extracted the common field to an interface and defined the field policy on the interface instead:
 
 ```graphql
 # Server schema
@@ -85,6 +85,10 @@ const cache = new InMemoryCache({
 > - [Generating possibleTypes automatically](https://www.apollographql.com/docs/react/data/fragments/#generating-possibletypes-automatically)
 >
 > 👋 If you're using [GraphQL Code Generator](https://the-guild.dev/graphql/codegen), this is what you're looking for: https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher. Either way, I highly encourage you to look into GraphQL Code Generator.
+
+Then, just like this, each implementer of `DataPoint` will automatically inherit the `sampledAtEpoch` field policy! No need to repeat the field policy over and over for each impleemnter.
+
+```ts
 
 ## Deserializing a Date
 
