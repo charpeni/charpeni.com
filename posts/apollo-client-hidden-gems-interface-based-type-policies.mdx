@@ -88,8 +88,6 @@ const cache = new InMemoryCache({
 
 Then, just like this, each implementer of `DataPoint` will automatically inherit the `sampledAtEpoch` field policy! No need to repeat the field policy over and over for each impleemnter.
 
-```ts
-
 ## Deserializing a Date
 
 It doesn't need to be combined with a local-only field, once we've set up `possibleTypes`, it could be used for simpler use cases too that only requires a read/merge function.
