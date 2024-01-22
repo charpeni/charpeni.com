@@ -108,7 +108,7 @@ const cache = new InMemoryCache({
         // Deserializes the `sampledAt` field from a string to a `Date` object.
         sampledAt: {
           read(sampledAt) {
-            return Date(sampledAt);
+            return new Date(sampledAt);
           },
         }
       },
