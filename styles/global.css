@@ -105,9 +105,13 @@ table {
 }
 
 .img-center {
-  display: block !important;
+  display: flex !important;
   margin: auto !important;
   max-width: max-content !important;
+
+  img {
+    display: initial !important;
+  }
 }
 
 a {

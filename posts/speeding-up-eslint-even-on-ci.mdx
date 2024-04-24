@@ -1,0 +1,143 @@
+---
+title: "Speeding up ESLint—Even on CI"
+publishedAt: '2024-04-25'
+summary: "Gotta Cache 'Em All: Leverage ESLint's cache to speed it up."
+image: '/static/images/speeding-up-eslint-even-on-ci/banner.png'
+---
+
+ESLint is a powerful tool that helps you maintain a consistent code style and catch bugs early.
+
+However, as your codebase grows, ESLint can become quite slow, which led me to being tired of waiting 5 minutes for ESLint to complete on CI and looking into opportunities to make it faster.
+
+I won't cover how to profile individual rules (see [ESLint's docs on Profile Rule Performance](https://eslint.org/docs/latest/extend/custom-rules#profile-rule-performance)) or how to optimize your ESLint configuration. Instead, I will show you how to leverage ESLint's cache to speed it up.
+
+Years or even months ago, you would have asked me about caching stuff like this on CI, and I would have said this is crazy, it should be executing things through the full process, but is it?
+
+Here we are! Let's dive into it.
+
+**Doing so allowed us to speed up ESLint job on CircleCI from ~5 minutes to ~10-30 seconds!** 🔥
+
+## Enabling ESLint's cache
+
+The first step in enabling ESLint's cache is to add the `--cache` flag to your ESLint command:
+
+```bash
+npx eslint '**/*.{js,ts,tsx}' --cache
+```
+
+By doing so, ESLint will cache the results of the linting process and reuse them on subsequent runs to only process the files that have changed since the last run. The cache is stored in `.eslintcache` by default, but can be changed via [`--cache-location`](https://eslint.org/docs/latest/use/command-line-interface#--cache-location).
+
+> ⚠️ **Be careful!**
+>
+> Omitting `--cache` will invalidate and **delete** the cache, and you would be running ESLint on all files again. Be sure to be consistent if you want to leverage the cache, e.g., don't forget to update your pre-commit hook if any!
+
+We also need to add `.eslintcache` (or what was provided to `--cache-location`) to `.gitignore` to avoid committing it to the repository as it is user specific (contains absolute paths rather than relatives):
+
+```bash
+echo '.eslintcache' >> .gitignore
+```
+
+### Choosing the right cache strategy
+
+ESLint offers two [cache strategies](https://eslint.org/docs/latest/use/command-line-interface#--cache-strategy):
+
+- `metadata`: This strategy caches the metadata of the files, such as the file size and the last modified time. **It's the default strategy**.
+- `content`: This strategy caches based on the content of the files, useful on CI as git does not track file modification time.
+
+Locally, the default cache strategy can work well, but on CI, you need the `content` strategy to avoid any issues with file modification time:
+
+```bash
+npx eslint '**/*.{js,ts,tsx}' --cache --cache-strategy content
+```
+
+## Caching ESLint's cache on CI
+
+Caching ESLint on CI isn't much different than locally, we "only" need to cache the cache file used by ESLint and be careful with cache invalidation.
+
+I will be using CircleCI as an example here, but I'm sure it could easily be translated to other CI providers.
+
+### Cache location, caching, and cache invalidation
+
+We need to cache ESLint's cache file, based on the previous steps, we want to cache `.eslintcache` (or what was provided to `--cache-location`)—it could even be a different one just for CI.
+
+To do so, we need to cache specifially that file, and we need to be careful with cache invalidation because caching things is always easier than invalidating the cache at the right time.
+
+In this context, we want to cache ESLint's cache file based on:
+
+- `yarn.lock` (or any package manager lock file): if we changed something to dependencies, we should be invalidating the cache as maybe ESLint was updated, and maybe we even have new rules to support
+- `.eslintrc.js` (any ESLint configuration file): if we changed our supported rules or anything in the configuration, the cache should be invalidated
+- `.eslintignore`: if we changed the ignored files, the cache should be invalidated
+
+Which will give us the following cache key:
+
+```
+eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+```
+
+Combined to the CircleCI configuration for restoring the cache, running ESLint, and finally saving the cache:
+
+```yaml:.circleci/config.yml
+lint:
+  docker:
+    - image: circleci/node:20
+  steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+          - eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+    - run:
+        name: 'Run ESLint'
+        command: npx eslint '**/*.{js,ts,tsx}' --cache --cache-strategy content
+    - save_cache:
+        key: eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+        paths:
+          - .eslintcache
+```
+
+### Daily cache (optional)
+
+One additional step I took to prevent running a stale cache and avoid any long-running issues with ESLint being cached, is to invalidate the cache daily.
+
+This is totally optional, it may not be necessary, but I figured it could be useful if something went wrong with the cache strategy and some errors slipped through. I don't believe it would be an issue as I believe the cache strategy is pretty solid, but it's always good to have a fallback. Also, at some point, the initial cache becomes quite outdated and we will be running ESLint on too many files, so it's good to have a fresh cache. Obviously, it could be a weekly cache invalidation or whatever you need.
+
+> CircleCI doesn't allow overriding the cached content for a given key, meaning that the first cached value will be kept for 15 days (CircleCI's cache policy) or until one of the `checksum` in the cache key changes.
+
+```yaml:.circleci/config.yml
+lint:
+  docker:
+    - image: circleci/node:20
+  steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+          - eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+    - run:
+        name: 'Run ESLint'
+        command: npx eslint '**/*.{js,ts,tsx}' --cache --cache-strategy content
+    - save_cache:
+        key: eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+        paths:
+          - .eslintcache
+```
+
+It means that for a given day, we will only execute ESLint on files that changed since the day's first run—unless something changes in `yarn.lock` or any ESLint files.
+
+That's it! You should now have a faster ESLint job on CI, and locally, too, if you weren't already using the cache.
+
+<div className="img-center">
+  <Image
+    alt={`racing car`}
+    src={`/static/images/racing-car.png`}
+    width={120}
+    height={120}
+  />
+  <Image
+    alt={`dashing away`}
+    src={`/static/images/dashing-away.png`}
+    width={60}
+    height={60}
+    style={{ alignSelf: 'flex-end' }}
+  />
+</div>
