@@ -110,14 +110,15 @@ lint:
   steps:
     - attach_workspace:
         at: ~/
+    - run: date +%F > date
     - restore_cache:
         keys:
-          - eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+          - eslint-cache-{{ checksum "date" }}-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
     - run:
         name: 'Run ESLint'
         command: npx eslint '**/*.{js,ts,tsx}' --cache --cache-strategy content
     - save_cache:
-        key: eslint-cache-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
+        key: eslint-cache-{{ checksum "date" }}-{{ checksum "yarn.lock" }}-{{ checksum ".eslintrc.js" }}-{{ checksum ".eslintignore" }}
         paths:
           - .eslintcache
 ```
