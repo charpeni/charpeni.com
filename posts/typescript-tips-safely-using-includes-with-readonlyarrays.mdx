@@ -1,0 +1,128 @@
+---
+title: "TypeScript Tips: Safely Using includes With ReadonlyArrays"
+publishedAt: '2024-05-28'
+summary: 'How to use includes on ReadonlyArrays while retaining type safety and narrowing down the type.'
+image: '/static/images/typescript-tips-safely-using-includes-with-readonlyarrays/banner.png'
+---
+
+I recently tried to use [`includes`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes) on a [`ReadonlyArray`](https://www.typescriptlang.org/docs/handbook/2/objects.html#the-readonlyarray-type), which was a subset of the value's type, and I was surprised to see that TypeScript wasn't letting me do it because it was expecting the full range of the superset:
+
+```
+Argument of type 'SUPERSET' is not assignable to parameter of type 'SUBSET'.
+```
+
+It seems smart to guard against that because in some cases it doesn't make sense if they don't overlap perfectly, but in some cases, like mine, it does!
+
+I looked online for a solution as I didn't want to just cast it as a string, but I was a little bit deceived by the solutions I found as I wanted to preserve the existing type safety and even narrow down based on the condition, so I wanted to share a new perspective on it!
+
+## Issue
+
+First of all, let's define a test scenario where we have a list of fruits and a subset of them defined as top picks:
+
+```typescript
+const FRUITS = [
+//    ^? const FRUITS: readonly ["Apple", "Banana", ...
+  'Apple',
+  'Banana',
+  'Orange',
+  'Grape',
+  'Watermelon',
+  'Pineapple',
+  'Mango',
+  'Strawberry',
+  'Peach',
+  'Pear',
+] as const;
+
+type AllFruits = typeof FRUITS[number];
+
+// This is a subset of `FRUITS`
+const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
+//    ^? const TOP_PICKS: readonly ["Apple", "Peach"...
+```
+
+Here, we would like to check whether the selection (`FRUITS`) is part of the `TOP_PICKS` (subset of `FRUITS`), which could be useful if we would like to display a distinctive element for "top pick" elements, e.g., a star.
+
+If we want to check whether the selection is part of the subset `TOP_PICKS`, TypeScript won't let us do it. Because it knows that our two literal arrays don't match as `selection` is typed based on its superset: `FRUITS`. TypeScript knows that not all members of the superset are present in the subset (obviously, right? It's a subset of the domain). TypeScript believes it could be a mistake, unless that's exactly what you want to do.
+
+```typescript
+function scenario(selection: AllFruits) {
+  if (TOP_PICKS.includes(selection)) { // Argument of type '"Apple" | "Banana" | "Orange" | "Grape" | "Watermelon" | "Pineapple" | "Mango" | "Strawberry" | "Peach" | "Pear"' is not assignable to parameter of type '"Apple" | "Peach"'.
+    // Do something.
+  }
+}
+```
+
+We need to widen the type of `TOP_PICKS` to be able to check whether a selection is included in it, and hopefully, retain type safety!
+
+First we can try out widening `TOP_PICKS` by casting it as `ReadonlyArray<string>` and you can see that it works! (or kind of)
+
+```typescript
+function scenario(selection: AllFruits) {
+  if ((TOP_PICKS as ReadonlyArray<string>).includes(selection)) {
+    const selectionType = selection;
+    //    ^? const selectionType: "Apple" | "Banana" | "...
+  } else {
+    const selectionType = selection;
+    //    ^? const selectionType: "Apple" | "Banana" | "...
+  }
+}
+```
+
+But... it feels like cheating a little bit when we know that it can't be a string, but only literals. It's kind of defeating the purpose of building arrays of literals, but at least, it doesn't turn `selection` type into `string`!
+
+We could be a little bit more precise here, rather than casting it as `string`, we could widen the type of `TOP_PICKS` to expand it to the full domain of its supset, so it does match with `selection` type.
+
+```typescript
+function scenario(selection: AllFruits) {
+  if ((TOP_PICKS as ReadonlyArray<AllFruits>).includes(selection)) {
+    const selectionType = selection;
+    //    ^? const selectionType: "Apple" | "Banana" | "...
+  } else {
+    const selectionType = selection;
+    //    ^? const selectionType: "Apple" | "Banana" | "...
+  }
+}
+```
+
+It works! But still, there's something weird, or at least, not satisfactory.
+
+What's the point in building literals if it doesn't narrow the type of `selection` in conditions?
+
+Meaning that, within the if/else condition, we know that if `selection` was included in `TOP_PICKS`, then it means `selection` could only be a value included in `TOP_PICKS`, not the full range!
+
+## Solution
+
+Let's extract the exact same logic we used previously, but this time, we'll define it in its own function as a [type guard](https://www.typescriptlang.org/docs/handbook/2/narrowing.html) combined with a [type predicate](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)!
+
+```typescript
+function isTopPick(selection: AllFruits): selection is (typeof TOP_PICKS)[number] {
+    return (TOP_PICKS as ReadonlyArray<AllFruits>).includes(selection);
+}
+```
+
+We do expect to receive a `selection`, which could be any fruits.
+
+Then, we upcast `TOP_PICKS` as its superset (`FRUITS`), which we call `includes` with two matching types.
+
+Finally, we define a type predicate as the function of a type guard returning whether `selection` is a top pick or not.
+
+Combined to a type predicate, we can tell TypeScript that if the type guard returns `true`, it means that the `selection` is in fact a `TOP_PICKS`!
+
+The beauty of this can be observed here, we were able to check if a value (superset) was included in a (subset) while preserving its type safety, but not only that, we also narrowed down the `selection` type!
+
+If `isTopPick` returns `true`, the `selection` type is narrowed down to `"Apple" | "Peach"`.
+
+```typescript
+function scenario(selection: AllFruits) {
+if (isTopPick(selection)) {
+    const selectionType = selection;
+    //    ^? const selectionType: "Apple" | "Peach"
+  } else {
+    const selectionType = selection;
+    //    ^? const selectionType: "Banana" | "Orange" | ...
+  }
+}
+```
+
+[📚 TypeScript Playground](https://www.typescriptlang.org/play/?#code/MYewdgzgLgBAYgJQKoEkAqBlGBeGBtAWACgB6EmCmAPQH5iKByAQQAcWAbAUwYBp6YGAIQCGYUcN78GAeQBOogObc+RRgHF5LZVIDqwqJ1kBbTu3CTVAgAoBLMJ2FsuFxgFlFIFwIxR5AdwAjQ1kATy8GKwdgAAtwyOFZCwBdGGEIGFBIKABuYmIoEK0YJnZ2OFkAVxsodNwCrRAAM3hkdAw8MAqjINkk3KJiMhg0aJt0sdSYCAqAiE5YJpgAA0RUTCXiTOhh6SsAfSsUAGEAaSxcPGYnZWso2JS0jPBtiH0xxptOdIQHABNwdghJiyeQhAA8JTKlWqEAAfP0hpRaHkiI0KmBgFAbOApsBOGJZNiABRzLiY7FgABcxVK5SqNQAlDAAN78CgkABUHLZFA5MAAEoZODwYH5OKKQBV2L8YOwbABrcVQEAZaKcYDy0VqqBq2QwHXi0nqrE4okrVrrJkTFgJBbNA3LNC7A7HM5LGAkmZzO3LVZtJYMlSUXlamwxJ5SmVBGAVOZo9gwGzNMUSyOyhVKlW-MYcYQhSbZ6B2ckAN3Fpk4JjAsEaID1ACJlSwYCww-L6zAK1WaiLOAA6BR9kXCKZQBJ9nkwPmTvkoZPivyiWDK1XqzV+bW6-VqqYV8k4622mCLB3TWbzR3Ow6nDBLEVoQqcDDAQksWB+cywLiwWMwf6JqAJ0sSg+UEdVhFjcVqhgeUwBAPx0h1fRjwqPUoA-dMDHkBMElBdJ-jABhYCMfRw0eJYjX3MB3QmepOCjNJ6OPMAAPSaYtFkb1qXNNZbyA4Mp2GR9n1fWBYPgxDomQuDYGEUoYBMbpDHSE8d3Y5SLwScUWFkL58VgOxt0NL0LyJEAAhLbFY0BEVCQUaIoBoGAUCgBh0hHM9vWPe0d3+Ei7AZfjgz5B8tBEmw3xgII5U4MtxlgUA02jEcjDGMdFRFdEuAgST9DczsAA9hExQEtWQkJJVFJd9SzEAgpAkgeSTD0nX2a8zj7Yt2AqX4vhJPcTTABkmWZGAhmBBQun07z9UfAR61YDhOA7AAfGB6xEMQxFW9a5EUZaYDW+sNEcA6jr0LCTDMMAdvrWx7EcJbbvcMAFBAW6fH8HpQlu+IYl+hxZHrBhE3SGTUhymwFDEAIuBqlsEmEEwsJmuj5sWrgAeK6JgfqgShgAERVCAQGR0ZXrxgBfFFg05blgJDHQFxseT7CYlc-BsXqWIdNHFiWVqXRvd0V2S2HM1XDUtXmLcPIGilQcTDFut6mVDOqYcwBlaIQC0eMbJnGBdLHQy0deRp5hCABCGdGoGBm6cNuAbE499xWAUR9VCFD3y5-E7AUS82tdW8ovzD2i1egCIeWH5hAIwFgVBMFoEJV7YXdUQZQqioMk9uYlSkgz3zreUIBthnBMECpAL7Pto4t0x0jlRVVzeKORzlKAoDhgJoI3fFRXFcS-G3ZDoI9wjYGS0c04UEUAhr5jSq7ww5IgPHBJc-L5TsGVFl6i328Dh0WFQlgQDmGbF5Z7MO5BPMVOaVfsIgBel+Qrg0igEVoP+L4p76lQixCi8twAizmnYFcFFfAByWBXASHI7bBmakSIkgt2pYEeHHBOQIH7glTgHWEgUuo9T6pRQaw0WSTkoFsWAFCKShXFLgBh4B+gCUoIiCgyIGaU07OwK+rJK60OePQsBYAmE4F3GSQa7COFjXIEiOgvCaacK5IbJmEZpRRXFJ3aoPdxR92InWbSulgBjHFLqYURt9BbiQixCOWIo7QXIoQ16d4h5aJlJzbmRlZpFH5hgkOGxK58hXJwAqNotbRxXA6fWf5SbCEMosGEUwKgsG9CKEm0d-7pBIlAcMnMdTLFYdRfx-ZDaGxchKWQZcrYwGrvQrEpQRQGl0vlEmZMA5Dxdr8EUdZUhfgcNAEU4NXhYggI0YqypQibz5DoIu+VT4gCgUrKKVRpTdJfuvRMzQ-4gAAURGABJZDwT8XzZooCZEUhog48A2ZBoQGUYgmArgHBgG6UhH+opqjkz8UmEgTd3b3OqBSEUKYR5jwMpc0p7pFzjGVmQtWICgnCyDMFIyLFoImFEJJcUVzjQ3K8cvfMM8SxyQqFBRFqs1kCyvME0ZIBlw7nifIV6nAEHBWQZQVB6D6U3hjjggEeDk6QjpDCYhnVqXkPEVQoR8inhZGkYS8AkiWHiLkRwrh1BnmUD4UC6hwiKB0OVVRNVprZE0PZIo7huqKDU3trTdRoSYAABl5j5Qib4aZfiIk+teCYWUIAFBhk8ZBGUOlYpWQgDZdZzLaI2BMOC7g8lD52CggZLFNRjx+BYmiDEg1DaPBHGjSaCQZSgG6Om7xvzJho0jdmD2BhOUgRgBo8U-4IlaExPDMxnAbBlkmASqiHiNxhmiMS5KYB8yNGhDUOZww1RgGTTGFgjig5CzdDHVJ6lOKmR4v6QMoZCnuzkgmJYpDeoQDhbW9CKp8kxE+Y+DeTs7BnpCCutN9g61zQbWGfQui8UwHzVRGaJa5pltkDKY2wDukDzaSU8RNF3I1WbK2KWAyZILqOKTPu9gZQrnA0UP9TbrEpknvqUwCYmHhUil83Z5yIMVHLUbeYwD0hLF8JSjx2L3m5WZZwQ2w7BrIbWVMntI46XB2Fi23k3KKAgcGqDNAutbAan6tc8A1IxVzogAyakpTFZEjoosVFZwGQdC6D0FI8r5EwdkCxPl0mziCr+MKpOeYIS0l05Ky9MrNNDU1TAB1PJHYupGIYhwNd8yqQmBR6M5k5iyDLNrIUK6xS6VSOLeGMQ1wMZHOS7q4pPQcW9EyeFStgAqyYoZEcnpzxQAZIbMdcNI1Jcss47NZthAWwKO-WA4NhVQpXevFUJz4JMX+LmvxwmiV0Vk4JKplyxgqZYGp+U7p7OQGWFxzgHiHSzfAeUxW43R5TZ5iqJYC1rhY3+ksOZ8mGNEhW6ptsGmVVDRGlaxVLxxHmtKUF2mNqdU8n1QI8UtmOEmtKf9jV33tU8ODA6ymQA)
