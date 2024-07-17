@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { parseISO, format } from 'date-fns';
 import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
-
 import Container from '@/components/Container';
 import { openWindow } from '@/utils/openWindow';
+import { Comments } from './Comments';
 
 function ShareSocialIcon({ network }: { network: string }) {
   const socialIconWidth = 40;
@@ -127,6 +127,7 @@ ${postUrl}`,
           </a>
         </div>
       </article>
+      <Comments title={frontMatter.title} />
     </Container>
   );
 }
