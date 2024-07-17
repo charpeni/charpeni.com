@@ -38,6 +38,9 @@ const ContentSecurityPolicy = `
   media-src 'none';
   connect-src *;
   font-src 'self';
+  script-src https://giscus.app/ 'unsafe-eval';
+  style-src https://giscus.app/ 'unsafe-inline';
+  frame-src https://giscus.app/;
 `;
 
 const securityHeaders = [
