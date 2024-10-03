@@ -1,0 +1,205 @@
+---
+title: "Minimizing Risk: Properly and Safely Resolving CVEs in Your Dependencies"
+publishedAt: '2024-10-04'
+summary: 'TODO'
+image: '/static/images/apollo-client-hidden-gems-interface-based-type-policies/banner.png'
+---
+
+I want to talk about a common scenario that many of us face as developers: dealing with CVEs ([Common Vulnerabilities and Exposures](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures)). In this post, we'll dive into how to properly and safely update dependencies to resolve CVEs, while also gathering an understanding of how package managers handle dependencies.
+
+## Why?
+
+I've seen too many blog posts and instructions that advise using the [`resolutions`](https://yarnpkg.com/configuration/manifest#resolutions) field without fully considering its side effects. Don't get me wrong, it's a powerful tool, but it should be used with caution and in last-resort scenarios. While it can be a quick fix, it may introduce new issues if not handled with care.
+
+Let's go through a structured approach to resolving CVEs, keeping changes to a minimum, and understanding the impact of our decisions.
+
+### Resolutions field is a last-resort solution
+
+By adding a resolution, you're essentially overriding the dependency resolution algorithm, which can lead to inconsistencies in your dependency tree. They may not manifest immediately, but they can cause issues down the line as most of the time, you want to always resolve to the latest version at the time of writing, but over time, you may want to update to the latest version to get the latest features and bug fixes, or have transitive dependencies requiring a newer version and you might not realize that your resolution is holding you back to the older version—that used to be the latest version.
+
+### Don't delete and regenerate your lock file
+
+Another thing I've seen from time to time, is that you may be tempted to delete the lock file and recreate it. This is not a good practice as it can lead to inconsistencies in your dependency tree. The lock file is there to ensure that you get the same dependencies across different machines and environments, and deleting it will make it so that you get different versions of the dependencies, which can lead to bugs that are hard to reproduce. It's better to keep the number of changes to a minimum and understand the impact of your decisions.
+
+## Steps
+
+In this guide, I'll be using Yarn Berry as the package manager, but the same principles can be applied to other package managers like npm, pnpm, or Yarn classic.
+
+### 1. Identify the CVE
+
+The first step is to understand the vulnerability. CVEs are documented security issues affecting software components, and it's important to gather information about which of your dependencies are impacted. This information can often be found through security audits in your package manager (`yarn audit`, `npm audit`, etc.), or from security alerts on platforms like GitHub.
+
+<div className="img-center">
+  <Image
+    alt={`CVE GitHub Example`}
+    src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/cve-github-example.png`}
+    width={600}
+    height={483}
+  />
+</div>
+
+In this example, we can gather than `micromatch` is the vulnerable package and that versions prior to `4.0.8` are vulnerable.
+
+### 2. How many versions of this dependency do we have?
+
+It's not uncommon for a project to rely on multiple versions of the same dependency, especially when using transitive dependencies. Start by checking how many instances of the vulnerable package are in use. With Yarn Berry, you can run:
+
+```bash
+yarn info <dependency-name> --all --recursive
+```
+
+<br />
+
+<div className="img-center">
+  <Image
+    alt={`yarn info example`}
+    src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-info.png`}
+    width={469}
+    height={360}
+  />
+</div>
+
+This command helps identify the versions of the package and which packages are depending on it. Knowing this will guide you in choosing the best solution to resolve the CVE.
+
+In this example, we can see that a single version of `micromatch` is used. This information is crucial to understand the impact of updating the package.
+
+### 3. Why do we have this dependency?
+
+Understanding why a certain package is in your dependency tree is crucial before making any changes. It could be that the package is directly used by your code, or it's a transitive dependency (a dependency of another dependency). This distinction helps to determine whether you can remove, replace, or update it.
+
+```bash
+yarn why <dependency-name> --recursive
+```
+
+<br />
+
+<div className="img-center">
+  <Image
+    alt={`yarn why example`}
+    src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-why.png`}
+    width={553}
+    height={360}
+  />
+</div>
+
+In this example, we can gather than `micromatch` isn't a direct dependency, but a transitive dependency of `gulp`.
+
+### 4. What are the possible solutions?
+
+Once you have all the information, it's time to decide on a solution. In most cases, the ideal solution is to let Dependabot (or equivalent) handle it for you, but because it's not always possible, let's cover what to do. There are multiple strategies you can follow, and the right one depends on the nature of the CVE and your project structure.
+
+#### 4.1 Update the dependency
+
+The simplest solution is to update the package to a version where the vulnerability is fixed. If the package is a direct dependency, this can often be done by updating your `package.json` and running:
+
+```bash
+yarn up <dependency-name>
+# or
+yarn up <dependency-name> --recursive
+```
+
+For transitive dependencies, things get trickier, and updating other dependencies might be required. As an example, in the previous case, we can't update `micromatch` directly because we learned that versions prior to `4.0.8` are vulnerable and that we're only using a single version: `3.1.10`. However, they all depend on `micromatch` with a range of `^3.1.10` (or so).
+
+Before going further, let's cover the meaning of tilde (`~`) and caret (`^`) in the context of semver (and their range):
+
+- `~3.1.10` means `>=3.1.10 <3.2.0`
+- `^3.1.10` means `>=3.1.10 <4.0.0`
+
+But there's a catch, for `0.x` versions, the caret (`^`) behaves differently:
+
+- `^0.3.10` means `>=0.3.10 <0.4.0`
+
+In our case, the range is `^3.1.10`, which means that we can update to any version that is greater than or equal to `3.1.10` and less than `4.0.0`. Given that the fixed version is `4.0.8`, we'll need another solution here. Remember the screenshot of Dependabot earlier? Even Dependabot won't be able to create a pull request:
+
+<div className="img-center">
+  <Image
+    alt={`Dependabot failure`}
+    src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/dependabot-failure.png`}
+    width={600}
+    height={124}
+  />
+</div>
+
+In another scenario, it could have been possible to update only `micromatch`. Given a scenario where the actual version is `3.1.10`, affected versions are `< 3.1.11` and therefore the patched version is `3.1.11`:
+
+```bash
+yarn why micromatch --recursive
+└─ cve-example@workspace:.
+   └─ gulp@npm:4.0.2 (via npm:^4)
+      ├─ glob-watcher@npm:5.0.5 (via npm:^5.0.3)
+      │  ├─ anymatch@npm:2.0.0 (via npm:^2.0.0)
+      │  │  └─ micromatch@npm:3.1.10 (via npm:^3.1.4)
+```
+
+In this example, because we're using `micromatch@npm:3.1.10` that matches with the expected range: `npm:^3.1.4`, but also because the version containing the fix (`3.1.11`) still satisfies the range, we could have safely updated to `3.1.11` without breaking anything by instructing our package manager to update this dependency via `yarn up micromatch --recursive`.
+
+This is also the reason why it's important to use wide ranges for your libraries and not pin them to a specific version (avoid `3.1.10` or `~3.1.10`), as it allows you to get the latest version that satisfies the range. Unless you have a good reason to be restrictive (e.g., known issue or not supporting above), but using pinned versions within a library is generally a bad practice.
+
+#### 4.2 Update dependencies that rely on this package (recursive updates)
+
+Sometimes the vulnerable dependency is used by another package in your project, and you cannot directly update it. In this case, updating the parent dependencies is often the solution. You may need to upgrade those parent dependencies to versions that no longer depend on the vulnerable version.
+
+You can use tools like `yarn outdated` to check for outdated dependencies in your project, or directly look at your lock file to trace where the vulnerable package is coming from.
+
+In the previous example, we weren't able to update only the vulnerable package because it was a transitive dependency of `gulp` that requires a specific range, and therefore, the only way to use the patched version is if `gulp` is updated to a version that uses the patched version of `micromatch`.
+
+```bash
+yarn up gulp
+```
+
+<br />
+
+<div className="img-center">
+  <Image
+    alt={`yarn up example`}
+    src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-up.png`}
+    width={600}
+    height={143}
+  />
+</div>
+
+#### 4.3 Safely use the resolutions field with a range
+
+If updating the parent dependencies is not feasible or if the dependency is deeply nested, you may consider using the `resolutions` field in your `package.json` to force a specific version of the vulnerable dependency. However, **this should be a last-resort solution** because it can lead to inconsistencies in your dependency tree.
+
+When using resolutions, try to specify a specific resolution instead of just the name of the package, to avoid breaking other dependencies. Omitting the version range can lead to unexpected behavior, as it will apply to all packages that depend on the specified package.
+
+For example:
+
+```bash
+yarn why lodash
+└─ cve-example@workspace:.
+   └─ lodash@npm:4.16.6 (via npm:~4.16.1)
+```
+
+If we want to force an update to at least `4.17.21`, we could do the following:
+
+```json
+{
+  "resolutions": {
+    "lodash@~4.16.1": "~4.17.21"
+  }
+}
+```
+
+When resolving `lodash@~4.16.1`, your package manager will overwrite the resolution to `~4.17.21`, but only to packages expecting `lodash@~4.16.1`, **it is not a range**.
+
+```bash
+yarn why lodash
+└─ cve-example@workspace:.
+   └─ lodash@npm:4.17.21 (via npm:^4.17.21)
+```
+
+This ensures that all versions of lodash v4 in your project will be resolved to a secure version, while still allowing flexibility for other packages that rely on different versions.
+
+### 5. Confirm the fix
+
+Finally, we need to confirm that the fix or fixes have been applied correctly. By running those steps, we ensure we can always minimize the number of changes to do, but it's not always possible.
+
+We can confirm if it worked by running those steps again and ensuring that the listed versions are not vulnerable:
+
+```bash
+yarn info <dependency-name> --all --recursive
+```
+
+By following these steps, you can ensure that you're not only resolving the CVE but also doing so in a way that minimizes disruption to your project. Always make sure to thoroughly test your project after applying any updates to catch any potential issues introduced by dependency changes.
