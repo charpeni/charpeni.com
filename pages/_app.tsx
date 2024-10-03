@@ -1,5 +1,6 @@
 import '@/styles/global.css';
 import '@/styles/prism-vsc-dark-plus.css';
+import 'remark-github-blockquote-alert/alert.css';
 
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';

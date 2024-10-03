@@ -57,7 +57,8 @@ It may be be different when [`Record`](https://github.com/tc39/proposal-record-t
 
 Fortunately, TypeScript offers a [`keyof` type operator](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html) that returns the type of the keys of a given type:
 
-> ⚠️ Be mindful that this is only effective if you know the object is immutable and won't contain any extra properties.
+> [!WARNING]
+> Be mindful that this is only effective if you know the object is immutable and won't contain any extra properties.
 
 ```typescript
 // Type is followed by `& {}` so we could simplify the type as the actual content rather than just displaying `Keys`

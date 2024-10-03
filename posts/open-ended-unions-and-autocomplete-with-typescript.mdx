@@ -78,7 +78,8 @@ type AreTheSame = string extends string & {} ? true : false;
 
 [🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAggThAKgCwgZQIYFtoF4oDOwcAlgHYDmUEAHsBGQCYGHHlUBkUA3gL5QB+KMQCu0AFxQAZhgA2BCAG4AUAHpVUTQD0BQA)
 
-> ⚠️ Be careful, empty intersections will be reduced to `never` (e.g., `string & number`).
+> [!WARNING]
+> Be careful, empty intersections will be reduced to `never` (e.g., `string & number`).
 
 The same thing could be done for `number`:
 

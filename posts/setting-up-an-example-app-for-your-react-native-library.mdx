@@ -5,10 +5,7 @@ summary: 'Having a hard time with a React Native example app? Here’s how you c
 image: '/static/images/setting-up-an-example-app-for-your-react-native-library/banner.png'
 ---
 
-<code>
-  Unable to resolve module … Module does not exist in the module map or in these
-  directories … Naming collision
-</code>
+> Unable to resolve module … Module does not exist in the module map or in these directories … Naming collision
 
 There is probably a tonne of ways to create an example app for your React Native library, except almost each of them comes with some major downsides.
 
@@ -16,14 +13,11 @@ The naive and common approach will be to use: `yarn add file:../` to add your li
 
 Then, what about symlinks? Well, [Metro doesn’t follow them](https://github.com/facebook/metro/issues/1), so you can forget about symlinks and yarn link or you will end up with:
 
-<code>
-  Unable to resolve module ... Module does not exist in the module map or in
-  these directories
-</code>
+> Unable to resolve module ... Module does not exist in the module map or in these directories
 
 Also, even if you pass these steps you will necessarily have to meet this error:
 
-<code>Haste module map naming collision duplicate module name</code>
+> Haste module map naming collision duplicate module name
 
 This usually means you have duplicated `node_modules` that have been copied over your lib and the example app, so there is no easy exit with conventional methods.
 
@@ -143,10 +137,10 @@ For further information, you can refer to [this commit](https://github.com/charp
 
 For [further documentation on configuring Metro](https://facebook.github.io/metro/docs/en/configuration).
 
-A full example repository is also available here: https://github.com/charpeni/react-native-lib-example-app
+A full example repository is also available here: [https://github.com/charpeni/react-native-lib-example-app](https://github.com/charpeni/react-native-lib-example-app)
 
 ## What’s next?
 
 Interested in testing this or you’d like to maintain or work on React Native libraries? Come see us in the [☂️ Lean Core initiative](https://github.com/facebook/react-native/issues/23313).
 
-There’s also plenty of libs that are waiting on this developer experience improvement in the React Native Community: https://github.com/react-native-community
+There’s also plenty of libs that are waiting on this developer experience improvement in the React Native Community: [https://github.com/react-native-community](https://github.com/react-native-community)

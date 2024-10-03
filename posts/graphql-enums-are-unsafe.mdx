@@ -100,7 +100,8 @@ In reality, the type for `Icon` should be an open-ended string union: `A`, `B`, 
 type Icon = 'A' | 'B' | 'C' | (string & {});
 ```
 
-📚 Detailed explaination here: [Open-Ended Unions and Autocomplete With TypeScript](/blog/open-ended-unions-and-autocomplete-with-typescript).
+> [!NOTE]
+> 📚 Detailed explaination here: [Open-Ended Unions and Autocomplete With TypeScript](/blog/open-ended-unions-and-autocomplete-with-typescript).
 
 One downside of this, is that we could pass anything as an icon as long as it's a string it will be valid. We'll see this example later in detail, one another solution is to add one entry to the union with something specific that doesn't exist but is there to get visibility on the fact that it's an open-ended string union.
 
@@ -112,7 +113,8 @@ type Icon = 'A' | 'B' | 'C' | '%future added value';
 
 In order to be defensive on the client, we need to stop blindly trusting enums. Enums are values supported by the backend, it doesn't mean they are supported by the client.
 
-> **Note**: Don't forget that your client changes aren't propagated to everyone unless you have a mechanism to stop old GraphQL clients from querying, then old client code will still be executing the query and receiving the new enum values.
+> [!IMPORTANT]
+> Don't forget that your client changes aren't propagated to everyone unless you have a mechanism to stop old GraphQL clients from querying, then old client code will still be executing the query and receiving the new enum values.
 
 One way to solve this—or at least a variant—is to keep a list of supported values on the frontend too! This way, we can check if the value is supported before using it.
 

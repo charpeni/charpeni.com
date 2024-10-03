@@ -4,9 +4,8 @@ import mdxPrism from 'mdx-prism';
 import path from 'path';
 import readingTime from 'reading-time';
 import { serialize } from 'next-mdx-remote/serialize';
-import remarkAutolinkHeadings from 'remark-autolink-headings';
-import remarkSlug from 'remark-slug';
-import remarkCodeTitles from 'remark-code-titles';
+import rehypeCodeTitles from 'rehype-code-titles';
+import { remarkAlert } from 'remark-github-blockquote-alert';
 import { getPlaiceholder } from 'plaiceholder';
 
 import type { ReadTimeResults } from 'reading-time';
@@ -44,8 +43,10 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   const { base64 } = await getPlaiceholder(data.image, { size: 20 });
   const mdxSource = await serialize(content, {
     mdxOptions: {
-      remarkPlugins: [remarkAutolinkHeadings, remarkSlug, remarkCodeTitles],
-      rehypePlugins: [mdxPrism],
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore-error - https://github.com/orgs/rehypejs/discussions/63
+      remarkPlugins: [remarkAlert],
+      rehypePlugins: [rehypeCodeTitles, mdxPrism],
     },
   });
 

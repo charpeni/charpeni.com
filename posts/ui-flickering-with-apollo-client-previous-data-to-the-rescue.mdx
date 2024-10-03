@@ -81,7 +81,10 @@ function Component() {
 }
 ```
 
-> Note: It used to be done automatically by Apollo Client, but it changed in v3 as they stopped delivering previous data in unrelated loading results, see [apollographql/apollo-client#6566](https://github.com/apollographql/apollo-client/pull/6566).
+<br />
+
+> [!NOTE]
+> It used to be done automatically by Apollo Client, but it changed in v3 as they stopped delivering previous data in unrelated loading results, see [apollographql/apollo-client#6566](https://github.com/apollographql/apollo-client/pull/6566).
 >
 > Now, `data` will most likely be `undefined` while `loading` is `true`, unless your cache and the fetch policy is configured to use the cache even while loading, but it really depends on how you trigger the query and your configuration.
 

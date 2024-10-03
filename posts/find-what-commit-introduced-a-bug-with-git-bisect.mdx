@@ -38,7 +38,8 @@ Unfortunately, the latest version of the library has a bug that causes the multi
 
 Moving forward, if we would like to prevent any regressions, we could write a test asserting the behavior of `multiply`:
 
-> ⚠️ Be careful to not commit the test yet, otherwise it won't be available on previous commits during a bisecting session.
+> [!WARNING]
+> Be careful to not commit the test yet, otherwise it won't be available on previous commits during a bisecting session.
 
 ```javascript
 const { multiply } = require('./math');
@@ -58,7 +59,8 @@ Git offers a better alternative: a `bisect` command that uses binary search to f
 
 You specify the last good commit you know and a bad commit (the one with the bug, usually your current commit), then the command will do a binary search through all the in between commits to ask you if the selected commit has the bug or not (if the commit is either bad or good). We will cover how to automate this later.
 
-> ℹ️ The following content is coming and executed from the workshop repository mentioned above.
+> [!NOTE]
+> The following content is coming and executed from the workshop repository mentioned above.
 
 From the following git history, we know that the library used to work at least on the second commit (`Initial setup`) but something broke in between the first commit and the last one.
 
