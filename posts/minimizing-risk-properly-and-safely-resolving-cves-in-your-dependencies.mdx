@@ -1,8 +1,8 @@
 ---
-title: "Minimizing Risk: Properly and Safely Resolving CVEs in Your Dependencies"
+title: 'Minimizing Risk: Properly and Safely Resolving CVEs in Your Dependencies'
 publishedAt: '2024-10-04'
-summary: 'TODO'
-image: '/static/images/apollo-client-hidden-gems-interface-based-type-policies/banner.png'
+summary: 'How to properly and safely update dependencies to resolve CVEs, while also gathering an understanding of how package managers handle dependencies.'
+image: '/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/banner.jpg'
 ---
 
 I want to talk about a common scenario that many of us face as developers: dealing with CVEs ([Common Vulnerabilities and Exposures](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures)). In this post, we'll dive into how to properly and safely update dependencies to resolve CVEs, while also gathering an understanding of how package managers handle dependencies.
@@ -33,12 +33,13 @@ The first step is to understand the vulnerability. CVEs are documented security 
   <Image
     alt={`CVE GitHub Example`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/cve-github-example.png`}
-    width={600}
-    height={483}
+    width={994}
+    height={800}
   />
 </div>
 
-In this example, we can gather than `micromatch` is the vulnerable package and that versions prior to `4.0.8` are vulnerable.
+> [!NOTE]
+> In this example, we can gather than `micromatch` is the vulnerable package and that versions prior to `4.0.8` are vulnerable.
 
 ### 2. How many versions of this dependency do we have?
 
@@ -47,6 +48,11 @@ It's not uncommon for a project to rely on multiple versions of the same depende
 ```bash
 yarn info <dependency-name> --all --recursive
 ```
+
+> [!TIP]
+> Yarn will default to print the information about all the matching direct dependencies of the package for the active workspace. To instead print all versions of the package that are direct dependencies of any of your workspaces, use the `-A,--all` flag.
+
+> [!TIP] > `-R,--recursive` flag will also report transitive dependencies. **Required** when investigating an issue that's not a direct dependency.
 
 <br />
 
@@ -59,9 +65,10 @@ yarn info <dependency-name> --all --recursive
   />
 </div>
 
-This command helps identify the versions of the package and which packages are depending on it. Knowing this will guide you in choosing the best solution to resolve the CVE.
+> [!NOTE]
+> In this example, we can see that a single version of `micromatch` is used. This information is crucial to understand the impact of updating the package.
 
-In this example, we can see that a single version of `micromatch` is used. This information is crucial to understand the impact of updating the package.
+This command helps identify the versions of the package and which packages are depending on it. Knowing this will guide you in choosing the best solution to resolve the CVE.
 
 ### 3. Why do we have this dependency?
 
@@ -70,6 +77,9 @@ Understanding why a certain package is in your dependency tree is crucial before
 ```bash
 yarn why <dependency-name> --recursive
 ```
+
+> [!TIP]
+> If `-R,--recursive` flag is set, the listing will go in depth and will list, for each workspaces, what are all the paths that lead to the dependency. This is also super helpful when investigating, otherwise, it only shows the direct dependant.
 
 <br />
 
@@ -82,7 +92,8 @@ yarn why <dependency-name> --recursive
   />
 </div>
 
-In this example, we can gather than `micromatch` isn't a direct dependency, but a transitive dependency of `gulp`.
+> [!NOTE]
+> In this example, we can gather than `micromatch` isn't a direct dependency, but a transitive dependency of `gulp`.
 
 ### 4. What are the possible solutions?
 
@@ -98,16 +109,19 @@ yarn up <dependency-name>
 yarn up <dependency-name> --recursive
 ```
 
+> [!TIP] > `-R,--recursive` flag may or may not be required, depending on whether the dependency you are updating is a direct or transitive dependency.
+
 For transitive dependencies, things get trickier, and updating other dependencies might be required. As an example, in the previous case, we can't update `micromatch` directly because we learned that versions prior to `4.0.8` are vulnerable and that we're only using a single version: `3.1.10`. However, they all depend on `micromatch` with a range of `^3.1.10` (or so).
 
-Before going further, let's cover the meaning of tilde (`~`) and caret (`^`) in the context of semver (and their range):
-
-- `~3.1.10` means `>=3.1.10 <3.2.0`
-- `^3.1.10` means `>=3.1.10 <4.0.0`
-
-But there's a catch, for `0.x` versions, the caret (`^`) behaves differently:
-
-- `^0.3.10` means `>=0.3.10 <0.4.0`
+> [!TIP]
+> Before going further, let's cover the meaning of tilde (`~`) and caret (`^`) in the context of semver (and their range):
+>
+> - `~3.1.10` means `>=3.1.10 <3.2.0`
+> - `^3.1.10` means `>=3.1.10 <4.0.0`
+>
+> But there's a catch, for `0.x` versions, the caret (`^`) behaves differently:
+>
+> - `^0.3.10` means `>=0.3.10 <0.4.0`
 
 In our case, the range is `^3.1.10`, which means that we can update to any version that is greater than or equal to `3.1.10` and less than `4.0.0`. Given that the fixed version is `4.0.8`, we'll need another solution here. Remember the screenshot of Dependabot earlier? Even Dependabot won't be able to create a pull request:
 
@@ -147,14 +161,16 @@ In the previous example, we weren't able to update only the vulnerable package b
 yarn up gulp
 ```
 
+> [!NOTE] > `-R,--recursive` flag is omitted here as `gulp` is a direct dependency.
+
 <br />
 
 <div className="img-center">
   <Image
     alt={`yarn up example`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-up.png`}
-    width={600}
-    height={143}
+    width={700}
+    height={167}
   />
 </div>
 
