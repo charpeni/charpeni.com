@@ -43,6 +43,8 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   const { base64 } = await getPlaiceholder(data.image, { size: 20 });
   const mdxSource = await serialize(content, {
     mdxOptions: {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore-error - https://github.com/orgs/rehypejs/discussions/63
       remarkPlugins: [remarkAlert],
       rehypePlugins: [rehypeCodeTitles, mdxPrism],
     },
