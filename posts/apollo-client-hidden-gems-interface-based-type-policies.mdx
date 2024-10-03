@@ -16,7 +16,7 @@ Applying type policies to interfaces can be really useful when you have a repeat
 
 ## Interfaces and TypePolicy inheritance
 
-I recently leveraged that pattern where we had multiple `*_DataPoint` types that all shared a common field: `sampledAt`, from which we need to derive the value into a local-only field containing the epoch representation of `sampledAt` as `sampledAtEpoch`. 
+I recently leveraged that pattern where we had multiple `*_DataPoint` types that all shared a common field: `sampledAt`, from which we need to derive the value into a local-only field containing the epoch representation of `sampledAt` as `sampledAtEpoch`.
 
 So, instead of defining the same field policy for each `DataPoint` implementer, I extracted the common field to an interface and defined the field policy on the interface instead:
 
@@ -55,7 +55,7 @@ Good news is that we can rely on the [inheritence of type and fields policies vi
 ```ts
 const cache = new InMemoryCache({
   possibleTypes: {
-    DataPoint: ["A_DataPoint", "B_DataPoint"],
+    DataPoint: ['A_DataPoint', 'B_DataPoint'],
   },
 
   typePolicies: {
@@ -73,18 +73,22 @@ const cache = new InMemoryCache({
           },
         },
       },
-  },
+    },
   },
 });
 ```
 
-> ⚠️ `possibleTypes` field needs to be filled in, otherwise, Apollo Client won't know about the interface implementers and won't be able to inherit the type policy. But I highly encourage you to look into generating it automatically.
+<br />
+
+> [!WARNING]
+> `possibleTypes` field needs to be filled in, otherwise, Apollo Client won't know about the interface implementers and won't be able to inherit the type policy. But I highly encourage you to look into generating it automatically.
 >
 > See:
+>
 > - [Defining possibleTypes manually](https://www.apollographql.com/docs/react/data/fragments/#defining-possibletypes-manually)
 > - [Generating possibleTypes automatically](https://www.apollographql.com/docs/react/data/fragments/#generating-possibletypes-automatically)
 >
-> 👋 If you're using [GraphQL Code Generator](https://the-guild.dev/graphql/codegen), this is what you're looking for: https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher. Either way, I highly encourage you to look into GraphQL Code Generator.
+> 👋 If you're using [GraphQL Code Generator](https://the-guild.dev/graphql/codegen), this is what you're looking for: [https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher](https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher). Either way, I highly encourage you to look into GraphQL Code Generator.
 
 Then, just like this, each implementer of `DataPoint` will automatically inherit the `sampledAtEpoch` field policy! No need to repeat the field policy over and over for each impleemnter.
 
@@ -99,7 +103,7 @@ Let's pick our previous example with `sampledAt` field being a `DateTime`, but r
 ```ts
 const cache = new InMemoryCache({
   possibleTypes: {
-    DataPoint: ["A_DataPoint", "B_DataPoint"],
+    DataPoint: ['A_DataPoint', 'B_DataPoint'],
   },
 
   typePolicies: {
@@ -110,9 +114,9 @@ const cache = new InMemoryCache({
           read(sampledAt) {
             return new Date(sampledAt);
           },
-        }
+        },
       },
-  },
+    },
   },
 });
 ```

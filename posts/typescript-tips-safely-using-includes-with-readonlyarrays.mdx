@@ -1,5 +1,5 @@
 ---
-title: "TypeScript Tips: Safely Using includes With ReadonlyArrays"
+title: 'TypeScript Tips: Safely Using includes With ReadonlyArrays'
 publishedAt: '2024-05-28'
 summary: 'How to use includes on ReadonlyArrays while retaining type safety and narrowing down the type.'
 image: '/static/images/typescript-tips-safely-using-includes-with-readonlyarrays/banner.png'
@@ -19,9 +19,10 @@ I looked online for a solution as I didn't want to just cast it as a string, but
 
 First of all, let's define a test scenario where we have a list of fruits and a subset of them defined as top picks:
 
+{/* prettier-ignore-start */}
 ```typescript
 const FRUITS = [
-//    ^? const FRUITS: readonly ["Apple", "Banana", ...
+  //  ^? const FRUITS: readonly ["Apple", "Banana", ...
   'Apple',
   'Banana',
   'Orange',
@@ -40,11 +41,13 @@ type AllFruits = typeof FRUITS[number];
 const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
 //    ^? const TOP_PICKS: readonly ["Apple", "Peach"...
 ```
+{/* prettier-ignore-end */}
 
 Here, we would like to check whether the selection (`FRUITS`) is part of the `TOP_PICKS` (subset of `FRUITS`), which could be useful if we would like to display a distinctive element for "top pick" elements, e.g., a star.
 
 If we want to check whether the selection is part of the subset `TOP_PICKS`, TypeScript won't let us do it. Because it knows that our two literal arrays don't match as `selection` is typed based on its superset: `FRUITS`. TypeScript knows that not all members of the superset are present in the subset (obviously, right? It's a subset of the domain). TypeScript believes it could be a mistake, unless that's exactly what you want to do.
 
+{/* prettier-ignore-start */}
 ```typescript
 function scenario(selection: AllFruits) {
   if (TOP_PICKS.includes(selection)) { // Argument of type '"Apple" | "Banana" | "Orange" | "Grape" | "Watermelon" | "Pineapple" | "Mango" | "Strawberry" | "Peach" | "Pear"' is not assignable to parameter of type '"Apple" | "Peach"'.
@@ -52,6 +55,7 @@ function scenario(selection: AllFruits) {
   }
 }
 ```
+{/* prettier-ignore-end */}
 
 We need to widen the type of `TOP_PICKS` to be able to check whether a selection is included in it, and hopefully, retain type safety!
 
@@ -96,8 +100,10 @@ Meaning that, within the if/else condition, we know that if `selection` was incl
 Let's extract the exact same logic we used previously, but this time, we'll define it in its own function as a [type guard](https://www.typescriptlang.org/docs/handbook/2/narrowing.html) combined with a [type predicate](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)!
 
 ```typescript
-function isTopPick(selection: AllFruits): selection is (typeof TOP_PICKS)[number] {
-    return (TOP_PICKS as ReadonlyArray<AllFruits>).includes(selection);
+function isTopPick(
+  selection: AllFruits,
+): selection is (typeof TOP_PICKS)[number] {
+  return (TOP_PICKS as ReadonlyArray<AllFruits>).includes(selection);
 }
 ```
 
@@ -115,7 +121,7 @@ If `isTopPick` returns `true`, the `selection` type is narrowed down to `"Apple"
 
 ```typescript
 function scenario(selection: AllFruits) {
-if (isTopPick(selection)) {
+  if (isTopPick(selection)) {
     const selectionType = selection;
     //    ^? const selectionType: "Apple" | "Peach"
   } else {

@@ -1,5 +1,5 @@
 ---
-title: "Speeding up ESLint—Even on CI"
+title: 'Speeding up ESLint—Even on CI'
 publishedAt: '2024-04-25'
 summary: "Gotta Cache 'Em All: Leverage ESLint's cache to speed it up."
 image: '/static/images/speeding-up-eslint-even-on-ci/banner.png'
@@ -27,8 +27,7 @@ npx eslint '**/*.{js,ts,tsx}' --cache
 
 By doing so, ESLint will cache the results of the linting process and reuse them on subsequent runs to only process the files that have changed since the last run. The cache is stored in `.eslintcache` by default, but can be changed via [`--cache-location`](https://eslint.org/docs/latest/use/command-line-interface#--cache-location).
 
-> ⚠️ **Be careful!**
->
+> [!WARNING]
 > Omitting `--cache` will invalidate and **delete** the cache, and you would be running ESLint on all files again. Be sure to be consistent if you want to leverage the cache, e.g., don't forget to update your pre-commit hook if any!
 
 We also need to add `.eslintcache` (or what was provided to `--cache-location`) to `.gitignore` to avoid committing it to the repository as it is user specific (contains absolute paths rather than relatives):
@@ -101,7 +100,10 @@ One additional step I took to prevent running a stale cache and avoid any long-r
 
 This is totally optional, it may not be necessary, but I figured it could be useful if something went wrong with the cache strategy and some errors slipped through. I don't believe it would be an issue as I believe the cache strategy is pretty solid, but it's always good to have a fallback. Also, at some point, the initial cache becomes quite outdated and we will be running ESLint on too many files, so it's good to have a fresh cache. Obviously, it could be a weekly cache invalidation or whatever you need.
 
+> [!NOTE]
 > CircleCI doesn't allow overriding the cached content for a given key, meaning that the first cached value will be kept for 15 days (CircleCI's cache policy) or until one of the `checksum` in the cache key changes.
+
+<br />
 
 ```yaml:.circleci/config.yml
 lint:
