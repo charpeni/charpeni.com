@@ -35,6 +35,15 @@
   font-display: swap;
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 ::selection {
   background-color: #47a3f3;
   color: #fefefe;
@@ -116,4 +125,24 @@ table {
 
 a {
   overflow-wrap: break-word;
+}
+
+.content-header-link {
+  opacity: 0;
+  margin-left: -20px;
+  padding-right: 4px;
+
+  .lucide-link {
+    display: inline-block;
+    vertical-align: middle;
+    width: 16px;
+    color: #808080;
+    margin-top: -4px;
+  }
+}
+
+.content-header:hover .content-header-link,
+.content-header-link:hover {
+  opacity: 1;
+  animation: fadeIn 300ms;
 }

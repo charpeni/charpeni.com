@@ -6,7 +6,10 @@ import readingTime from 'reading-time';
 import { serialize } from 'next-mdx-remote/serialize';
 import rehypeCodeTitles from 'rehype-code-titles';
 import { remarkAlert } from 'remark-github-blockquote-alert';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeSlug from 'rehype-slug';
 import { getPlaiceholder } from 'plaiceholder';
+import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
 
 import type { ReadTimeResults } from 'reading-time';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
@@ -46,7 +49,23 @@ export async function getPostBySlug(slug: string): Promise<Post> {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore-error - https://github.com/orgs/rehypejs/discussions/63
       remarkPlugins: [remarkAlert],
-      rehypePlugins: [rehypeCodeTitles, mdxPrism],
+      rehypePlugins: [
+        rehypeSlug,
+        [
+          rehypeAutolinkHeadings,
+          {
+            headingProperties: {
+              className: ['content-header'],
+            },
+            content: fromHtmlIsomorphic(
+              '<span class="content-header-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>',
+              { fragment: true },
+            ).children,
+          },
+        ],
+        rehypeCodeTitles,
+        mdxPrism,
+      ],
     },
   });
 
