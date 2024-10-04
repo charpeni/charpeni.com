@@ -113,7 +113,7 @@ type Icon = 'A' | 'B' | 'C' | '%future added value';
 
 In order to be defensive on the client, we need to stop blindly trusting enums. Enums are values supported by the backend, it doesn't mean they are supported by the client.
 
-> [!IMPORTANT]
+> [!WARNING]
 > Don't forget that your client changes aren't propagated to everyone unless you have a mechanism to stop old GraphQL clients from querying, then old client code will still be executing the query and receiving the new enum values.
 
 One way to solve this—or at least a variant—is to keep a list of supported values on the frontend too! This way, we can check if the value is supported before using it.

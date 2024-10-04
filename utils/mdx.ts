@@ -5,11 +5,11 @@ import path from 'path';
 import readingTime from 'reading-time';
 import { serialize } from 'next-mdx-remote/serialize';
 import rehypeCodeTitles from 'rehype-code-titles';
-import { remarkAlert } from 'remark-github-blockquote-alert';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeSlug from 'rehype-slug';
 import { getPlaiceholder } from 'plaiceholder';
 import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
+import rehypeCallouts from 'rehype-callouts';
 
 import type { ReadTimeResults } from 'reading-time';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
@@ -46,9 +46,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   const { base64 } = await getPlaiceholder(data.image, { size: 20 });
   const mdxSource = await serialize(content, {
     mdxOptions: {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore-error - https://github.com/orgs/rehypejs/discussions/63
-      remarkPlugins: [remarkAlert],
+      remarkPlugins: [],
       rehypePlugins: [
         rehypeSlug,
         [
@@ -64,6 +62,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
           },
         ],
         rehypeCodeTitles,
+        rehypeCallouts,
         mdxPrism,
       ],
     },
