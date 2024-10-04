@@ -52,7 +52,9 @@ yarn info <dependency-name> --all --recursive
 > [!TIP]
 > Yarn will default to print the information about all the matching direct dependencies of the package for the active workspace. To instead print all versions of the package that are direct dependencies of any of your workspaces, use the `-A,--all` flag.
 
-> [!TIP] > `-R,--recursive` flag will also report transitive dependencies. **Required** when investigating an issue that's not a direct dependency.
+> [!TIP]
+>
+> `-R,--recursive` flag will also report transitive dependencies. **Required** when investigating an issue that's not a direct dependency.
 
 <br />
 
@@ -69,6 +71,19 @@ yarn info <dependency-name> --all --recursive
 > In this example, we can see that a single version of `micromatch` is used. This information is crucial to understand the impact of updating the package.
 
 This command helps identify the versions of the package and which packages are depending on it. Knowing this will guide you in choosing the best solution to resolve the CVE.
+
+> [!NOTE]
+> Package managers try to satisfy the requirements for each package by resolving the best possible versions based on the constraints provided (e.g., semver ranges). But when multiple dependencies request conflicting versions, the package manager may need to install multiple versions of the same package. This can lead to a more complex dependency tree and increase the risk of bugs or vulnerabilities.
+>
+> Here's an example of a lock file with a resolution (`4.17.21`) satisfying multiple ranges of `lodash-es`:
+>
+> ```json
+> "lodash-es@npm:^4.17.11, lodash-es@npm:^4.17.15, lodash-es@npm:^4.17.21":
+>   version: 4.17.21
+>   resolution: "lodash-es@npm:4.17.21"
+> ```
+>
+> This is why it's important to review your dependencies periodically and "dedupe" your packages where possible. Deduplication helps to consolidate multiple versions of the same package, reducing redundancy and the potential for version conflicts. By actively managing your dependency tree, you minimize the risk of issues creeping into your project over time.
 
 ### 3. Why do we have this dependency?
 
@@ -109,7 +124,9 @@ yarn up <dependency-name>
 yarn up <dependency-name> --recursive
 ```
 
-> [!TIP] > `-R,--recursive` flag may or may not be required, depending on whether the dependency you are updating is a direct or transitive dependency.
+> [!TIP]
+>
+> `-R,--recursive` flag may or may not be required, depending on whether the dependency you are updating is a direct or transitive dependency.
 
 For transitive dependencies, things get trickier, and updating other dependencies might be required. As an example, in the previous case, we can't update `micromatch` directly because we learned that versions prior to `4.0.8` are vulnerable and that we're only using a single version: `3.1.10`. However, they all depend on `micromatch` with a range of `^3.1.10` (or so).
 
@@ -161,7 +178,9 @@ In the previous example, we weren't able to update only the vulnerable package b
 yarn up gulp
 ```
 
-> [!NOTE] > `-R,--recursive` flag is omitted here as `gulp` is a direct dependency.
+> [!NOTE]
+>
+> `-R,--recursive` flag is omitted here as `gulp` is a direct dependency.
 
 <br />
 
