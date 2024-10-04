@@ -70,15 +70,15 @@ importers:
       rehype-autolink-headings:
         specifier: ^7.1.0
         version: 7.1.0
+      rehype-callouts:
+        specifier: ^1.0.3
+        version: 1.0.3
       rehype-code-titles:
         specifier: ^1.2.0
         version: 1.2.0
       rehype-slug:
         specifier: ^6.0.0
         version: 6.0.0
-      remark-github-blockquote-alert:
-        specifier: ^1.2.1
-        version: 1.2.1
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
@@ -1528,6 +1528,9 @@ packages:
   hastscript@8.0.0:
     resolution: {integrity: sha512-dMOtzCEd3ABUeSIISmrETiKuyydk1w0pa+gE/uormcTpSYuaNJPbX1NU3JLyscSLjwAQM8bWMhhIlnCqnRvDTw==}
 
+  hastscript@9.0.0:
+    resolution: {integrity: sha512-jzaLBGavEDKHrc5EfFImKN7nZKKBdSLIdGvCwDZ9TfzbF2ffXiov8CKE445L2Z1Ek2t/m4SKQ2j6Ipv7NyUolw==}
+
   html-void-elements@1.0.5:
     resolution: {integrity: sha512-uE/TxKuyNIcx44cIWnjr/rfIATDH7ZaOMmstu0CwhFG1Dunhlp4OC6/NMbhiwoq5BpW0ubi303qnEk/PZj614w==}
 
@@ -2464,6 +2467,10 @@ packages:
   rehype-autolink-headings@7.1.0:
     resolution: {integrity: sha512-rItO/pSdvnvsP4QRB1pmPiNHUskikqtPojZKJPPPAVx9Hj8i8TwMBhofrrAYRhYOOBZH9tgmG5lPqDLuIWPWmw==}
 
+  rehype-callouts@1.0.3:
+    resolution: {integrity: sha512-j4Yhj+csgmAOVNkO8UbyqHTucBlm3uu0Vm7ftzMsWnoLwO74hbfccUuz7PyFTMZgeqeMN4u4Ds7JxKI580dzSA==}
+    engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
+
   rehype-code-titles@1.2.0:
     resolution: {integrity: sha512-bSr2YJ0GHbHFarUNDZ3VpcGi9HqjLNrA9Lj3nuyox2aGGLhN53dFP2WJtPRnnRqU/vpbCatIgOYxEvWP1YYKrw==}
     engines: {node: '>=16'}
@@ -2491,10 +2498,6 @@ packages:
 
   remark-frontmatter@5.0.0:
     resolution: {integrity: sha512-XTFYvNASMe5iPN0719nPrdItC9aU0ssC4v14mH1BCi1u0n1gAocqcujWUrByftZTbLhRtiKRyjYTSIOcr69UVQ==}
-
-  remark-github-blockquote-alert@1.2.1:
-    resolution: {integrity: sha512-qNf2mSAoZgh3Cl23/9Y1L7S4Kbf9NsdHvYK398ab/52yEsDPDU5I4cuTcgDRrdIX7Ltc6RK+KCLRtWkbFnL6Dg==}
-    engines: {node: '>=16'}
 
   remark-mdx@2.3.0:
     resolution: {integrity: sha512-g53hMkpM0I98MU266IzDFMrTD980gNF3BJnkyFcmN+dD873mQeD5rdMO3Y2X+x8umQfbSE0PcoEDl7ledSA+2g==}
@@ -4640,6 +4643,14 @@ snapshots:
       property-information: 6.0.1
       space-separated-tokens: 2.0.1
 
+  hastscript@9.0.0:
+    dependencies:
+      '@types/hast': 3.0.4
+      comma-separated-tokens: 2.0.2
+      hast-util-parse-selector: 4.0.0
+      property-information: 6.0.1
+      space-separated-tokens: 2.0.1
+
   html-void-elements@1.0.5: {}
 
   html-void-elements@3.0.0: {}
@@ -5907,6 +5918,13 @@ snapshots:
       unified: 11.0.5
       unist-util-visit: 5.0.0
 
+  rehype-callouts@1.0.3:
+    dependencies:
+      hast-util-from-html: 2.0.3
+      hast-util-is-element: 3.0.0
+      hastscript: 9.0.0
+      unist-util-visit: 5.0.0
+
   rehype-code-titles@1.2.0:
     dependencies:
       hast: 1.0.0
@@ -5962,10 +5980,6 @@ snapshots:
       unified: 11.0.5
     transitivePeerDependencies:
       - supports-color
-
-  remark-github-blockquote-alert@1.2.1:
-    dependencies:
-      unist-util-visit: 5.0.0
 
   remark-mdx@2.3.0:
     dependencies:
