@@ -56,14 +56,12 @@ yarn info <dependency-name> --all --recursive
 >
 > `-R,--recursive` flag will also report transitive dependencies. **Required** when investigating an issue that's not a direct dependency.
 
-<br />
-
 <div className="img-center">
   <Image
     alt={`yarn info example`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-info.png`}
-    width={469}
-    height={360}
+    width={528}
+    height={450}
   />
 </div>
 
@@ -96,14 +94,12 @@ yarn why <dependency-name> --recursive
 > [!TIP]
 > If `-R,--recursive` flag is set, the listing will go in depth and will list, for each workspaces, what are all the paths that lead to the dependency. This is also super helpful when investigating, otherwise, it only shows the direct dependant.
 
-<br />
-
 <div className="img-center">
   <Image
     alt={`yarn why example`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-why.png`}
-    width={553}
-    height={360}
+    width={620}
+    height={450}
   />
 </div>
 
@@ -147,7 +143,7 @@ In our case, the range is `^3.1.10`, which means that we can update to any versi
     alt={`Dependabot failure`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/dependabot-failure.png`}
     width={600}
-    height={124}
+    height={126}
   />
 </div>
 
@@ -182,14 +178,12 @@ yarn up gulp
 >
 > `-R,--recursive` flag is omitted here as `gulp` is a direct dependency.
 
-<br />
-
 <div className="img-center">
   <Image
     alt={`yarn up example`}
     src={`/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/yarn-up.png`}
     width={700}
-    height={167}
+    height={258}
   />
 </div>
 
