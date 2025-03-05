@@ -52,7 +52,7 @@ export default function Home({
   return (
     <Container>
       <div className="flex flex-col justify-center items-start max-w-4xl w-full mx-auto mb-16 px-4 md:px-0">
-        <section className="w-full mb-16 px-4 lg:px-0">
+        <section className="w-full mb-16">
           <div className="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between">
             <div className="flex-1 mt-4 lg:mt-0 lg:pr-8 w-full text-center lg:text-left">
               <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight mb-8 text-black dark:text-white lg:whitespace-nowrap">
