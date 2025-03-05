@@ -61,10 +61,12 @@ export default function Home({
               <div className="lg:flex lg:items-start lg:gap-8">
                 <div className="flex-1">
                   <h2 className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed mx-auto lg:mx-0">
-                    I&apos;m a Software Engineer mainly playing with React Native,
-                    React, GraphQL, and Continuous Integrations (CircleCI, GitHub
-                    Actions). I&apos;m an{' '}
-                    <span className="highlight font-semibold dark:text-white">
+                    I&apos;m a Software Engineer mainly playing with{' '}
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">React Native</span>,{' '}
+                    <span className="text-cyan-600 dark:text-cyan-400 font-medium">React</span>,{' '}
+                    <span className="text-pink-600 dark:text-pink-400 font-medium">GraphQL</span>, and{' '}
+                    <span className="text-purple-600 dark:text-purple-400 font-medium">Continuous Integrations</span>. I&apos;m an{' '}
+                    <span className="highlight font-semibold text-black dark:text-white">
                       open source enthusiast
                     </span>
                     , and I enjoy removing friction from the developer experience.
@@ -82,7 +84,7 @@ export default function Home({
                     <MySocials />
                   </div>
                 </div>
-                <div className="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.08),0_0_40px_rgba(147,51,234,0.05),0_0_60px_rgba(236,72,153,0.03)]">
+                <div className="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_40px_rgba(147,51,234,0.2),0_0_60px_rgba(236,72,153,0.15)]">
                   <div className={`absolute -inset-[6px] ${styles.gradientRotate}`} />
                   <div className="absolute inset-[3px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden">
                     <Image

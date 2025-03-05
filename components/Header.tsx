@@ -53,7 +53,7 @@ export default function Header() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <nav className="flex justify-between items-center max-w-4xl w-full py-8 my-0 md:my-8 mx-auto px-4 md:px-0 bg-white dark:bg-black">
+    <nav className="flex justify-between items-center max-w-4xl w-full py-8 my-0 md:my-8 mx-auto px-8 lg:px-0 bg-white dark:bg-black">
       <button
         aria-label="Toggle Dark Mode"
         type="button"
