@@ -7,6 +7,7 @@ type Props = {
   slug: string;
   image: string;
   blurDataURL: string;
+  readingTime: { text: string };
 };
 
 export default function BlogPostCard({
@@ -15,35 +16,47 @@ export default function BlogPostCard({
   slug,
   image,
   blurDataURL,
+  readingTime,
 }: Props) {
   return (
-    <Link href={`/blog/${slug}`} className="w-full mb-8">
-      <div className="w-full rounded shadow-md hover:shadow-lg dark:ring-1 dark:ring-gray-500 dark:hover:ring-2 dark:hover:ring-gray-400 transition-all">
-        <div className="relative w-full pt-[30%]">
+    <Link href={`/blog/${slug}`} className="group block w-full h-full">
+      <article className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:ring-1 dark:ring-gray-800 h-full flex flex-col">
+        <div className="relative w-full pt-[56.25%] flex-shrink-0">
           <Image
-            className="rounded-t"
+            className="rounded-t-xl"
             alt={title}
             src={image}
             placeholder="blur"
             blurDataURL={blurDataURL}
             fill
-            sizes="(min-width: 768px) 85vw,
-                    (min-width: 1280px) 50vw,
-                    33vw"
+            sizes="(min-width: 768px) 40vw,
+                    (min-width: 1280px) 30vw,
+                    90vw"
             style={{
               objectFit: 'cover',
             }}
           />
         </div>
-        <div className="p-4">
-          <div className="flex flex-col md:flex-row justify-between">
-            <h4 className="text-lg md:text-xl font-medium mb-2 w-full text-gray-900 dark:text-gray-100">
+        <div className="p-6 flex flex-col flex-1">
+          <div className="flex flex-col flex-1">
+            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {title}
-            </h4>
+            </h3>
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              {readingTime.text}
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 line-clamp-3 flex-1">{summary}</p>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{summary}</p>
+          <div className="mt-4">
+            <span className="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300">
+              Read more
+              <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </span>
+          </div>
         </div>
-      </div>
+      </article>
     </Link>
   );
 }
