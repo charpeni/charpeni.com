@@ -146,3 +146,11 @@ a {
   opacity: 1;
   animation: fadeIn 300ms;
 }
+
+.banner {
+  @apply mb-8 overflow-hidden rounded-lg;
+}
+
+.banner img {
+  @apply w-full h-auto object-cover;
+}

@@ -5,6 +5,17 @@ summary: 'How to properly and safely update dependencies to resolve CVEs, while 
 image: '/static/images/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies/banner.jpg'
 ---
 
+import { Image } from 'astro:assets';
+
+<div className="banner">
+  <Image
+    alt="Banner"
+    src={frontmatter.image}
+    width={1200}
+    height={630}
+  />
+</div>
+
 I want to talk about a common scenario that many of us face as developers: dealing with CVEs ([Common Vulnerabilities and Exposures](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures)). In this post, we'll dive into how to properly and safely update dependencies to resolve CVEs, while also gathering an understanding of how package managers handle dependencies.
 
 ## Why?

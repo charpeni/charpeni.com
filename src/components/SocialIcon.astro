@@ -1,0 +1,20 @@
+---
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
+
+interface Props {
+  url: string;
+}
+
+const { url } = Astro.props;
+---
+
+<div class="rounded-full hover:bg-gray-100">
+  <ReactSocialIcon
+    bgColor="transparent"
+    fgColor="#757575"
+    target="_blank"
+    rel="noopener noreferrer"
+    url={url}
+    client:load
+  />
+</div>

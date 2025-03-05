@@ -1,0 +1,58 @@
+---
+import Footer from './Footer.astro';
+import Header from './Header.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: string;
+  author?: string;
+  twitterUsername?: string;
+  image?: string;
+  date?: string;
+}
+
+const {
+  title = 'Nicolas Charpentier – Website',
+  description = 'My personal website and blog.',
+  type = 'website',
+  author = 'Nicolas Charpentier',
+  twitterUsername = '@charpeni_',
+  image,
+  date,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<div class="bg-white dark:bg-black">
+  <Header />
+  <main
+    id="skip"
+    class="flex flex-col justify-center bg-white dark:bg-black px-8"
+  >
+    <slot />
+    <Footer />
+  </main>
+</div>
+
+<meta name="robots" content="follow, index" />
+<meta content={description} name="description" />
+<meta name="author" content={author} />
+<meta property="og:url" content={canonicalURL} />
+<link rel="canonical" href={canonicalURL} />
+
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content="Nicolas Charpentier" />
+<meta property="og:description" content={description} />
+<meta property="og:title" content={title} />
+{image && <meta property="og:image" content={image} />}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content={twitterUsername} />
+<meta name="twitter:creator" content={twitterUsername} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{image && <meta name="twitter:image" content={image} />}
+
+{date && <meta property="article:published_time" content={date} />}

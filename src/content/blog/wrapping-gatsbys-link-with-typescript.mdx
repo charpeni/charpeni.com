@@ -5,11 +5,22 @@ summary: "How to properly wrap Gatsby's <Link> component while preserving Gatsby
 image: '/static/images/wrapping-gatsbys-link-with-typescript/banner.webp'
 ---
 
+import { Image } from 'astro:assets';
+
+<div className="banner">
+  <Image
+    alt="Banner"
+    src={frontmatter.image}
+    width={1200}
+    height={630}
+  />
+</div>
+
 If you came across this article, it's probably because you're wondering how to handle external and internal links with Gatsby properly.
 
 > 🧰 Written on Gatsby v3, TypeScript 4.4, and React 17.
 
-Gatsby includes a built-in `<Link>` component for creating links between internal pages. This component is a wrapper around [@reach/router’s Link component](https://reach.tech/router/api/Link) that adds useful enhancements specific to Gatsby. All props are passed through to `@reach/router`’s Link component.
+Gatsby includes a built-in `<Link>` component for creating links between internal pages. This component is a wrapper around [@reach/router's Link component](https://reach.tech/router/api/Link) that adds useful enhancements specific to Gatsby. All props are passed through to `@reach/router`'s Link component.
 
 We shouldn't use it for internal links because Gatsby is doing performance optimizations like preloading to prefetch page resources depending on user interactions to eliminate the latency. If you don't respect this, you'll end up with warnings like:
 

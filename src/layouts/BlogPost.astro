@@ -1,0 +1,48 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import Layout from './Layout.astro';
+
+type Props = CollectionEntry<'blog'>;
+
+const { data, slug } = Astro.props;
+const { title, publishedAt, summary, image } = data;
+---
+
+<Layout title={title} description={summary}>
+  <article
+    class="flex flex-col items-start justify-center w-full max-w-2xl mx-auto mb-16"
+  >
+    <h1
+      class="mb-4 text-3xl font-bold tracking-tight text-black md:text-5xl dark:text-white"
+    >
+      {title}
+    </h1>
+    <div
+      class="flex flex-col items-start justify-between w-full mt-2 md:flex-row md:items-center"
+    >
+      <div class="flex items-center">
+        <p class="text-sm text-gray-700 dark:text-gray-300">
+          {
+            new Date(publishedAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })
+          }
+        </p>
+      </div>
+    </div>
+    <div class="prose dark:prose-dark max-w-none w-full mt-4">
+      <slot />
+    </div>
+  </article>
+</Layout>
+
+<style is:global>
+  .prose img {
+    @apply rounded-lg;
+    @apply w-full;
+    @apply h-auto;
+  }
+</style>
