@@ -66,7 +66,7 @@ export default function Home({
                     <span className="text-cyan-600 dark:text-cyan-400 font-medium">React</span>,{' '}
                     <span className="text-pink-600 dark:text-pink-400 font-medium">GraphQL</span>, and{' '}
                     <span className="text-purple-600 dark:text-purple-400 font-medium">Continuous Integrations</span>. I&apos;m an{' '}
-                    <span className="highlight font-semibold text-black dark:text-white">
+                    <span className="font-semibold glow-yellow-text">
                       open source enthusiast
                     </span>
                     , and I enjoy removing friction from the developer experience.
