@@ -37,13 +37,13 @@ export default function BlogLayout({ children, frontMatter }) {
       type="article"
     >
       <article className="flex flex-col justify-center max-w-3xl mx-auto mb-16 w-full">
-        <header className="mb-12">
-          <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl tracking-tight text-black dark:text-white">
+        <header className="mb-6 lg:mb-12">
+          <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight text-black dark:text-white">
             {frontMatter.title}
           </h1>
         </header>
 
-        <div className="relative w-full aspect-[2/1] mb-8 rounded-xl overflow-hidden">
+        <div className="relative w-full aspect-[2/1] mb-6 lg:mb-8 rounded-xl overflow-hidden">
           <Image
             alt={frontMatter.title}
             src={frontMatter.image}
@@ -55,7 +55,7 @@ export default function BlogLayout({ children, frontMatter }) {
           />
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-gray-700 dark:text-gray-300 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-gray-700 dark:text-gray-300 mb-4">
           <div className="flex items-center justify-between md:justify-start w-full md:w-auto">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.08),0_0_40px_rgba(147,51,234,0.05),0_0_60px_rgba(236,72,153,0.03)]">
@@ -79,7 +79,7 @@ export default function BlogLayout({ children, frontMatter }) {
               </div>
             </div>
             <div className="md:hidden">
-              <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm">
+              <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm">
                 {frontMatter.readingTime.text}
               </span>
             </div>

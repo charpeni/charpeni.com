@@ -14,13 +14,14 @@ module.exports = {
         durple: '#452B5B',
       },
       fontFamily: {
-        sans: ['Titillium Web', ...fontFamily.sans],
+        sans: ['Fixel Text', ...fontFamily.sans],
       },
       typography: (theme) => ({
         DEFAULT: {
           css: {
             letterSpacing: '.01em',
             wordSpacing: '.025em',
+            lineHeight: '1.75',
             color: theme('colors.gray.700'),
             a: {
               color: theme('colors.blue.500'),
