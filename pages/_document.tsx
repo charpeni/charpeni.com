@@ -7,28 +7,28 @@ class MyDocument extends Document {
         <Head>
           <link
             rel="preload"
-            href="/fonts/titillium-web-v9-latin-regular.woff2"
+            href="/fonts/FixelText-Regular.woff2"
             as="font"
             type="font/woff2"
             crossOrigin="anonymous"
           />
           <link
             rel="preload"
-            href="/fonts/titillium-web-v9-latin-600.woff2"
+            href="/fonts/FixelText-SemiBold.woff2"
             as="font"
             type="font/woff2"
             crossOrigin="anonymous"
           />
           <link
             rel="preload"
-            href="/fonts/titillium-web-v9-latin-700.woff2"
+            href="/fonts/FixelText-ExtraBold.woff2"
             as="font"
             type="font/woff2"
             crossOrigin="anonymous"
           />
           <link
             rel="preload"
-            href="/fonts/titillium-web-v9-latin-900.woff2"
+            href="/fonts/FixelText-Black.woff2"
             as="font"
             type="font/woff2"
             crossOrigin="anonymous"
