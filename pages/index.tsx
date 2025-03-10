@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import styles from '@/styles/GradientAnimation.module.css';
 
 import Container from '@/components/Container';
@@ -19,13 +19,14 @@ export default function Home({
   const router = useRouter();
   const currentPage = Number(router.query.page) || 1;
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const blogHeaderRef = useRef<HTMLHeadingElement>(null);
   
   const paginatedPosts = posts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
     currentPage * POSTS_PER_PAGE
   );
 
-  // Update URL when page changes
+  // Update URL when page changes and scroll to blog header
   const setCurrentPage = (page: number) => {
     const query = { ...router.query };
     if (page === 1) {
@@ -37,7 +38,15 @@ export default function Home({
     router.push({
       pathname: router.pathname,
       query
-    }, undefined, { shallow: true });
+    }, undefined, { shallow: true }).then(() => {
+      // Scroll to the blog posts header with smooth behavior
+      if (blogHeaderRef.current) {
+        blogHeaderRef.current.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
   };
 
   // Validate page number
@@ -102,7 +111,11 @@ export default function Home({
         </section>
 
         <section className="w-full">
-          <h2 className="font-bold text-3xl md:text-4xl tracking-tight mb-8 text-black dark:text-white">
+          <h2 
+            ref={blogHeaderRef}
+            id="blog-posts" 
+            className="font-bold text-3xl md:text-4xl tracking-tight mb-8 text-black dark:text-white"
+          >
             Blog Posts
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
