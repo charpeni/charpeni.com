@@ -7,7 +7,7 @@ image: '/static/images/setting-up-an-example-app-for-your-react-native-library/b
 
 > Unable to resolve module … Module does not exist in the module map or in these directories … Naming collision
 
-There is probably a tonne of ways to create an example app for your React Native library, except almost each of them comes with some major downsides.
+There is probably a ton of ways to create an example app for your React Native library, except almost each of them comes with some major downsides.
 
 The naive and common approach will be to use: `yarn add file:../` to add your library to your example app, and that would probably work great! But, you would have to reinstall your package on every lib change, if you don’t forget it. Some libraries are using something similar, with a custom script to automatically watch and update files on changes (`watchman` / `rsync`), this may be great engineering but certainly not the best developer experience! (See [wix/wml](https://github.com/wix/wml)).
 

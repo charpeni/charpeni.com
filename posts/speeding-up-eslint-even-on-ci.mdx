@@ -28,7 +28,7 @@ npx eslint '**/*.{js,ts,tsx}' --cache
 By doing so, ESLint will cache the results of the linting process and reuse them on subsequent runs to only process the files that have changed since the last run. The cache is stored in `.eslintcache` by default, but can be changed via [`--cache-location`](https://eslint.org/docs/latest/use/command-line-interface#--cache-location).
 
 > [!WARNING]
-> Omitting `--cache` will invalidate and **delete** the cache, and you would be running ESLint on all files again. Be sure to be consistent if you want to leverage the cache, e.g., don't forget to update your pre-commit hook if any!
+> Omitting `--cache` will invalidate and **delete** the cache, and you will be running ESLint on all files again. Be sure to be consistent if you want to leverage the cache, e.g., don't forget to update your pre-commit hook if any!
 
 We also need to add `.eslintcache` (or what was provided to `--cache-location`) to `.gitignore` to avoid committing it to the repository as it is user specific (contains absolute paths rather than relatives):
 
@@ -59,7 +59,7 @@ I will be using CircleCI as an example here, but I'm sure it could easily be tra
 
 We need to cache ESLint's cache file, based on the previous steps, we want to cache `.eslintcache` (or what was provided to `--cache-location`)—it could even be a different one just for CI.
 
-To do so, we need to cache specifially that file, and we need to be careful with cache invalidation because caching things is always easier than invalidating the cache at the right time.
+To do so, we need to cache specifically that file, and we need to be careful with cache invalidation because caching things is always easier than invalidating the cache at the right time.
 
 In this context, we want to cache ESLint's cache file based on:
 
