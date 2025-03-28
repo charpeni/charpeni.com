@@ -1,0 +1,98 @@
+---
+title: 'How to Easily Reproduce a Flaky Test in Playwright'
+publishedAt: '2025-03-28'
+summary: 'Stop playing whack-a-mole with flaky Playwright tests by using CPU throttling to reliably reproduce CI failures on your local machine.'
+image: '/static/images/how-to-easily-reproduce-a-flaky-test-in-playwright/banner.jpg'
+---
+
+Have you ever dealt with a flaky test? Especially the one that works locally almost all the time but fails on CI? Or even worse, it works on your machine but fails on your colleague's machine?
+
+I spent some time recently on flaky tests, and I wanted to share a few tips on how to easily reproduce those flakiness locally and ensuring you can trust your commit rather than sending multiple commits `Fix tests (for real this time)`.
+
+## Reproducing a flaky test
+
+I recently worked on end-to-end tests with [Playwright](https://playwright.dev/) that were loading a web app, but also loading an heavy collaborative editor (_read this as something that takes a while to load_). On my machine, it was working well all the time (obviously), but on CI, it was failing randomly—but often. I suspected it had to do with timeouts and the fact that the editor was loading a bit slowly, but I wanted to be sure of it, so I started to investigate.
+
+I didn't want to blindly increment all timeouts, I wanted to reproduce locally so I could have confidence in my changes. The lack of confidence was killing me each single time I was pushing a commit believing it was fixed for real this time. I knew that it was something related to the machine performance, as CI machines are usually less powerful than the one we have locally.
+
+I discovered the [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) class within Playwright, which stands for [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/). I learned that you can create a `CDPSession`, then send a useful protocol method: [`Emulation.setCPUThrottlingRate`](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setCPUThrottlingRate). You probably see where this is going now.
+
+In my case, I knew from which file flaky tests were, so I added the following as a `beforeEach` hook:
+
+```js
+test.beforeEach(async ({ page }) => {
+  const context = page.context();
+  const cdpSession = await context.newCDPSession(page);
+  // 4-6x CPU throttling is what worked well for my M1 Pro.
+  await cdpSession.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+});
+```
+
+> [!CAUTION]
+> Be careful, **don't commit this!**
+>
+> This is only for reproducing flaky tests locally by throttling your CPU to match the machine performance used on CI.
+
+Doing so, I was able to throttle my CPU and I reproduced those flakiness right away. 4 to 6 times worked well for me (M1 Pro), but you can adjust it to your needs. From there, I was able to trace the failures and fix them with confidence. Yes, they worked well on CI too!
+
+## Other Playwright tips
+
+Since you made it this far, I wanted to share a few other tips I learned while working with Playwright.
+
+### Disable retries when investigating
+
+Retries are a useful feature for retrying flaky tests automatically, but they can be a pain when debugging.
+
+You should remember to disable them by setting the `retries` option to `0` when investigating flakiness, otherwise it could hide some flakiness in those retries. I know, retries are also mentioned in the test results
+
+```bash
+npx playwright test --retries 0
+```
+
+> [!TIP]
+> An alternative to it, could be to use the explicit `--fail-on-flaky-tests` option, which will fail the test suite if any test is flagged as flaky.
+
+### Repeat tests
+
+There's a command to repeat each single test `N` times! That's an interesting command to run when investigating flakiness rather than running the same command multiple times.
+
+```bash
+npx playwright test --repeat-each 10
+```
+
+### Stress test your machine
+
+I mentioned earlier that our machines are usually more powerful than CI machines, but what if you want to stress test your machine (other than by throttling)?
+
+You can use the `--workers` option to run multiple tests in parallel, which is useful to stress test your machine and reproduce flakiness.
+
+> [!TIP]
+> Workers represents the number of concurrent workers or percentage of logical CPU cores. E.g., using `--workers 1` means there's a single worker, which disables parallelism.
+>
+> By default, Playwright uses 50% of logical CPU cores.
+
+```bash
+npx playwright test --workers 10
+```
+
+### Stop after the first failure
+
+Reading Playwright logs can be challenging sometimes, especially if you have a lot of them running in parallel. They can also take some times to complete, especially when using `--repeat-each`, so what I like to do is to let the command run in background, but I ask my terminal to play a sound notification when the execution is completed.
+
+A useful command here is `-x`, which will stop the test suite after the first failure. This is useful to avoid waiting for all tests to complete when you already know that one of them is failing.
+
+```bash
+npx playwright test -x
+```
+
+### All those tips together
+
+We have been discussing a few tips to reproduce flaky tests, but you can combine all of them together to stress test your machine and reproduce flakiness, they aren't mutually exclusive
+
+```bash
+npx playwright test --fail-on-flaky-tests --repeat-each 10 --workers 10 -x
+```
+
+---
+
+I hope it was useful and that you learned a few things along the way. If you have any other tips or tricks to reproduce flaky tests, feel free to share them in the comments below!
