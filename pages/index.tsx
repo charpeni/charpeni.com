@@ -84,10 +84,7 @@ export default function Home({
                     I often describe myself as someone doing the &quot;backend&quot; work
                     of the frontend: frontend architecture and infrastructure. Currently
                     working at{' '}
-                    <CompanyName className="decoration-shortcut">Shortcut</CompanyName>{' '}
-                    (formerly{' '}
-                    <CompanyName className="decoration-durple">Clubhouse</CompanyName>
-                    ).
+                    <CompanyName className="decoration-shortcut">Shortcut</CompanyName>.
                   </p>
                   <div className="mt-4 md:mt-8 flex justify-center lg:justify-start">
                     <MySocials />
