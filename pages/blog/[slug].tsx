@@ -1,10 +1,10 @@
+import type { InferGetStaticPropsType } from 'next';
+
 import { MDXRemote } from 'next-mdx-remote';
 
-import { getPosts, getPostBySlug } from '@/utils/mdx';
 import BlogLayout from '@/components/BlogLayout';
 import MDXComponents from '@/components/MDXComponents';
-
-import type { InferGetStaticPropsType } from 'next';
+import { getPosts, getPostBySlug } from '@/utils/mdx';
 
 export default function Blog({
   mdxSource,
@@ -12,7 +12,7 @@ export default function Blog({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <BlogLayout frontMatter={frontMatter}>
-      <MDXRemote {...mdxSource} components={MDXComponents as any} />
+      <MDXRemote {...mdxSource} components={MDXComponents} />
     </BlogLayout>
   );
 }
@@ -30,7 +30,7 @@ export async function getStaticPaths() {
   };
 }
 
-export async function getStaticProps({ params }) {
+export async function getStaticProps({ params }: { params: { slug: string } }) {
   const post = await getPostBySlug(params.slug);
 
   return { props: { ...post } };

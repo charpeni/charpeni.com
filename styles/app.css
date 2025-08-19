@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+/* Configuration */
+@config "../tailwind.config.js";
+
+/* Import other styles */
+@import './global.css';
+@import './prism-vsc-dark-plus.css';

@@ -1,45 +1,38 @@
-const { withPlaiceholder } = require('@plaiceholder/next');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
-module.exports = withBundleAnalyzer(
-  withPlaiceholder({
-    swcMinify: true,
-    reactStrictMode: true,
-    async headers() {
-      return [
-        {
-          source: '/(.*)',
-          headers: securityHeaders,
-        },
-      ];
-    },
-    async redirects() {
-      return [
-        {
-          source: '/blog/enforce-best-practices-incrementally',
-          destination:
-            '/blog/enforce-best-practices-incrementally-with-betterer',
-          permanent: true,
-        },
-      ];
-    },
-  }),
-);
+module.exports = withBundleAnalyzer({
+  reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: securityHeaders,
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/blog/enforce-best-practices-incrementally',
+        destination: '/blog/enforce-best-practices-incrementally-with-betterer',
+        permanent: true,
+      },
+    ];
+  },
+});
 
 // https://securityheaders.com
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io giscus.app;
   child-src *.google.com;
-  style-src 'self' 'unsafe-inline' *.googleapis.com;
+  style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app;
   img-src * blob: data:;
   media-src 'none';
   connect-src *;
   font-src 'self';
-  script-src https://giscus.app/ 'unsafe-eval';
-  style-src https://giscus.app/ 'unsafe-inline';
   frame-src https://giscus.app/;
 `;
 

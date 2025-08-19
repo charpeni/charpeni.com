@@ -1,10 +1,13 @@
 import Image from 'next/image';
+
 import { parseISO, format } from 'date-fns';
-import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons/component';
+
 import Container from '@/components/Container';
-import { openWindow } from '@/utils/openWindow';
-import { Comments } from './Comments';
 import styles from '@/styles/GradientAnimation.module.css';
+import { openWindow } from '@/utils/openWindow';
+
+import { Comments } from './Comments';
 
 function ShareSocialIcon({ network }: { network: string }) {
   const socialIconWidth = 40;
@@ -48,6 +51,7 @@ export default function BlogLayout({ children, frontMatter }) {
             alt={frontMatter.title}
             src={frontMatter.image}
             fill
+            sizes="(max-width: 768px) 100vw, 768px"
             priority
             className="object-cover"
             placeholder="blur"
@@ -59,7 +63,9 @@ export default function BlogLayout({ children, frontMatter }) {
           <div className="flex items-center justify-between md:justify-start w-full md:w-auto">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.08),0_0_40px_rgba(147,51,234,0.05),0_0_60px_rgba(236,72,153,0.03)]">
-                <div className={`absolute -inset-[3px] ${styles.gradientRotate}`} />
+                <div
+                  className={`absolute -inset-[3px] ${styles.gradientRotate}`}
+                />
                 <div className="absolute inset-[2px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden">
                   <Image
                     className="object-cover rounded-full"
@@ -103,9 +109,9 @@ export default function BlogLayout({ children, frontMatter }) {
               </span>
               <div className="flex gap-2">
                 <button
-                  title="Share on Twitter"
+                  title="Share on X"
                   onClick={() => {
-                    const url = new URL('https://twitter.com/intent/tweet');
+                    const url = new URL('https://x.com/intent/tweet');
                     url.searchParams.set(
                       'text',
                       `${frontMatter.title} by @charpeni_\n\n${postUrl}`,
@@ -114,7 +120,7 @@ export default function BlogLayout({ children, frontMatter }) {
                   }}
                   className="transition-transform hover:scale-110"
                 >
-                  <ShareSocialIcon network="twitter" />
+                  <ShareSocialIcon network="x" />
                 </button>
                 <button
                   title="Share on LinkedIn"
@@ -137,8 +143,18 @@ export default function BlogLayout({ children, frontMatter }) {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
               Edit on GitHub
             </a>

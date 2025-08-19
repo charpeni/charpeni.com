@@ -1,5 +1,3 @@
-const { spacing, fontFamily } = require('tailwindcss/defaultTheme');
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -12,9 +10,6 @@ module.exports = {
       colors: {
         shortcut: '#58B1E4',
         durple: '#452B5B',
-      },
-      fontFamily: {
-        sans: ['Fixel Text', ...fontFamily.sans],
       },
       typography: (theme) => ({
         DEFAULT: {
@@ -29,9 +24,6 @@ module.exports = {
                 color: theme('colors.blue.700'),
               },
               code: { color: theme('colors.blue.400') },
-            },
-            'h2,h3,h4': {
-              'scroll-margin-top': spacing[32],
             },
             code: { color: theme('colors.pink.500') },
             'blockquote p:first-of-type::before': false,
@@ -54,7 +46,6 @@ module.exports = {
             },
             'h2,h3,h4': {
               color: theme('colors.gray.100'),
-              'scroll-margin-top': spacing[32],
             },
             hr: { borderColor: theme('colors.gray.700') },
             ol: {
@@ -81,8 +72,5 @@ module.exports = {
       }),
     },
   },
-  variants: {
-    typography: ['dark'],
-  },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [],
 };

@@ -1,15 +1,14 @@
+import type { InferGetStaticPropsType } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import styles from '@/styles/GradientAnimation.module.css';
 
-import Container from '@/components/Container';
-import CompanyName from '@/components/CompanyName';
 import BlogPostCard from '@/components/BlogPostCard';
+import CompanyName from '@/components/CompanyName';
+import Container from '@/components/Container';
 import MySocials from '@/components/MySocials';
+import styles from '@/styles/GradientAnimation.module.css';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
-
-import type { InferGetStaticPropsType } from 'next';
 
 const POSTS_PER_PAGE = 8;
 
@@ -20,10 +19,10 @@ export default function Home({
   const currentPage = Number(router.query.page) || 1;
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   const blogHeaderRef = useRef<HTMLHeadingElement>(null);
-  
+
   const paginatedPosts = posts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
-    currentPage * POSTS_PER_PAGE
+    currentPage * POSTS_PER_PAGE,
   );
 
   // Update URL when page changes and scroll to blog header
@@ -34,19 +33,25 @@ export default function Home({
     } else {
       query.page = page.toString();
     }
-    
-    router.push({
-      pathname: router.pathname,
-      query
-    }, undefined, { shallow: true }).then(() => {
-      // Scroll to the blog posts header with smooth behavior
-      if (blogHeaderRef.current) {
-        blogHeaderRef.current.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    });
+
+    router
+      .push(
+        {
+          pathname: router.pathname,
+          query,
+        },
+        undefined,
+        { shallow: true },
+      )
+      .then(() => {
+        // Scroll to the blog posts header with smooth behavior
+        if (blogHeaderRef.current) {
+          blogHeaderRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }
+      });
   };
 
   // Validate page number
@@ -56,6 +61,7 @@ export default function Home({
     } else if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, totalPages]);
 
   return (
@@ -69,34 +75,53 @@ export default function Home({
               </h1>
               <div className="lg:flex lg:items-start lg:gap-8">
                 <div className="flex-1">
-                  <h2 className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed mx-auto lg:mx-0">
+                  <h2 className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7">
                     I&apos;m a Software Engineer mainly playing with{' '}
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">React Native</span>,{' '}
-                    <span className="text-cyan-600 dark:text-cyan-400 font-medium">React</span>,{' '}
-                    <span className="text-pink-600 dark:text-pink-400 font-medium">GraphQL</span>, and{' '}
-                    <span className="text-purple-600 dark:text-purple-400 font-medium">Continuous Integrations</span>. I&apos;m an{' '}
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      React Native
+                    </span>
+                    ,{' '}
+                    <span className="text-cyan-600 dark:text-cyan-400 font-medium">
+                      React
+                    </span>
+                    ,{' '}
+                    <span className="text-pink-600 dark:text-pink-400 font-medium">
+                      GraphQL
+                    </span>
+                    , and{' '}
+                    <span className="text-purple-600 dark:text-purple-400 font-medium">
+                      Continuous Integrations
+                    </span>
+                    . I&apos;m an{' '}
                     <span className="font-semibold glow-yellow-text">
                       open source enthusiast
                     </span>
-                    , and I enjoy removing friction from the developer experience.
+                    , and I enjoy removing friction from the developer
+                    experience.
                   </h2>
                   <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
-                    I often describe myself as someone doing the &quot;backend&quot; work
-                    of the frontend: frontend architecture and infrastructure. Currently
-                    working at{' '}
-                    <CompanyName className="decoration-shortcut">Shortcut</CompanyName>.
+                    I often describe myself as someone doing the
+                    &quot;backend&quot; work of the frontend: frontend
+                    architecture and infrastructure. Currently working at{' '}
+                    <CompanyName className="decoration-shortcut">
+                      Shortcut
+                    </CompanyName>
+                    .
                   </p>
                   <div className="mt-4 md:mt-8 flex justify-center lg:justify-start">
                     <MySocials />
                   </div>
                 </div>
                 <div className="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_40px_rgba(147,51,234,0.2),0_0_60px_rgba(236,72,153,0.15)]">
-                  <div className={`absolute -inset-[6px] ${styles.gradientRotate}`} />
+                  <div
+                    className={`absolute -inset-[6px] ${styles.gradientRotate}`}
+                  />
                   <div className="absolute inset-[3px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden">
                     <Image
                       src="/static/images/nicolas_charpentier.jpeg"
                       alt="Nicolas Charpentier"
                       fill
+                      sizes="194px"
                       priority
                       className="object-cover rounded-full"
                     />
@@ -108,19 +133,23 @@ export default function Home({
         </section>
 
         <section className="w-full">
-          <h2 
+          <h2
             ref={blogHeaderRef}
-            id="blog-posts" 
+            id="blog-posts"
             className="font-bold text-3xl md:text-4xl tracking-tight mb-8 text-black dark:text-white"
           >
             Blog Posts
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {paginatedPosts.map((post) => (
-              <BlogPostCard key={post.slug} {...post} />
+            {paginatedPosts.map((post, index) => (
+              <BlogPostCard
+                key={post.slug}
+                {...post}
+                priority={currentPage === 1 && index === 0}
+              />
             ))}
           </div>
-          
+
           {totalPages > 1 && (
             <div className="mt-12 flex justify-center items-center">
               <button
@@ -129,12 +158,22 @@ export default function Home({
                 className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous page"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
               <div className="flex items-center">
-                {[...Array(totalPages)].map((_, i) => {
+                {Array.from({ length: totalPages }).map((_, i) => {
                   const colors = [
                     'bg-blue-600 dark:bg-blue-400',
                     'bg-emerald-600 dark:bg-emerald-400',
@@ -145,13 +184,19 @@ export default function Home({
                     'bg-indigo-600 dark:bg-indigo-400',
                     'bg-pink-600 dark:bg-pink-400',
                   ];
-                  const dotColor = i < currentPage ? colors[i % colors.length] : 'bg-gray-300 dark:bg-gray-600';
-                  const lineColor = i < currentPage ? colors[(i - 1) % colors.length] : 'bg-gray-300 dark:bg-gray-600';
-                  
+                  const dotColor =
+                    i < currentPage
+                      ? colors[i % colors.length]
+                      : 'bg-gray-300 dark:bg-gray-600';
+                  const lineColor =
+                    i < currentPage
+                      ? colors[(i - 1) % colors.length]
+                      : 'bg-gray-300 dark:bg-gray-600';
+
                   return (
                     <div key={i + 1} className="flex items-center">
                       {i > 0 && (
-                        <div 
+                        <div
                           className={`h-[2px] w-8 transition-colors duration-200 ${lineColor}`}
                         />
                       )}
@@ -161,18 +206,20 @@ export default function Home({
                           currentPage === i + 1
                             ? 'scale-125'
                             : i + 1 < currentPage
-                            ? 'scale-75'
-                            : 'hover:scale-110'
+                              ? 'scale-75'
+                              : 'hover:scale-110'
                         }`}
                         aria-label={`Page ${i + 1}`}
-                        aria-current={currentPage === i + 1 ? 'page' : undefined}
+                        aria-current={
+                          currentPage === i + 1 ? 'page' : undefined
+                        }
                       >
-                        <div 
+                        <div
                           className={`absolute w-8 h-8 rounded-full transition-colors duration-200 ${dotColor} ${
                             i + 1 > currentPage ? 'hover:opacity-80' : ''
                           }`}
                         />
-                        <span 
+                        <span
                           className={`relative text-xs font-medium z-10 text-white ${
                             i + 1 < currentPage ? 'text-[0.6rem]' : ''
                           }`}
@@ -185,13 +232,25 @@ export default function Home({
                 })}
               </div>
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage === totalPages}
                 className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next page"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>

@@ -1,7 +1,11 @@
 import Giscus from '@giscus/react';
 import { useTheme } from 'next-themes';
 
-export function Comments({ title }: { title: string }) {
+type Props = {
+  title: string;
+};
+
+export function Comments({ title }: Props) {
   const { resolvedTheme } = useTheme();
 
   return (
