@@ -141,8 +141,12 @@ export default function Home({
             Blog Posts
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {paginatedPosts.map((post) => (
-              <BlogPostCard key={post.slug} {...post} />
+            {paginatedPosts.map((post, index) => (
+              <BlogPostCard
+                key={post.slug}
+                {...post}
+                priority={currentPage === 1 && index === 0}
+              />
             ))}
           </div>
 

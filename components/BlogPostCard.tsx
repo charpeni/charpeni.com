@@ -8,6 +8,7 @@ type Props = {
   image: string;
   blurDataURL: string;
   readingTime: { text: string };
+  priority?: boolean;
 };
 
 export default function BlogPostCard({
@@ -17,6 +18,7 @@ export default function BlogPostCard({
   image,
   blurDataURL,
   readingTime,
+  priority,
 }: Props) {
   return (
     <Link href={`/blog/${slug}`} className="group block w-full h-full">
@@ -30,6 +32,7 @@ export default function BlogPostCard({
             blurDataURL={blurDataURL}
             fill
             sizes="(min-width: 768px) 432px, 90vw"
+            priority={Boolean(priority)}
             style={{
               objectFit: 'cover',
             }}
