@@ -33,6 +33,7 @@ export default function BlogPostCard({
             fill
             sizes="(min-width: 768px) 432px, 90vw"
             priority={Boolean(priority)}
+            fetchPriority={priority ? 'high' : 'auto'}
             style={{
               objectFit: 'cover',
             }}
