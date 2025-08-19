@@ -1,4 +1,4 @@
-import { SocialIcon as ReactSocialIcon } from 'react-social-icons';
+import { SocialIcon as ReactSocialIcon } from 'react-social-icons/component';
 
 import type { SocialIconProps } from 'react-social-icons';
 

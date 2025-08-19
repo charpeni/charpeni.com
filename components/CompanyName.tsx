@@ -10,7 +10,7 @@ export default function CompanyName({
   return (
     <span
       className={`font-bold text-black dark:text-white underline decoration-2 ${
-        className ? className : ''
+        className ?? ''
       }`}
     >
       {companyName}

@@ -2,7 +2,11 @@ import NextLink from 'next/link';
 
 import MySocials from '@/components/MySocials';
 
-function Separator({ className }: { className?: string }) {
+type Props = {
+  className?: string;
+};
+
+function Separator({ className }: Props) {
   return <span className={`${className} px-1`}>|</span>;
 }
 

@@ -280,7 +280,7 @@ class Component {
 
 Even this, they also recommend to avoid autobind on all methods or class:
 
-> It is unnecessary to do that to every function. This is just as bad as autobinding (on a class). You only need to bind functions that you pass around. e.g. onClick={this.doSomething}. Or fetch.then(this.hanldeDone) — Dan Abramov‏
+> It is unnecessary to do that to every function. This is just as bad as autobinding (on a class). You only need to bind functions that you pass around. e.g. `onClick={this.doSomething}`. Or `fetch.then(this.hanldeDone)` — Dan Abramov‏
 
 > I was the guy who came up with autobinding in older Reacts and I’m glad to see it gone. It might save you a few keystrokes but it allocates functions that’ll never be called in 90% of cases and has noticeable performance degradation. Getting rid of autobinding is a good thing — Peter Hunt
 

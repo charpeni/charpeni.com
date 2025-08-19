@@ -1,6 +1,6 @@
 import fs from 'fs';
 import matter from 'gray-matter';
-import mdxPrism from 'mdx-prism';
+import rehypePrismPlus from 'rehype-prism-plus';
 import path from 'path';
 import readingTime from 'reading-time';
 import { serialize } from 'next-mdx-remote/serialize';
@@ -43,7 +43,9 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   );
 
   const { data, content } = matter(source);
-  const { base64 } = await getPlaiceholder(data.image, { size: 20 });
+  const imagePath = path.join(process.cwd(), 'public', data.image);
+  const imageBuffer = fs.readFileSync(imagePath);
+  const { base64 } = await getPlaiceholder(imageBuffer, { size: 20 });
   const mdxSource = await serialize(content, {
     mdxOptions: {
       remarkPlugins: [],
@@ -63,7 +65,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
         ],
         rehypeCodeTitles,
         rehypeCallouts,
-        mdxPrism,
+        [rehypePrismPlus, { showLineNumbers: true }],
       ],
     },
   });
@@ -71,13 +73,13 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   return {
     mdxSource,
     frontMatter: {
-      slug: slug || null,
+      slug: slug,
       title: data.title,
       publishedAt: data.publishedAt,
       summary: data.summary,
       image: data.image,
       blurDataURL: base64,
-      wordCount: content.split(/\s+/gu).length,
+      wordCount: content.split(/\s+/g).length,
       readingTime: readingTime(content),
     },
   };
