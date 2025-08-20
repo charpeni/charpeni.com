@@ -118,7 +118,7 @@ export default function BlogLayout({ children, frontMatter }) {
                     );
                     openWindow(url.toString());
                   }}
-                  className="transition-transform hover:scale-110"
+                  className="cursor-pointer transition-transform hover:scale-110"
                 >
                   <ShareSocialIcon network="x" />
                 </button>
@@ -131,7 +131,7 @@ export default function BlogLayout({ children, frontMatter }) {
                     url.searchParams.set('url', postUrl);
                     openWindow(url.toString());
                   }}
-                  className="transition-transform hover:scale-110"
+                  className="cursor-pointer transition-transform hover:scale-110"
                 >
                   <ShareSocialIcon network="linkedin" />
                 </button>
