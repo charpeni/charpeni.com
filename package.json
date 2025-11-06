@@ -16,6 +16,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@codesandbox/sandpack-react": "^2.20.0",
     "@giscus/react": "^3.1.0",
     "@next/mdx": "^15.4.7",
     "@plaiceholder/next": "^3.0.0",
