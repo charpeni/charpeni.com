@@ -26,14 +26,14 @@ module.exports = withBundleAnalyzer({
 // https://securityheaders.com
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io giscus.app;
-  child-src *.google.com;
-  style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io giscus.app https://*.codesandbox.io;
+  child-src *.google.com *.codesandbox.io;
+  style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app https://*.codesandbox.io;
   img-src * blob: data:;
   media-src 'none';
   connect-src *;
-  font-src 'self';
-  frame-src https://giscus.app/;
+  font-src 'self' https://*.codesandbox.io;
+  frame-src https://giscus.app/ https://*.codesandbox.io;
 `;
 
 const securityHeaders = [
