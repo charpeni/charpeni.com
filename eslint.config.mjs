@@ -1,16 +1,16 @@
-import { FlatCompat } from '@eslint/eslintrc';
 import pluginJs from '@eslint/js';
+import next from 'eslint-config-next';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 import pluginReact from 'eslint-plugin-react';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
-
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   { ignores: ['.next/**', 'public/**', 'next.config.js', 'postcss.config.js'] },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
@@ -18,14 +18,7 @@ const config = [
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   eslintPluginUnicorn.configs['recommended'],
-  ...compat.config({
-    extends: ['next'],
-    settings: {
-      next: {
-        rootDir: '.',
-      },
-    },
-  }),
+  ...next,
   {
     rules: {
       'import/order': [
@@ -72,6 +65,13 @@ const config = [
         },
       ],
       'unicorn/prevent-abbreviations': 'off',
+      'unicorn/filename-case': [
+        'error',
+        {
+          case: 'camelCase',
+        },
+      ],
+      'unicorn/prefer-module': 'off',
     },
   },
   {

@@ -11,6 +11,7 @@ export default function Header() {
   const { resolvedTheme, setTheme } = useTheme();
 
   // After mounting, we have access to the theme
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   return (
@@ -24,10 +25,7 @@ export default function Header() {
         {mounted ? resolvedTheme === 'dark' ? <Sun /> : <Moon /> : null}
       </button>
       <div>
-        <Link
-          href="/"
-          className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
-        >
+        <Link href="/" className="p-2 sm:p-4 text-gray-900 dark:text-gray-100">
           Home
         </Link>
       </div>
