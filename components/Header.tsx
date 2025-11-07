@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import { useTheme } from 'next-themes';
@@ -10,7 +9,6 @@ import { Sun } from './Sun';
 export default function Header() {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
-  const router = useRouter();
 
   // After mounting, we have access to the theme
   useEffect(() => setMounted(true), []);
@@ -29,13 +27,6 @@ export default function Header() {
         <Link
           href="/"
           className="p-2 sm:p-4 text-gray-900 dark:text-gray-100"
-          onClick={() => {
-            try {
-              pa?.track({ name: 'PressingHome', from: router.asPath });
-            } catch {
-              // Too bad.
-            }
-          }}
         >
           Home
         </Link>

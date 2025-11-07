@@ -15,12 +15,10 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Script
-        src="https://microanalytics.io/js/script.js"
+        src="https://api.pirsch.io/pa.js"
         strategy="afterInteractive"
-        data-host="https://microanalytics.io"
-        data-dnt="false"
-        id="ZwSg9rf6GA"
-        async
+        id="pianjs"
+        data-code="Tr41JTaYVYMIseTMTDKggSAsFsM85hnC"
         defer
       />
 

@@ -26,7 +26,7 @@ module.exports = withBundleAnalyzer({
 // https://securityheaders.com
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' microanalytics.io giscus.app https://*.codesandbox.io;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' api.pirsch.io giscus.app https://*.codesandbox.io;
   child-src *.google.com *.codesandbox.io;
   style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app https://*.codesandbox.io;
   img-src * blob: data:;
