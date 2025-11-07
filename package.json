@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "author": "Nicolas Charpentier <nicolas.charpentier079@gmail.com>",
   "license": "MIT",
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "analyze": "ANALYZE=true pnpm build",
     "build": "next build",
