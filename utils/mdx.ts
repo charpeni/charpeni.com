@@ -1,18 +1,19 @@
-import fs from 'fs';
-import matter from 'gray-matter';
-import rehypePrismPlus from 'rehype-prism-plus';
-import path from 'path';
-import readingTime from 'reading-time';
-import { serialize } from 'next-mdx-remote/serialize';
-import rehypeCodeTitles from 'rehype-code-titles';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypeSlug from 'rehype-slug';
-import { getPlaiceholder } from 'plaiceholder';
-import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
-import rehypeCallouts from 'rehype-callouts';
+import fs from 'node:fs';
+import path from 'node:path';
 
-import type { ReadTimeResults } from 'reading-time';
+import matter from 'gray-matter';
+import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
+import { serialize } from 'next-mdx-remote/serialize';
+import { getPlaiceholder } from 'plaiceholder';
+import readingTime from 'reading-time';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeCallouts from 'rehype-callouts';
+import rehypeCodeTitles from 'rehype-code-titles';
+import rehypePrismPlus from 'rehype-prism-plus';
+import rehypeSlug from 'rehype-slug';
+
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
+import type { ReadTimeResults } from 'reading-time';
 
 type PostFrontMatter = {
   title: string;
@@ -93,7 +94,7 @@ export async function getAllPostsFrontMatter() {
   ).then((posts) =>
     posts
       .map((post) => post.frontMatter)
-      .sort(
+      .toSorted(
         (a, b) =>
           Number(new Date(b.publishedAt)) - Number(new Date(a.publishedAt)),
       ),

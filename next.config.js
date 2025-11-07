@@ -4,6 +4,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
+  images: {
+    qualities: [100, 75],
+  },
   async headers() {
     return [
       {
