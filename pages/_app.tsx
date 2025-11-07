@@ -9,6 +9,7 @@ import 'react-social-icons/x';
 import type { AppProps } from 'next/app';
 import Script from 'next/script';
 
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from 'next-themes';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -24,6 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
       <ThemeProvider attribute="class">
         <Component {...pageProps} />
+        <SpeedInsights />
       </ThemeProvider>
     </>
   );
