@@ -1,0 +1,41 @@
+---
+title: 'Configure Go to Definition to Open TypeScript Source'
+publishedAt: '2025-11-19'
+summary: 'Learn how to fix Go to Definition navigating to type declarations instead of source files in TypeScript projects.'
+image: '/static/images/configure-go-to-definition-to-open-typescript-source/banner.png'
+---
+
+If you are reading this, it's probably because you ended up working with a TypeScript project, configured as a monorepo with project references (or not), soon to realize that every single time you use `Go to Definition` in your IDE, it leads you to the generated type declarations rather than the source. It could be useful for third-party packages, but when you are actively developing in your own code base, it can be frustrating as you probably want to edit the source, not read types.
+
+Let's fix this!
+
+Within your [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), you probably already have [`declaration`](https://www.typescriptlang.org/tsconfig/#declaration) defined:
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true
+  }
+}
+```
+
+This is the step generating the type declarations files (`.d.ts`) that your IDE is navigating to when you use `Go to Definition`.
+
+The missing piece here to fix the connection back to the source, is to configure [`declarationMap`](https://www.typescriptlang.org/tsconfig/#declarationMap), that will generate a source map for `.d.ts` files which map back to the original `.ts` source file. Allowing your IDE to navigate to the source instead of the declaration, like you would expect!
+
+> [!TIP]
+> You may need to apply this to all `tsconfig.json` files depending on your project structure.
+
+```diff
+{
+  "compilerOptions": {
+    "declaration": true,
++   "declarationMap": true
+  }
+}
+```
+
+> [!NOTE]
+> An explicit reload/restart of the TypeScript server or VS Code might be required after changing `tsconfig.json` for the changes to be recognized.
+
+No need to manually navigate to the source from the generated `.d.ts` files anymore!
