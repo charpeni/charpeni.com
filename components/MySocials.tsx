@@ -7,7 +7,7 @@ export default function MySocials() {
       <SocialIcon url="https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/" />
       <SocialIcon url="https://x.com/charpeni_" />
       <SocialIcon url="https://bsky.app/profile/charpeni.bsky.social" />
-      <SocialIcon url="mailto:nicolas.charpentier079@gmail.com" />
+      <SocialIcon url="mailto:blog@nicolascharpentier.com" />
     </div>
   );
 }
