@@ -1,0 +1,104 @@
+---
+title: 'Bun Code Coverage Gap'
+publishedAt: '2025-12-09'
+summary: "Bun's test runner only tracks coverage for loaded files. Here's how to expose the gaps."
+image: '/static/images/bun-code-coverage-gap/banner.png'
+---
+
+If you are reading this, it's probably because you've been using Bun's test runner with code coverage enabled and something felt off. Maybe your coverage looked great, but you had a gut feeling that some files were missing from the report.
+
+## The Problem
+
+**Bun's test runner only tracks coverage for files that are actually imported/loaded during test execution.** This is [documented behavior](https://bun.sh/docs/test/code-coverage#coverage-not-showing-for-some-files) and not a bug. It's just something easy to miss when setting up coverage.
+
+Say you have a package with the following structure:
+
+```
+src/
+├── index.ts        # Entry point, tested
+├── api.ts          # API functions, tested
+├── utils.ts        # Utility functions, NOT imported by tests
+└── helpers.ts      # Helper functions, NOT imported by tests
+```
+
+When running `bun test --coverage`, you might see:
+
+```
+-------------------|---------|---------|-------------------
+File               | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|---------|-------------------
+All files          |  100.00 |  100.00 |
+ src/index.ts      |  100.00 |  100.00 |
+ src/api.ts        |  100.00 |  100.00 |
+-------------------|---------|---------|-------------------
+```
+
+100% coverage. Except `utils.ts` and `helpers.ts` aren't in the report at all. If a file isn't loaded, it doesn't exist in the coverage denominator.
+
+## The Solution
+
+The fix is to **dynamically import all modules at test time**. By forcing Bun to load every source file in your package, you make all code visible to the coverage tracker.
+
+> [!NOTE]
+> Some modules may have side effects when imported. If a module runs code at import time (e.g., registering global handlers), this approach will trigger those side effects during tests.
+
+### 1. A Reusable Import Utility
+
+Create a utility file (e.g., `scripts/importAllModules.ts`):
+
+```typescript
+const DEFAULT_EXCLUDE = ['.test.ts', '.d.ts'];
+
+export async function importAllModules(
+  dir: string,
+  exclude: string[] = [],
+): Promise<void> {
+  const allExclude = [...DEFAULT_EXCLUDE, ...exclude];
+  const glob = new Bun.Glob('**/*.ts');
+  const files = [...glob.scanSync(dir)].filter(
+    (f) => !allExclude.some((pattern) => f.endsWith(pattern)),
+  );
+
+  await Promise.all(
+    files.map((relPath) => import(new URL(relPath, `file://${dir}/`).href)),
+  );
+}
+```
+
+This uses [`Bun.Glob`](https://bun.sh/docs/api/glob) for file discovery, excludes test files (`.test.ts`) and type definitions (`.d.ts`) by default, and imports all source files in parallel.
+
+> [!TIP]
+> Use the `exclude` parameter for files you intentionally don't want coverage for, like build scripts, macros, Storybook stories, or generated code.
+
+### 2. Per-Package Coverage Test Files
+
+Each package gets a simple `coverage.test.ts` file:
+
+```typescript
+import { test } from 'bun:test';
+import { importAllModules } from '../path/to/scripts/importAllModules';
+
+test('imports all modules for coverage', async () => {
+  await importAllModules(import.meta.dir);
+});
+```
+
+This single test forces Bun to load every source file in the package. Now the coverage report shows all files:
+
+```
+-------------------|---------|---------|-------------------
+File               | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|---------|-------------------
+All files          |   50.00 |   45.00 |
+ src/index.ts      |  100.00 |  100.00 |
+ src/api.ts        |  100.00 |  100.00 |
+ src/utils.ts      |    0.00 |    0.00 | 1-50
+ src/helpers.ts    |    0.00 |    0.00 | 1-30
+-------------------|---------|---------|-------------------
+```
+
+Now you see the real picture, and it ensures that coverage targets are actually meaningful and not just reporting based on what's imported by tests.
+
+---
+
+This isn't a Bun-specific issue. Similar behavior exists in other JavaScript coverage tools. Only after seeing real coverage numbers can you set accurate targets.
