@@ -117,7 +117,9 @@ export default function Home({
                   </p>
                   <div className="mt-4 md:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-2">
                     <MySocials />
-                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">|</span>
+                    <span className="hidden md:inline text-sm text-gray-500 dark:text-gray-400">
+                      |
+                    </span>
                     <a
                       href="https://prs.charpeni.com"
                       target="_blank"
