@@ -8,8 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        shortcut: '#58B1E4',
-        durple: '#452B5B',
+        shortcut: '#494BCB',
       },
       typography: (theme) => ({
         DEFAULT: {

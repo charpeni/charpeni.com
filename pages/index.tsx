@@ -76,7 +76,13 @@ export default function Home({
               <div className="lg:flex lg:items-start lg:gap-8">
                 <div className="flex-1">
                   <h2 className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7">
-                    I&apos;m a Software Engineer mainly playing with{' '}
+                    I&apos;m a Software Engineer doing the &quot;backend&quot;
+                    work of the frontend: architecture, tooling, and
+                    infrastructure. I specialize in{' '}
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      TypeScript
+                    </span>
+                    ,{' '}
                     <span className="text-blue-600 dark:text-blue-400 font-medium">
                       React Native
                     </span>
@@ -90,26 +96,36 @@ export default function Home({
                     </span>
                     , and{' '}
                     <span className="text-purple-600 dark:text-purple-400 font-medium">
-                      Continuous Integrations
+                      CI/CD
                     </span>
-                    . I&apos;m an{' '}
-                    <span className="font-semibold glow-yellow-text">
-                      open source enthusiast
-                    </span>
-                    , and I enjoy removing friction from the developer
-                    experience.
+                    .
                   </h2>
                   <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
-                    I often describe myself as someone doing the
-                    &quot;backend&quot; work of the frontend: frontend
-                    architecture and infrastructure. Currently working at{' '}
+                    I&apos;m an{' '}
+                    <span className="font-semibold glow-yellow-text">
+                      open source enthusiast
+                    </span>{' '}
+                    who loves removing friction from the developer experience
+                    and hunting down performance issues.
+                  </p>
+                  <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
+                    Currently working at{' '}
                     <CompanyName className="decoration-shortcut">
                       Shortcut
                     </CompanyName>
                     .
                   </p>
-                  <div className="mt-4 md:mt-8 flex justify-center lg:justify-start">
+                  <div className="mt-4 md:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-2">
                     <MySocials />
+                    <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">|</span>
+                    <a
+                      href="https://prs.charpeni.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+                    >
+                      Check out my latest open source contributions
+                    </a>
                   </div>
                 </div>
                 <div className="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_40px_rgba(147,51,234,0.2),0_0_60px_rgba(236,72,153,0.15)]">
@@ -131,6 +147,11 @@ export default function Home({
             </div>
           </div>
         </section>
+
+        <p className="w-full mb-2 text-center text-base text-gray-500 dark:text-gray-500 italic">
+          Sharing knowledge is part of removing friction, so here are my latest
+          findings:
+        </p>
 
         <section className="w-full">
           <h2
