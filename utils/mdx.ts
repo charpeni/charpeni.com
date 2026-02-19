@@ -48,6 +48,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
   const imageBuffer = fs.readFileSync(imagePath);
   const { base64 } = await getPlaiceholder(imageBuffer, { size: 20 });
   const mdxSource = await serialize(content, {
+    blockJS: false,
     mdxOptions: {
       remarkPlugins: [],
       rehypePlugins: [
