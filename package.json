@@ -8,7 +8,7 @@
   "scripts": {
     "analyze": "ANALYZE=true pnpm build",
     "build": "next build",
-    "postbuild": "next-sitemap && node --experimental-strip-types scripts/generateLlmsTxt.ts",
+    "postbuild": "next-sitemap && node --experimental-strip-types scripts/generateLlmsTxt.ts && node --experimental-strip-types scripts/generateRssFeed.ts",
     "dev": "next",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",

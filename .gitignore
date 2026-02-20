@@ -4,7 +4,7 @@
 node_modules
 .env.local
 public/sitemap*.xml
-public/feed.xml
+public/blog/rss.xml
 public/llms.txt
 .vercel
 tsconfig.tsbuildinfo
