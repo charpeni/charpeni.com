@@ -72,6 +72,12 @@ class MyDocument extends Document {
             content="/static/favicons/browserconfig.xml"
             name="msapplication-config"
           />
+          <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="Nicolas Charpentier's Blog"
+            href="/blog/rss.xml"
+          />
         </Head>
         <body className="bg-white dark:bg-black text-white dark:text-black">
           <Main />

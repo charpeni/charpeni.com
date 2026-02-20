@@ -4,6 +4,7 @@ import 'react-social-icons/bsky.app';
 import 'react-social-icons/github';
 import 'react-social-icons/linkedin';
 import 'react-social-icons/mailto';
+import 'react-social-icons/rss';
 import 'react-social-icons/x';
 
 import type { AppProps } from 'next/app';
