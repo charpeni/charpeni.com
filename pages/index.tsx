@@ -115,7 +115,7 @@ export default function Home({
                     </CompanyName>
                     .
                   </p>
-                  <div className="mt-4 md:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-2">
+                  <div className="mt-4 md:mt-8 flex flex-wrap md:flex-nowrap items-center justify-center lg:justify-start gap-2">
                     <MySocials />
                     <span className="hidden md:inline text-sm text-gray-500 dark:text-gray-400">
                       |
@@ -124,7 +124,7 @@ export default function Home({
                       href="https://prs.charpeni.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+                      className="text-sm text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors whitespace-nowrap ml-1"
                     >
                       Check out my latest open source contributions
                     </a>
