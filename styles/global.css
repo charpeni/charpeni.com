@@ -105,7 +105,8 @@ pre {
   margin-bottom: -0.5em !important;
 }
 
-.rehype-code-title + pre {
+.rehype-code-title + pre,
+.rehype-code-title + .code-block pre {
   @apply mt-0 rounded-t-none;
 }
 
@@ -150,4 +151,38 @@ a {
 .content-header-link:hover {
   opacity: 1;
   animation: fadeIn 300ms;
+}
+
+/* Code block copy button */
+.code-block {
+  position: relative;
+}
+
+.code-block pre {
+  min-height: calc(8px + 32px + 8px);
+}
+
+.copy-code-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #888;
+  cursor: pointer;
+  transition:
+    color 200ms,
+    background-color 200ms;
+}
+
+.copy-code-button:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
 }

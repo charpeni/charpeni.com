@@ -2,6 +2,8 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import CodeBlock from '@/components/CodeBlock';
+
 const Sandpack = dynamic(() => import('@/components/Sandpack'), {
   ssr: false,
   loading: () => (
@@ -26,6 +28,7 @@ function CustomLink(props: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
 const MDXComponents = {
   Image,
   a: CustomLink,
+  pre: CodeBlock,
   Sandpack,
 };
 
