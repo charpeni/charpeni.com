@@ -105,7 +105,8 @@ pre {
   margin-bottom: -0.5em !important;
 }
 
-.rehype-code-title + pre {
+.rehype-code-title + pre,
+.rehype-code-title + .code-block pre {
   @apply mt-0 rounded-t-none;
 }
 
@@ -150,4 +151,42 @@ a {
 .content-header-link:hover {
   opacity: 1;
   animation: fadeIn 300ms;
+}
+
+/* Code block copy button */
+.code-block {
+  position: relative;
+}
+
+.copy-code-button {
+  position: absolute;
+  top: 0;
+  right: 12px;
+  bottom: 0;
+  margin: auto 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #888;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 200ms,
+    color 200ms,
+    background-color 200ms;
+}
+
+.code-block:hover .copy-code-button {
+  opacity: 1;
+}
+
+.copy-code-button:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
 }
