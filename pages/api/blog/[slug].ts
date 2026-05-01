@@ -3,7 +3,10 @@ import path from 'node:path';
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+import { absolutizeMarkdownLinks } from '@/utils/absolutizeMarkdownLinks';
+
 const root = process.cwd();
+const SITE_URL = 'https://charpeni.com';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { slug } = req.query;
@@ -20,7 +23,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(404).send('Post not found');
   }
 
-  const content = fs.readFileSync(filePath, 'utf8');
+  const raw = fs.readFileSync(filePath, 'utf8');
+
+  // Rewrite root-relative URLs to absolute ones so the file remains
+  // self-contained when consumed out of context (LLM ingestion, copy-paste
+  // into ChatGPT/Claude, etc.).
+  const content = absolutizeMarkdownLinks(raw, SITE_URL);
 
   res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
   res.setHeader('Content-Disposition', `inline; filename="${cleanSlug}.md"`);

@@ -65,7 +65,11 @@ export default function Home({
   }, [currentPage, totalPages]);
 
   return (
-    <Container>
+    <Container
+      title="Nicolas Charpentier — Frontend Infrastructure & Developer Tooling"
+      description="Software Engineer focused on frontend infrastructure and developer tooling. I write about TypeScript, React, React Native, GraphQL, Apollo Client, CI/CD, and shipping reliable code."
+      noIndex={currentPage > 1}
+    >
       <div className="flex flex-col justify-center items-start max-w-4xl w-full mx-auto mb-16">
         <section className="w-full mb-8 md:mb-16">
           <div className="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between">
@@ -75,7 +79,7 @@ export default function Home({
               </h1>
               <div className="lg:flex lg:items-start lg:gap-8">
                 <div className="flex-1">
-                  <h2 className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7">
+                  <p className="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7">
                     I&apos;m a Software Engineer doing the &quot;backend&quot;
                     work of the frontend: architecture, tooling, and
                     infrastructure. I specialize in{' '}
@@ -99,7 +103,7 @@ export default function Home({
                       CI/CD
                     </span>
                     .
-                  </h2>
+                  </p>
                   <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
                     I&apos;m an{' '}
                     <span className="font-semibold glow-yellow-text">
@@ -110,8 +114,18 @@ export default function Home({
                   </p>
                   <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
                     Currently working at{' '}
-                    <CompanyName className="decoration-shortcut">
+                    <CompanyName
+                      className="text-shortcut decoration-shortcut"
+                      href="https://shortcut.com"
+                    >
                       Shortcut
+                    </CompanyName>
+                    , on{' '}
+                    <CompanyName
+                      className="text-korey decoration-korey"
+                      href="https://korey.ai"
+                    >
+                      Korey.ai
                     </CompanyName>
                     .
                   </p>
