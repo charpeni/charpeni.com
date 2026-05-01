@@ -9,6 +9,7 @@ module.exports = {
     extend: {
       colors: {
         shortcut: '#494BCB',
+        korey: '#6E2028',
       },
       typography: (theme) => ({
         DEFAULT: {

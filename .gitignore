@@ -3,6 +3,7 @@
 .next
 node_modules
 .env.local
+public/robots.txt
 public/sitemap*.xml
 public/blog/rss.xml
 public/llms.txt

@@ -54,14 +54,15 @@ ${postLinks}
 
 ## Topics Covered
 
-- TypeScript (type safety, type testing, generics)
-- React and React Native
-- GraphQL and Apollo Client
-- Continuous Integration and DevOps
-- JavaScript best practices
-- Developer tooling (ESLint, Git, Playwright)
-- Frontend architecture
-- Web performance optimization
+- TypeScript (type testing, generics, autocomplete with open-ended unions, typing Object.keys/Object.entries, ReadonlyArray includes)
+- React and React Native (library setup, integration patterns, useTransition pitfalls)
+- GraphQL and Apollo Client (interface-based type policies, enum pitfalls, UI flickering with previousData)
+- Continuous Integration and DevOps (ESLint speed on CI, reliable JavaScript CI, Angular CLI CI, Bun code coverage gap)
+- Developer tooling (Betterer for incremental best practices, Graphite for stacked PRs, custom Git merge drivers, git bisect)
+- Testing (reproducing flaky Playwright tests)
+- Dependency security (CVE resolution, minimum release age, compromised packages)
+- JavaScript language features (ES8, default parameters, Array.prototype.groupBy)
+- Homelab and self-hosting
 
 ## Contact
 

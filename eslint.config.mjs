@@ -11,7 +11,15 @@ import tseslint from 'typescript-eslint';
 const config = [
   ...nextCoreWebVitals,
   ...nextTypescript,
-  { ignores: ['.next/**', 'public/**', 'next.config.js', 'postcss.config.js'] },
+  {
+    ignores: [
+      '.next/**',
+      'public/**',
+      'next.config.js',
+      'next-sitemap.config.js',
+      'postcss.config.js',
+    ],
+  },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,

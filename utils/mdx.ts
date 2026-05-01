@@ -18,8 +18,21 @@ import type { ReadTimeResults } from 'reading-time';
 type PostFrontMatter = {
   title: string;
   publishedAt: string;
+  /**
+   * Optional ISO date string (or any `new Date()`-parseable form). When set,
+   * surfaced as `article:modified_time`, `BlogPosting.dateModified`, and used
+   * as the sitemap `<lastmod>` for this URL. Falls back to `publishedAt`.
+   * The field is omitted (not set to `undefined`) when absent, so it
+   * survives Next.js's `getStaticProps` JSON serialization.
+   */
+  updatedAt?: string;
   summary: string;
   image: string;
+  /**
+   * List of topical tags (lowercase kebab-case). Surfaced as `article:tag`
+   * meta tags and `BlogPosting.keywords` for SEO. Empty array means untagged.
+   */
+  tags: string[];
   wordCount: number;
   readingTime: ReadTimeResults;
   slug: string;
@@ -72,19 +85,24 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     },
   });
 
-  return {
-    mdxSource,
-    frontMatter: {
-      slug: slug,
-      title: data.title,
-      publishedAt: data.publishedAt,
-      summary: data.summary,
-      image: data.image,
-      blurDataURL: base64,
-      wordCount: content.split(/\s+/g).length,
-      readingTime: readingTime(content),
-    },
+  const frontMatter: PostFrontMatter = {
+    slug,
+    title: data.title,
+    publishedAt: data.publishedAt,
+    summary: data.summary,
+    image: data.image,
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    blurDataURL: base64,
+    wordCount: content.split(/\s+/g).length,
+    readingTime: readingTime(content),
   };
+  // Only set `updatedAt` when present — Next's `getStaticProps` rejects
+  // `undefined`, but omitted optional keys serialize cleanly.
+  if (data.updatedAt) {
+    frontMatter.updatedAt = data.updatedAt;
+  }
+
+  return { mdxSource, frontMatter };
 }
 
 export async function getAllPostsFrontMatter() {

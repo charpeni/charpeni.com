@@ -24,9 +24,15 @@ export default function BlogPostCard({
     <Link href={`/blog/${slug}`} className="group block w-full h-full">
       <article className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:ring-1 dark:ring-gray-800 h-full flex flex-col">
         <div className="relative w-full pt-[56.25%] flex-shrink-0">
+          {/*
+            The post title is rendered as the <h3> immediately below this
+            banner. Marking the banner alt="" + aria-hidden avoids the
+            duplicate announcement screen readers would otherwise make.
+          */}
           <Image
             className="rounded-t-xl"
-            alt={title}
+            alt=""
+            aria-hidden="true"
             src={image}
             placeholder="blur"
             blurDataURL={blurDataURL}

@@ -4,6 +4,7 @@ import { parseISO, format } from 'date-fns';
 import { SocialIcon as ReactSocialIcon } from 'react-social-icons/component';
 
 import Container from '@/components/Container';
+import CopyAsMarkdownButton from '@/components/CopyAsMarkdownButton';
 import styles from '@/styles/GradientAnimation.module.css';
 import { openWindow } from '@/utils/openWindow';
 
@@ -30,14 +31,73 @@ const editUrl = (slug: string) =>
 
 export default function BlogLayout({ children, frontMatter }) {
   const postUrl = `https://charpeni.com/blog/${frontMatter.slug}`;
+  const imageUrl = `https://charpeni.com${frontMatter.image}`;
+  const publishedAtIso = new Date(frontMatter.publishedAt).toISOString();
+  const updatedAtIso = frontMatter.updatedAt
+    ? new Date(frontMatter.updatedAt).toISOString()
+    : publishedAtIso;
+
+  const tags: string[] = Array.isArray(frontMatter.tags)
+    ? frontMatter.tags
+    : [];
+
+  const blogPostingLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: frontMatter.title,
+    description: frontMatter.summary,
+    image: [imageUrl],
+    datePublished: publishedAtIso,
+    dateModified: updatedAtIso,
+    ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+    author: {
+      '@type': 'Person',
+      name: 'Nicolas Charpentier',
+      url: 'https://charpeni.com',
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Nicolas Charpentier',
+      url: 'https://charpeni.com',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': postUrl,
+    },
+    url: postUrl,
+    inLanguage: 'en',
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://charpeni.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: frontMatter.title,
+        item: postUrl,
+      },
+    ],
+  };
 
   return (
     <Container
       title={`${frontMatter.title} | Nicolas Charpentier`}
       description={frontMatter.summary}
-      image={`https://charpeni.com${frontMatter.image}`}
-      date={new Date(frontMatter.publishedAt).toISOString()}
+      image={imageUrl}
+      date={publishedAtIso}
+      updatedAt={frontMatter.updatedAt ? updatedAtIso : undefined}
+      tags={tags}
       type="article"
+      structuredData={[blogPostingLd, breadcrumbLd]}
+      markdownUrl={`https://charpeni.com/api/blog/${frontMatter.slug}.md`}
     >
       <article className="flex flex-col justify-center max-w-3xl mx-auto mb-16 w-full">
         <header className="mb-6 lg:mb-12">
@@ -47,8 +107,16 @@ export default function BlogLayout({ children, frontMatter }) {
         </header>
 
         <div className="relative w-full aspect-[2/1] mb-6 lg:mb-8 rounded-xl overflow-hidden">
+          {/*
+            The post title is already rendered as the <h1> directly above this
+            banner; the banner itself is decorative. Marking it with alt=""
+            (and aria-hidden) keeps screen readers from announcing the title
+            twice while still letting next/image lazy-load and serve the
+            placeholder. See https://www.w3.org/WAI/tutorials/images/decorative/
+          */}
           <Image
-            alt={frontMatter.title}
+            alt=""
+            aria-hidden="true"
             src={frontMatter.image}
             fill
             sizes="(max-width: 768px) 100vw, 768px"
@@ -90,10 +158,14 @@ export default function BlogLayout({ children, frontMatter }) {
               </span>
             </div>
           </div>
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center gap-2">
+            <CopyAsMarkdownButton slug={frontMatter.slug} />
             <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm">
               {frontMatter.readingTime.text}
             </span>
+          </div>
+          <div className="md:hidden flex items-center justify-start">
+            <CopyAsMarkdownButton slug={frontMatter.slug} />
           </div>
         </div>
 

@@ -22,6 +22,13 @@ module.exports = withBundleAnalyzer({
         destination: '/blog/enforce-best-practices-incrementally-with-betterer',
         permanent: true,
       },
+      // The blog post list lives on the homepage; /blog is not its own page.
+      // Redirect to avoid a 404 for inbound links and external references.
+      {
+        source: '/blog',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
 });
