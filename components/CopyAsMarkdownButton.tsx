@@ -43,6 +43,8 @@ export default function CopyAsMarkdownButton({ slug, className = '' }: Props) {
     }
   }, [slug, status]);
 
+  const isIdle = status === 'idle';
+
   const label =
     status === 'copied'
       ? 'Copied!'
@@ -50,7 +52,7 @@ export default function CopyAsMarkdownButton({ slug, className = '' }: Props) {
         ? 'Failed to copy'
         : status === 'copying'
           ? 'Copying…'
-          : 'Copy as Markdown';
+          : 'Copy';
 
   return (
     <button
@@ -59,7 +61,7 @@ export default function CopyAsMarkdownButton({ slug, className = '' }: Props) {
       disabled={status === 'copying'}
       aria-label="Copy post as Markdown to clipboard"
       title="Copy the raw Markdown source of this post — useful for pasting into an LLM as context."
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 disabled:cursor-wait disabled:opacity-70 ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 disabled:cursor-wait disabled:opacity-70 whitespace-nowrap min-w-19 ${className}`}
     >
       {status === 'copied' ? (
         <svg
@@ -93,7 +95,12 @@ export default function CopyAsMarkdownButton({ slug, className = '' }: Props) {
           <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
         </svg>
       )}
-      <span>{label}</span>
+      <span className="text-xs sm:text-sm">
+        {label}
+        {isIdle && (
+          <span className="hidden min-[450px]:inline"> as Markdown</span>
+        )}
+      </span>
     </button>
   );
 }
