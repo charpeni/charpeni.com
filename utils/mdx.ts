@@ -30,7 +30,11 @@ type PostFrontMatter = {
   image: string;
   /**
    * List of topical tags (lowercase kebab-case). Surfaced as `article:tag`
-   * meta tags and `BlogPosting.keywords` for SEO. Empty array means untagged.
+   * meta tags and `BlogPosting.keywords` for SEO. Empty array means
+   * untagged. A small whitelist of these tags (see `BRANCH_TAGS` in
+   * `utils/graph.ts`) is also used by the homepage commit-log graph
+   * to render branches; everything else renders as discovery chips
+   * only.
    */
   tags: string[];
   wordCount: number;

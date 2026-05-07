@@ -1,13 +1,15 @@
 import type { InferGetStaticPropsType } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import BlogPostCard from '@/components/BlogPostCard';
 import CompanyName from '@/components/CompanyName';
 import Container from '@/components/Container';
 import MySocials from '@/components/MySocials';
 import styles from '@/styles/GradientAnimation.module.css';
+import { BRANCH_TAGS, computeGraph } from '@/utils/graph';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
 
 const POSTS_PER_PAGE = 8;
@@ -23,6 +25,23 @@ export default function Home({
   const paginatedPosts = posts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
     currentPage * POSTS_PER_PAGE,
+  );
+
+  // Compute series-lane state for the visible page. Cheap and pure;
+  // runs on every render but only does meaningful work on inputs that
+  // change with `currentPage`.
+  const graph = computeGraph(paginatedPosts, posts);
+
+  // Hover state lifted from individual post cards so a hover on one
+  // row can highlight the entire git path (lane lines + arcs + orbs)
+  // across all sibling rows on the page. Cards report the lanes they
+  // own on mouse enter; the matching segments anywhere on the page
+  // light up via `highlightedLanes`.
+  const [highlightedLanes, setHighlightedLanes] =
+    useState<ReadonlySet<string> | null>(null);
+  const handleHighlight = useCallback(
+    (lanes: ReadonlySet<string> | null) => setHighlightedLanes(lanes),
+    [],
   );
 
   // Update URL when page changes and scroll to blog header
@@ -71,7 +90,7 @@ export default function Home({
       noIndex={currentPage > 1}
     >
       <div className="flex flex-col justify-center items-start max-w-4xl w-full mx-auto mb-16">
-        <section className="w-full mb-8 md:mb-16">
+        <section className="w-full mb-8">
           <div className="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between">
             <div className="flex-1 md:mt-4 lg:mt-0 lg:pr-8 w-full text-center lg:text-left">
               <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight mb-8 text-black dark:text-white lg:whitespace-nowrap">
@@ -164,133 +183,85 @@ export default function Home({
           </div>
         </section>
 
-        <p className="w-full mb-2 text-center text-base text-gray-500 dark:text-gray-500 italic">
+        <p className="w-full mb-4 text-center text-base text-gray-500 dark:text-gray-500 italic">
           Sharing knowledge is part of removing friction, so here are my latest
           findings:
         </p>
 
         <section className="w-full">
-          <h2
+          <div
             ref={blogHeaderRef}
             id="blog-posts"
-            className="font-bold text-3xl md:text-4xl tracking-tight mb-8 text-black dark:text-white"
+            className="mb-10 border-b border-gray-200 dark:border-gray-800 pb-4"
           >
-            Blog Posts
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <h2 className="font-bold text-3xl md:text-4xl tracking-tight text-black dark:text-white">
+              Blog Posts
+            </h2>
+          </div>
+
+          <div
+            className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-gray-500 dark:text-gray-500"
+            aria-label="Branches"
+          >
+            <span className="text-gray-400 dark:text-gray-600">branches:</span>
+            {BRANCH_TAGS.map((branch) => (
+              <Link
+                key={branch}
+                href={`/tags/${branch}`}
+                className="inline-flex items-center gap-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"
+                />
+                {branch}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex flex-col">
             {paginatedPosts.map((post, index) => (
               <BlogPostCard
                 key={post.slug}
                 {...post}
-                priority={currentPage === 1 && index === 0}
+                graph={graph.rows[index]}
+                isHead={currentPage === 1 && index === 0}
+                activeBranches={graph.activeBranches}
+                highlightedLanes={highlightedLanes}
+                onHighlight={handleHighlight}
               />
             ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-12 flex justify-center items-center">
+            <nav
+              className="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 font-mono text-sm"
+              aria-label="Pagination"
+            >
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous page"
+                className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                <span aria-hidden="true">←</span>
+                <span>newer</span>
               </button>
-              <div className="flex items-center">
-                {Array.from({ length: totalPages }).map((_, i) => {
-                  const colors = [
-                    'bg-blue-600 dark:bg-blue-400',
-                    'bg-emerald-600 dark:bg-emerald-400',
-                    'bg-purple-600 dark:bg-purple-400',
-                    'bg-amber-600 dark:bg-amber-400',
-                    'bg-rose-600 dark:bg-rose-400',
-                    'bg-cyan-600 dark:bg-cyan-400',
-                    'bg-indigo-600 dark:bg-indigo-400',
-                    'bg-pink-600 dark:bg-pink-400',
-                  ];
-                  const dotColor =
-                    i < currentPage
-                      ? colors[i % colors.length]
-                      : 'bg-gray-300 dark:bg-gray-600';
-                  const lineColor =
-                    i < currentPage
-                      ? colors[(i - 1) % colors.length]
-                      : 'bg-gray-300 dark:bg-gray-600';
 
-                  return (
-                    <div key={i + 1} className="flex items-center">
-                      {i > 0 && (
-                        <div
-                          className={`h-[2px] w-8 transition-colors duration-200 ${lineColor}`}
-                        />
-                      )}
-                      <button
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`relative w-8 h-8 flex items-center justify-center transition-all duration-200 ${
-                          currentPage === i + 1
-                            ? 'scale-125'
-                            : i + 1 < currentPage
-                              ? 'scale-75'
-                              : 'hover:scale-110'
-                        }`}
-                        aria-label={`Page ${i + 1}`}
-                        aria-current={
-                          currentPage === i + 1 ? 'page' : undefined
-                        }
-                      >
-                        <div
-                          className={`absolute w-8 h-8 rounded-full transition-colors duration-200 ${dotColor} ${
-                            i + 1 > currentPage ? 'hover:opacity-80' : ''
-                          }`}
-                        />
-                        <span
-                          className={`relative text-xs font-medium z-10 text-white ${
-                            i + 1 < currentPage ? 'text-[0.6rem]' : ''
-                          }`}
-                        >
-                          {i + 1}
-                        </span>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+              <span className="text-gray-500 dark:text-gray-500 tabular-nums">
+                page {currentPage} / {totalPages}
+              </span>
+
               <button
                 onClick={() =>
                   setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next page"
+                className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <span>older</span>
+                <span aria-hidden="true">→</span>
               </button>
-            </div>
+            </nav>
           )}
         </section>
       </div>
