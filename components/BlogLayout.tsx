@@ -127,35 +127,28 @@ export default function BlogLayout({ children, frontMatter }) {
           />
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-gray-700 dark:text-gray-300 mb-4">
-          <div className="flex items-center justify-between md:justify-start w-full md:w-auto">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.08),0_0_40px_rgba(147,51,234,0.05),0_0_60px_rgba(236,72,153,0.03)]">
-                <div
-                  className={`absolute -inset-[3px] ${styles.gradientRotate}`}
+        <div className="flex flex-row items-center justify-between gap-2 md:gap-4 text-gray-700 dark:text-gray-300 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 relative w-12 h-12 rounded-full overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.08),0_0_40px_rgba(147,51,234,0.05),0_0_60px_rgba(236,72,153,0.03)]">
+              <div
+                className={`absolute -inset-[3px] ${styles.gradientRotate}`}
+              />
+              <div className="absolute inset-[2px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden">
+                <Image
+                  className="object-cover rounded-full"
+                  src="/static/images/nicolas_charpentier.jpeg"
+                  alt="Nicolas Charpentier"
+                  fill
+                  sizes="48px"
+                  quality={100}
                 />
-                <div className="absolute inset-[2px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden">
-                  <Image
-                    className="object-cover rounded-full"
-                    src="/static/images/nicolas_charpentier.jpeg"
-                    alt="Nicolas Charpentier"
-                    fill
-                    sizes="48px"
-                    quality={100}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="font-medium">Nicolas Charpentier</div>
-                <div className="text-sm text-gray-500">
-                  {format(parseISO(frontMatter.publishedAt), 'MMMM dd, yyyy')}
-                </div>
               </div>
             </div>
-            <div className="md:hidden">
-              <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm">
-                {frontMatter.readingTime.text}
-              </span>
+            <div>
+              <div className="font-medium">Nicolas Charpentier</div>
+              <div className="text-sm text-gray-500">
+                {format(parseISO(frontMatter.publishedAt), 'MMMM dd, yyyy')}
+              </div>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2">
@@ -164,7 +157,10 @@ export default function BlogLayout({ children, frontMatter }) {
               {frontMatter.readingTime.text}
             </span>
           </div>
-          <div className="md:hidden flex items-center justify-start">
+          <div className="md:hidden flex flex-col items-end gap-1">
+            <span className="px-2 sm:px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm mt-3 sm:mt-0">
+              {frontMatter.readingTime.text}
+            </span>
             <CopyAsMarkdownButton slug={frontMatter.slug} />
           </div>
         </div>

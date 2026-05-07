@@ -1,0 +1,100 @@
+---
+title: 'Stop Using Yarn Classic'
+publishedAt: '2026-05-07T12:00:00Z'
+summary: "Yarn Classic is frozen, and its lack of recursive transitive updates is becoming a real liability in an era where CVEs land weekly. It's time to move on."
+image: '/static/images/stop-using-yarn-classic/banner.png'
+tags: ['dependencies', 'security', 'yarn', 'tooling']
+---
+
+If you're still on Yarn Classic (`1.x`) in 2026, this post is for you.
+
+I'm not going to pretend Yarn Classic is broken. It still installs your dependencies, it still produces a deterministic lockfile, and it still works on most projects. But the ecosystem has moved on for almost five years now, and the gap is starting to hurt—especially around **patching CVEs in transitive dependencies**, which we now seem to do every other week.
+
+## Yarn Classic Is Frozen
+
+Let's get this out of the way first. Yarn Classic is **officially frozen**. From the [`yarnpkg/yarn`](https://github.com/yarnpkg/yarn) repository's own README:
+
+> The 1.x line is frozen — features and bugfixes now happen on https://github.com/yarnpkg/berry.
+>
+> If you hit bugs or issues with Yarn 1.x, we strongly suggest you migrate to the latest release.
+
+The latest 1.x release (`1.22.22`) shipped in March 2024. Everything since—new features, bug fixes, security work—happens on Yarn Berry (currently 4.x). The Yarn team itself has been telling people to migrate for years.
+
+## The Real Problem: Transitive CVEs
+
+Here's what made me write this post. I [previously wrote about properly resolving CVEs in your dependencies](/blog/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies), and the workflow there leans heavily on commands like:
+
+```sh
+yarn up <package> --recursive
+```
+
+That `--recursive` flag is the magic. It tells Yarn Berry to re-resolve a package _everywhere_ it appears in the lockfile, including transitive dependencies, without promoting it to a direct dependency. It's exactly what you want when a vulnerable version of `minimatch`, `ajv`, `picomatch`, or `yaml` (pick your CVE-of-the-week) is pulled in by tooling like `eslint`, `jest`, `typedoc`, or any number of build-time packages.
+
+**Yarn Classic has no equivalent for this.** Not a missing flag, not a different command name—the feature simply isn't there.
+
+### What Doesn't Work
+
+Let's go through the options Yarn Classic does give you, because each one comes with a real catch:
+
+#### `yarn upgrade <package>`
+
+A plain `yarn upgrade` may leave vulnerable transitive versions completely unchanged, depending on how the lockfile is structured and which ranges already satisfy what's installed:
+
+```sh
+yarn upgrade minimatch ajv picomatch yaml
+```
+
+You run it, you check `yarn.lock`, and the vulnerable versions are still there. Frustrating.
+
+#### `yarn upgrade <package>@<version>`
+
+Versioned upgrades can re-resolve the package, but they have a nasty side effect: they may **promote a transitive package into your direct `dependencies`**, which is almost never what you want for a minimal CVE fix.
+
+```sh
+yarn upgrade minimatch@^3.1.4
+```
+
+You wanted a lockfile-only fix; you got a `package.json` change you now have to explain in code review.
+
+#### Permanent broad `resolutions`
+
+Adding a `resolutions` entry works technically. It will pin the package to a patched version everywhere. But as I covered in the [CVE post](/blog/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies#resolutions-field-is-a-last-resort-solution), `resolutions` is a **last-resort tool**. It overrides the resolution algorithm permanently, and over time those entries accumulate and start holding back legitimate upgrades that you didn't realize were being blocked.
+
+> [!NOTE]
+> There _is_ a workable Yarn Classic workflow using **temporary** narrow `resolutions` as a lockfile re-resolution mechanism (add the resolution, run `yarn install`, remove the resolution, run `yarn install` again). It works, but it's a multi-step manual dance for something that should be a single command. And every time you do it, you're working around a missing feature instead of using one.
+
+### What Yarn Berry Does Instead
+
+In Yarn Berry, the entire dance above collapses into:
+
+```sh
+yarn up minimatch --recursive
+```
+
+That's it. The lockfile gets updated everywhere `minimatch` appears, `package.json` is left alone (because `minimatch` wasn't a direct dependency), and you can move on with your day.
+
+Multiply that by the number of CVE patches you've had to ship this year, across however many repos you maintain. That's the cost of staying on Classic.
+
+## Yarn Berry Isn't the Only Path Forward
+
+The good news is that **every** modern alternative handles transitive updates better than Yarn Classic. The natural migration target is Yarn Berry, but you don't have to go there if it doesn't suit you.
+
+### Yarn Berry
+
+The most direct upgrade. The official [step-by-step migration guide](https://yarnpkg.com/migration/guide) keeps `node_modules`, so you don't have to commit to Plug'n'Play unless you want to. Most projects can migrate in an afternoon:
+
+```sh
+corepack enable
+yarn set version berry
+yarn install
+```
+
+You keep the same lockfile semantics (just a newer format), the same `yarn` muscle memory for most commands, and you immediately get `yarn up --recursive`, `yarn info --recursive`, `yarn why --recursive`, [`npmMinimalAgeGate`](/blog/protecting-against-compromised-packages-with-minimum-release-age#yarn-berry), workspaces that actually work, and years of bug fixes.
+
+### pnpm
+
+If you're open to a more significant change, [pnpm](https://pnpm.io/) is excellent and is what I reach for on most new projects these days. It has [`pnpm update`](https://pnpm.io/cli/update) (which re-resolves transitive matches in the lockfile), [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides) for pinning, [`minimumReleaseAge`](/blog/protecting-against-compromised-packages-with-minimum-release-age#pnpm), a strict `node_modules` layout that catches phantom dependencies, and it's generally faster and more disk-efficient.
+
+### Bun
+
+If you're already experimenting with [Bun](https://bun.sh/), [`bun update`](https://bun.sh/docs/pm/cli/update) and [`bun install`](https://bun.sh/docs/cli/install) work, transitive pinning is handled via [`overrides`/`resolutions`](https://bun.sh/docs/pm/overrides), and Bun 1.3+ has [`install.minimumReleaseAge`](/blog/protecting-against-compromised-packages-with-minimum-release-age#bun) too.
