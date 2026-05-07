@@ -192,14 +192,11 @@ export default function Home({
           <div
             ref={blogHeaderRef}
             id="blog-posts"
-            className="mb-10 flex items-baseline justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4"
+            className="mb-10 border-b border-gray-200 dark:border-gray-800 pb-4"
           >
             <h2 className="font-bold text-3xl md:text-4xl tracking-tight text-black dark:text-white">
               Blog Posts
             </h2>
-            <span className="font-mono text-xs text-gray-500 dark:text-gray-500">
-              main · {posts.length} commits
-            </span>
           </div>
 
           <div
@@ -207,24 +204,19 @@ export default function Home({
             aria-label="Branches"
           >
             <span className="text-gray-400 dark:text-gray-600">branches:</span>
-            {BRANCH_TAGS.map((branch) => {
-              const isActive = graph.activeBranches.includes(branch);
-              return (
-                <Link
-                  key={branch}
-                  href={`/tags/${branch}`}
-                  className={`inline-flex items-center gap-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400 ${
-                    isActive ? '' : 'opacity-50'
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="inline-block w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"
-                  />
-                  {branch}
-                </Link>
-              );
-            })}
+            {BRANCH_TAGS.map((branch) => (
+              <Link
+                key={branch}
+                href={`/tags/${branch}`}
+                className="inline-flex items-center gap-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"
+                />
+                {branch}
+              </Link>
+            ))}
           </div>
 
           <div className="flex flex-col">
