@@ -6,7 +6,6 @@ import type {
 import Link from 'next/link';
 
 import Container from '@/components/Container';
-import { isBranchTag } from '@/utils/graph';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
 
 const SITE_URL = 'https://charpeni.com';
@@ -28,13 +27,11 @@ type TagPost = {
 
 type Props = {
   tag: string;
-  isBranch: boolean;
   posts: TagPost[];
 };
 
 export default function TagPage({
   tag,
-  isBranch,
   posts,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const title = `#${tag} · Nicolas Charpentier`;
@@ -81,17 +78,13 @@ export default function TagPage({
             </Link>
           </nav>
 
-          <div className="mb-10 flex items-baseline justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+          <div className="mb-10 border-b border-gray-200 dark:border-gray-800 pb-4">
             <h1 className="font-bold text-3xl md:text-4xl tracking-tight text-black dark:text-white">
               <span className="font-mono text-gray-400 dark:text-gray-600">
                 #
               </span>
               {tag}
             </h1>
-            <span className="font-mono text-xs text-gray-500 dark:text-gray-500">
-              {isBranch ? 'branch' : 'tag'} · {posts.length}{' '}
-              {posts.length === 1 ? 'commit' : 'commits'}
-            </span>
           </div>
 
           {posts.length === 0 ? (
@@ -185,7 +178,6 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
   return {
     props: {
       tag,
-      isBranch: isBranchTag(tag),
       posts: filtered,
     },
   };
