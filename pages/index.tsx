@@ -128,8 +128,9 @@ export default function Home({
                     <span className="font-semibold glow-yellow-text">
                       open source enthusiast
                     </span>{' '}
-                    who loves removing friction from the developer experience
-                    and hunting down performance issues.
+                    who loves removing friction from the developer experience,
+                    hunting down performance issues, and sharing what I find
+                    along the way.
                   </p>
                   <p className="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0">
                     Currently working at{' '}
@@ -182,11 +183,6 @@ export default function Home({
             </div>
           </div>
         </section>
-
-        <p className="w-full mb-4 text-center text-base text-gray-500 dark:text-gray-500 italic">
-          Sharing knowledge is part of removing friction, so here are my latest
-          findings:
-        </p>
 
         <section className="w-full">
           <div
