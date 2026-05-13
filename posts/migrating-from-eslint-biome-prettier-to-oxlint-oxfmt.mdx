@@ -1,0 +1,126 @@
+---
+title: 'Migrating from ESLint, Biome, and Prettier to Oxlint and Oxfmt'
+publishedAt: '2026-05-13T12:00:00Z'
+summary: 'I tasked an agent to migrate our monorepo from a mix of ESLint, Biome, and Prettier to Oxlint and Oxfmt. The full lint pipeline went from 81s to 2.5s.'
+tags: ['eslint', 'oxlint', 'performance', 'tooling']
+---
+
+I had been hearing about [Oxc](https://oxc.rs/) for a while, but I never quite found the time (or the excuse) to try it on a real codebase. What finally pushed me to give it a shot was [Christoph Nakazawa](https://x.com/cnakazawa) (Product @ [VoidZero](https://voidzero.dev/)) being relentlessly vocal about the performance wins he was seeing on real projects.
+
+Our monorepo had accumulated a small mess of linters and formatters: ESLint in some packages, Biome in others, Prettier in a few corners, with overlapping rules, duplicated configs, and a CI step that took way too long.
+
+So I tasked an agent to migrate everything to [Oxlint](https://oxc.rs/docs/guide/usage/linter/) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter/), and the result was hard to argue with.
+
+**Our full lint pipeline went from ~81 seconds to ~2.5 seconds.** 🔥
+
+## Why Oxc?
+
+Oxc, the umbrella project behind Oxlint and Oxfmt, is a Rust-based JavaScript/TypeScript toolchain. It's not a port and it's not a wrapper, it's a full reimplementation aiming to do what ESLint, Biome, and Prettier do, but orders of magnitude faster.
+
+A few things make it attractive right now:
+
+- **Oxlint** ships native implementations of the ESLint rules most projects actually use, plus the popular plugins (`typescript`, `react`, `react-hooks`, `import`, `unicorn`, `jsx-a11y`, `nextjs`, `jest`, `vitest`, `promise`, and more).
+- **Oxfmt** is Prettier-compatible. Most Prettier options transfer directly with the same behavior.
+- For the rules Oxlint doesn't have natively, there's a **JS plugin API** that lets you keep using existing ESLint plugins or write your own, without a full ESLint runtime.
+- Both tools have **automated migration tooling** that reads your existing config and produces an equivalent one.
+
+It's not a 1:1 replacement for everything, and I'll get to the gotchas, but for the bulk of what most teams need, it's there.
+
+## Letting an Agent Do the Migration
+
+Here's the part that surprised me the most: **I didn't really do the migration myself.** I pointed an agent at the repo, told it to migrate from our existing setup to Oxlint and Oxfmt, and let it go.
+
+A few things made this work better than expected:
+
+1. **The migration tooling already exists.** [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) reads your ESLint flat config and outputs an `.oxlintrc.json`. Oxfmt has a `--migrate=prettier`/`--migrate=biome` flag built in. Half the work is automated out of the box.
+2. **The migration guides are good.** The [Oxlint](https://oxc.rs/docs/guide/usage/linter/) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter/) docs cover the plugin name mapping, the unsupported features to watch for, and how to update CI scripts. Pointing the agent at them up front is what kept it from going off the rails.
+3. **The work is mostly mechanical.** Run the migration tool, review the output, swap `biome-ignore` comments for `eslint-disable` equivalents (Oxlint understands them natively), update the CI scripts, and prune dead dependencies. It's exactly the kind of work you want to delegate.
+
+The agent ran the migration, ran the new lint and format commands, fixed the diffs, updated the package scripts, pruned the now-unused dependencies, and produced a PR I could review like any other one. I spent my time on the parts that actually required judgment: deciding which rule gaps mattered, validating the architectural rules we ported to a custom JS plugin, and reviewing the final diff.
+
+## The Numbers
+
+I won't share the exact PR or the project specifics (it's a private monorepo), but here's the shape of the wins on the largest project in our repo:
+
+> [!NOTE]
+> All benchmarks measured via `hyperfine --warmup 3 --runs 10` on macOS Apple Silicon M1 Pro, Node v24.14.0, using package scripts (not `npx`).
+
+- **Full lint pipeline (Biome + ESLint → Oxlint + Oxfmt):** ~81s → ~2.5s. **A 97% reduction.**
+- **Lint only (Biome native rules → Oxlint native rules):** ~3s → ~0.7s.
+- **Format only (Biome → Oxfmt):** ~2.9s → ~1.9s.
+
+The headline number (81s → 2.5s) comes from eliminating ESLint entirely. Most of that 81 seconds was ESLint resolving imports for a custom architectural rule (`import/no-restricted-paths`), which we replaced with a tiny custom JS plugin in Oxlint that does the same thing in a fraction of the time.
+
+For smaller projects in the same repo, the wins were more modest. A project that was already on Biome went from ~500ms to ~500ms (parity), a small ESLint project went from ~950ms to ~480ms (-49%), and a Prettier-only Lambda went from ~640ms to ~560ms (-11%). Biome was already fast, so the lint-only delta when migrating from Biome isn't where the win comes from. **The real win is eliminating ESLint when you have it in the mix.**
+
+## Where the Remaining Time Goes
+
+There's still some time left on the clock, and it's worth being clear about where it comes from.
+
+In our case, the remaining ~2.5 seconds is mostly the **JS plugins** running ESLint-style rules through Oxlint's plugin API. Native Oxlint rules are nearly free; JS plugin rules go through the V8 boundary and execute as JavaScript. They're still much faster than running them through ESLint, but they're not Rust-native fast.
+
+That's a fine trade-off. The plugin API is the escape hatch that lets you migrate today instead of waiting for every rule you care about to be ported natively. If a rule eventually gets a native Oxlint implementation, you swap it in and lose the JS plugin overhead. If it doesn't, you've still gone from "ESLint runs the rule" to "Oxlint runs the rule via JS plugin", which is a real win.
+
+> [!NOTE]
+> Oxlint currently has a performance cliff when you have **4+ JS plugin _names_** active simultaneously, going from ~2.5s to ~38s in our case. We worked around it by keeping ourselves to 3 plugins. Worth knowing if you're planning to lean heavily on JS plugins.
+
+## Gotchas
+
+It's not a magic 1:1 swap. Here's what to watch for.
+
+### Some rules don't have an Oxlint equivalent yet
+
+A handful of rules we relied on don't have native Oxlint counterparts. The notable ones for us:
+
+- **`noLeakedRender`** (Biome): catches `{count && <Component/>}` rendering `0` or `""` as text. High value, no Oxlint equivalent today.
+- **`noUndeclaredEnvVars`** (Biome): catches typos in `import.meta.env.VITE_*`. Same story.
+- **`noSwitchDeclarations`**: `let`/`const` in `case` without block scope.
+
+You can usually live without these, or write a JS plugin for the high-value ones, but it's worth doing a rule audit before you commit. Coverage moves fast, so check the [rules reference](https://oxc.rs/docs/guide/usage/linter/rules) for your version before assuming a gap.
+
+> [!TIP]
+> Run `npx @oxlint/migrate --details` to see exactly which of your ESLint rules couldn't be migrated. It's the fastest way to size the gap.
+
+### Don't run formatting through your linter
+
+If you were running Prettier through `eslint-plugin-prettier`, drop it. The official Oxlint guidance is to keep formatting out of the lint pipeline entirely — switch to Oxfmt, or run `prettier --check` as a separate step. It's faster, the diagnostics are clearer, and the two tools stop fighting over the same files.
+
+### `printWidth` defaults differ
+
+Prettier and Biome default to `80`. Oxfmt defaults to `100`. The migration tool will preserve your existing value, but if you're starting fresh, the defaults disagree. Pick one rather than letting the tool pick for you.
+
+### Embedded language formatting may differ slightly
+
+Oxfmt formats code embedded in JS/TS template literals (CSS-in-JS, GraphQL, HTML, and similar) via its [embedded formatting](https://oxc.rs/docs/guide/usage/formatter/embedded-formatting) feature. It works, but output may differ slightly from Prettier inside those blocks. If you have strong opinions on template literal formatting, give the diff a careful read.
+
+### Editor integration
+
+Make sure your editor is pointed at Oxlint instead of (or alongside) ESLint. The Oxc team maintains [editor extensions](https://oxc.rs/docs/guide/usage/linter/editors) for the major editors. Skipping this step gives you a great CI experience and a confused local one.
+
+## Should You Migrate?
+
+If you're running ESLint on a non-trivial codebase, **probably yes**. Especially if you're using rules with expensive resolvers (`import/no-restricted-paths`, `import/no-cycle`, or anything that walks the module graph), the savings can be enormous.
+
+If you're already on Biome, the lint-only wins are smaller, but the ecosystem story is different. Oxlint has wider rule and plugin coverage out of the box (a real `eslint-plugin-import` equivalent, `nextjs`, `react-perf`, `jest`, and more), and the JS plugin API gives you an actual escape hatch when you need a rule that isn't built in. Biome is fast, but Oxlint is fast _and_ closer to ESLint's ecosystem.
+
+If you're on Prettier, Oxfmt is mostly a drop-in. The migration tool handles the config, and the format output is intentionally Prettier-compatible. The wins are more modest (formatters were never the bottleneck), but it's nice to be on a single, unified toolchain.
+
+The combination of automated migration tooling and an agent that can drive it makes this a low-cost experiment. Spin up a branch, let an agent run the migration, look at the resulting diff, and decide whether to merge it. Worst case, you've learned something about your linting setup.
+
+In our case, the answer was an easy yes. **97% off the lint pipeline** is hard to walk away from.
+
+<div className="img-center">
+  <Image
+    alt={``}
+    src={`/static/images/racing-car.png`}
+    width={120}
+    height={120}
+  />
+  <Image
+    alt={``}
+    src={`/static/images/dashing-away.png`}
+    width={60}
+    height={60}
+    style={{ alignSelf: 'flex-end' }}
+  />
+</div>
