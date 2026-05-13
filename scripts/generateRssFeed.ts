@@ -22,7 +22,12 @@ type PostMeta = {
   publishedAt: string;
   updatedAt?: string;
   summary: string;
-  image: string;
+  /**
+   * Optional banner image (relative to `/public`). When omitted, the RSS
+   * `<enclosure>` is skipped — RSS readers that don't get an enclosure simply
+   * render the item without a thumbnail.
+   */
+  image?: string;
   tags: string[];
 };
 
@@ -50,9 +55,11 @@ function getPostsMeta(): PostMeta[] {
         title: data.title as string,
         publishedAt: data.publishedAt as string,
         summary: data.summary as string,
-        image: data.image as string,
         tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
       };
+      if (data.image) {
+        meta.image = data.image as string;
+      }
       if (data.updatedAt) {
         meta.updatedAt = data.updatedAt as string;
       }
@@ -67,11 +74,17 @@ function getPostsMeta(): PostMeta[] {
 function generateRssItem(post: PostMeta): string {
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
   const pubDate = new Date(post.publishedAt).toUTCString();
-  const imageUrl = `${SITE_URL}${post.image}`;
-  const imagePath = path.join(process.cwd(), 'public', post.image);
-  const imageSize = fs.statSync(imagePath).size;
-  const ext = path.extname(post.image).toLowerCase();
-  const mimeType = MIME_TYPES[ext] ?? 'application/octet-stream';
+  // Banner is optional. When absent, we omit `<enclosure>` from the item;
+  // feed readers gracefully render the item without a thumbnail.
+  let enclosure = '';
+  if (post.image) {
+    const imageUrl = `${SITE_URL}${post.image}`;
+    const imagePath = path.join(process.cwd(), 'public', post.image);
+    const imageSize = fs.statSync(imagePath).size;
+    const ext = path.extname(post.image).toLowerCase();
+    const mimeType = MIME_TYPES[ext] ?? 'application/octet-stream';
+    enclosure = `\n      <enclosure url="${escapeXml(imageUrl)}" length="${imageSize}" type="${mimeType}" />`;
+  }
 
   // RSS 2.0 has no native "modified" date, so we use the Atom namespace's
   // <atom:updated> element when an explicit `updatedAt` is set. Feed readers
@@ -93,8 +106,7 @@ function generateRssItem(post: PostMeta): string {
       <guid>${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>${atomUpdated}
       <dc:creator>${escapeXml(AUTHOR_NAME)}</dc:creator>${categories}
-      <description>${escapeXml(post.summary)}</description>
-      <enclosure url="${escapeXml(imageUrl)}" length="${imageSize}" type="${mimeType}" />
+      <description>${escapeXml(post.summary)}</description>${enclosure}
     </item>`;
 }
 

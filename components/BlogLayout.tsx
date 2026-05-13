@@ -31,7 +31,16 @@ const editUrl = (slug: string) =>
 
 export default function BlogLayout({ children, frontMatter }) {
   const postUrl = `https://charpeni.com/blog/${frontMatter.slug}`;
-  const imageUrl = `https://charpeni.com${frontMatter.image}`;
+  // Posts may omit `image`. The in-page banner block is rendered only when
+  // `image` is set. For social previews we prefer, in order:
+  //   1. The custom banner (`image`)
+  //   2. A generated per-post OG card (`ogImage`, see
+  //      `scripts/generateOgImages.ts`)
+  //   3. The sitewide default OG image (handled by `Container`)
+  const socialImage = frontMatter.image ?? frontMatter.ogImage;
+  const imageUrl = socialImage
+    ? `https://charpeni.com${socialImage}`
+    : undefined;
   const publishedAtIso = new Date(frontMatter.publishedAt).toISOString();
   const updatedAtIso = frontMatter.updatedAt
     ? new Date(frontMatter.updatedAt).toISOString()
@@ -46,7 +55,7 @@ export default function BlogLayout({ children, frontMatter }) {
     '@type': 'BlogPosting',
     headline: frontMatter.title,
     description: frontMatter.summary,
-    image: [imageUrl],
+    ...(imageUrl ? { image: [imageUrl] } : {}),
     datePublished: publishedAtIso,
     dateModified: updatedAtIso,
     ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
@@ -106,26 +115,32 @@ export default function BlogLayout({ children, frontMatter }) {
           </h1>
         </header>
 
-        <div className="relative w-full aspect-[2/1] mb-6 lg:mb-8 rounded-xl overflow-hidden">
-          {/*
-            The post title is already rendered as the <h1> directly above this
-            banner; the banner itself is decorative. Marking it with alt=""
-            (and aria-hidden) keeps screen readers from announcing the title
-            twice while still letting next/image lazy-load and serve the
-            placeholder. See https://www.w3.org/WAI/tutorials/images/decorative/
-          */}
-          <Image
-            alt=""
-            aria-hidden="true"
-            src={frontMatter.image}
-            fill
-            sizes="(max-width: 768px) 100vw, 768px"
-            priority
-            className="object-cover"
-            placeholder="blur"
-            blurDataURL={frontMatter.blurDataURL}
-          />
-        </div>
+        {frontMatter.image ? (
+          <div className="relative w-full aspect-[2/1] mb-6 lg:mb-8 rounded-xl overflow-hidden">
+            {/*
+              The post title is already rendered as the <h1> directly above this
+              banner; the banner itself is decorative. Marking it with alt=""
+              (and aria-hidden) keeps screen readers from announcing the title
+              twice while still letting next/image lazy-load and serve the
+              placeholder. See https://www.w3.org/WAI/tutorials/images/decorative/
+            */}
+            <Image
+              alt=""
+              aria-hidden="true"
+              src={frontMatter.image}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+              className="object-cover"
+              {...(frontMatter.blurDataURL
+                ? {
+                    placeholder: 'blur' as const,
+                    blurDataURL: frontMatter.blurDataURL,
+                  }
+                : {})}
+            />
+          </div>
+        ) : null}
 
         <div className="flex flex-row items-center justify-between gap-2 md:gap-4 text-gray-700 dark:text-gray-300 mb-4">
           <div className="flex items-center gap-3">
