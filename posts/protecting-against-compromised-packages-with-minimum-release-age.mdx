@@ -79,19 +79,16 @@ Yarn Berry 4.10+ has the equivalent setting under a slightly different name: [`n
 > This can also be set globally in `~/.yarnrc.yml` to apply to every project on your machine.
 
 ```yaml:.yarnrc.yml
-npmMinimalAgeGate: "3d"
+npmMinimalAgeGate: "1d"
 ```
 
 To preapprove specific packages or patterns:
 
 ```yaml:.yarnrc.yml
-npmMinimalAgeGate: "3d"
+npmMinimalAgeGate: "1d"
 npmPreapprovedPackages:
   - "@myorg/*"
 ```
-
-> [!TIP]
-> `3d` is a sensible value here, partly because the npm registry has [specific rules for packages less than 72 hours old](https://docs.npmjs.com/policies/unpublish) (they can still be freely unpublished, which would also break your build).
 
 ## npm
 
@@ -118,20 +115,20 @@ Bun 1.3+ has the same setting, [`install.minimumReleaseAge`](https://bun.sh/docs
 
 ```toml:bunfig.toml
 [install]
-# Only install package versions published at least 3 days ago
-minimumReleaseAge = 259200
+# Only install package versions published at least 1 day ago
+minimumReleaseAge = 86400
 ```
 
 Exclusions work via [`install.minimumReleaseAgeExcludes`](https://bun.sh/docs/runtime/bunfig#install-minimumreleaseageexcludes):
 
 ```toml:bunfig.toml
 [install]
-minimumReleaseAge = 259200
+minimumReleaseAge = 86400
 minimumReleaseAgeExcludes = ["@types/bun", "typescript"]
 ```
 
 > [!NOTE]
-> Each package manager uses a different unit: pnpm uses minutes, Yarn uses duration strings (`3d`), npm uses days, and Bun uses seconds. Double-check the value when copying configurations between projects.
+> Each package manager uses a different unit: pnpm uses minutes, Yarn uses duration strings (`1d`), npm uses days, and Bun uses seconds. Double-check the value when copying configurations between projects.
 
 ## Picking a Value
 
