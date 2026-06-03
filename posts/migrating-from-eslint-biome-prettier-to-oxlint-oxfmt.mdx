@@ -62,7 +62,9 @@ In our case, the remaining ~2.5 seconds is mostly the **JS plugins** running ESL
 That's a fine trade-off. The plugin API is the escape hatch that lets you migrate today instead of waiting for every rule you care about to be ported natively. If a rule eventually gets a native Oxlint implementation, you swap it in and lose the JS plugin overhead. If it doesn't, you've still gone from "ESLint runs the rule" to "Oxlint runs the rule via JS plugin", which is a real win.
 
 > [!NOTE]
-> Oxlint currently has a performance cliff when you have **4+ JS plugin _names_** active simultaneously, going from ~2.5s to ~38s in our case. We worked around it by keeping ourselves to 3 plugins. Worth knowing if you're planning to lean heavily on JS plugins.
+> <del>Oxlint currently has a performance cliff when you have <strong>4+ JS plugin <em>names</em></strong> active simultaneously, going from ~2.5s to ~38s in our case. We worked around it by keeping ourselves to 3 plugins. Worth knowing if you're planning to lean heavily on JS plugins.</del>
+>
+> **Update:** after digging into this more, the slowdown was not caused by crossing four JS plugin names. The expensive case was `eslint-plugin-react-compiler` specifically when run through Oxlint's JS plugin API. A fourth no-op JS plugin did not reproduce the slowdown, while React Compiler alone did. We removed that plugin because its warnings were not actionable for us at the time, which kept the lint pipeline around 2.5s.
 
 ## Gotchas
 
