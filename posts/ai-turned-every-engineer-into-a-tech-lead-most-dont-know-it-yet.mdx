@@ -1,0 +1,121 @@
+---
+title: "AI Turned Every Engineer Into a Tech Lead. Most Don't Know It Yet."
+publishedAt: '2026-06-08T12:00:00Z'
+summary: "My Take on AI as of June 2026. Most people say AI kills the creativity and the fun in building. I want to offer the other side: managing agents feels a lot like the tech lead job I already loved."
+tags: ['ai']
+---
+
+<figure className="img-center img-zoom">
+  <a
+    href="/static/images/ai-turned-every-engineer-into-a-tech-lead-most-dont-know-it-yet/tldr.png"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <Image
+      alt={`A visual TL;DR of this post: AI turned every engineer into a tech lead`}
+      src={`/static/images/ai-turned-every-engineer-into-a-tech-lead-most-dont-know-it-yet/tldr.png`}
+      width={1024}
+      height={1536}
+    />
+  </a>
+  <figcaption>TL;DR (click to enlarge)</figcaption>
+</figure>
+
+Most takes on AI I read these days land somewhere between resignation and grief. AI kills the creativity. AI removes the fun in building. AI is turning engineers into prompt-typers who don't understand their own codebases anymore.
+
+I get it. There's truth in some of that. But I want to offer a different angle, because that's not how it has felt for me. At least not entirely.
+
+For me, AI came as both a benediction and a bummer. Let me explain why, and why I want to spend most of this post on the good part.
+
+## A Bit of Context: I've Been a Tech Lead for the Past Few Years
+
+I've spent the last while acting as a tech lead. My day-to-day hasn't really been about writing the most code on the team. It's been about breaking down projects into solvable pieces, sequencing the work, and helping a team actually ship.
+
+Somewhere along the way I stopped measuring myself by my own output. **I started measuring my velocity as the team's velocity.** I think of myself as a team multiplier. The joy I get isn't from being the person who wrote the clever bit, it's from removing friction so that everyone else can move faster and ship great things.
+
+That framing matters, because it's the lens I brought to AI. And through that lens, AI looks very different than it does to someone who measures themselves purely by what they personally typed.
+
+## The Bummer
+
+Let's get the downside out of the way, because it's real and I don't want to pretend otherwise.
+
+There's a kind of craftsmanship that AI does flatten. The satisfaction of sitting with a hard problem, the muscle memory of building something with your own hands, the quiet pride of a clean implementation you wrote line by line. When an agent does that part for you, some of that feeling goes away. If that's where you draw your joy, AI can feel like it's taking something from you.
+
+I won't argue you out of that. It's a genuine loss for a lot of people, and dismissing it would be dishonest.
+
+## The Benediction
+
+I'd already lost some of that feeling long before AI showed up, though.
+
+After years of this work, I was quietly tired of building the same things over and over. The same CRUD features. The same forms. The same React components, wired up the same way, for the hundredth time. The novelty of _that_ wore off a long time ago.
+
+Becoming a tech lead was the first thing that helped on that front. It moved my attention up a level, from "how do I build this form" to "how do we ship this whole thing well." The repetitive parts stopped being the point. The interesting work became the decomposition, the sequencing, the unblocking.
+
+And this is exactly where AI clicked for me.
+
+## Clearing the Fog of War
+
+One part of the tech lead role I really enjoy is what I like to call "clearing the fog of war." Anyone who has played an Age of Empires game knows the feeling: you start surrounded by darkness, and before you can do anything useful, you have to scout. You send someone out to look around and clear the map a little.
+
+You spot the wolves ahead of time so your villagers don't get attacked on the way to the trees. You find your nearest enemy so they don't surprise you later. You locate the valuable resources worth building toward. And then you plan your next moves from that information, instead of stumbling into the dark.
+
+That's a huge part of leading a team. Before the work starts, you go look around: where are the risks, where are the dependencies, what's the thing that's going to bite us in three weeks if nobody scouts it now? You clear enough of the map that everyone else can move without walking into a wolf.
+
+It turns out this matters just as much with AI. Skip the scouting and you're steering agents straight into a flock of wolves: you end up with a spaghetti codebase that doesn't work and that you don't understand. The fog doesn't clear itself just because an agent is the one doing the building.
+
+<figure className="img-center">
+  <Image
+    alt={`An Age of Empires scout revealing the map`}
+    src={`/static/images/ai-turned-every-engineer-into-a-tech-lead-most-dont-know-it-yet/fog-of-war.gif`}
+    width={522}
+    height={269}
+  />
+  <figcaption>
+    When you don't leverage <a href="https://github.com/mattpocock/skills"><code>/grill-with-docs</code></a> from Matt Pocock's skills.
+  </figcaption>
+</figure>
+
+## Managing Agents Feels a Lot Like Leading a Team
+
+With AI, the day-to-day feels almost like the tech lead job, except now some of the people shipping things are agents.
+
+And honestly? **The core skill is the same.** Whether you're working with human peers or with agents, the job comes down to a few things:
+
+- You need to make sure that what you want is **clear**. Ambiguous intent produces ambiguous work, from people and from agents alike.
+- You need to make sure no one ends up **blocked**. Work that stalls silently is the thing that quietly kills projects.
+- And when someone _does_ get blocked, you need to be able to **unblock them** without jeopardizing the whole effort.
+- You need to **stay in the loop** on what's being worked on, why, and how. You're not the one writing it, but you still have to know what's happening and review it. The moment you lose track of that is the moment the project starts drifting away from you.
+
+I spend my time writing clear specs, sequencing work so pieces don't collide, reviewing output with judgment, and stepping in to unblock when something goes sideways. That was my job before AI. It's still my job now. The roster just changed.
+
+And the roster has another layer to it now. Being a tech lead with AI isn't just leading agents directly. It's leading agents _and_ teammates who are themselves leading agents. The same job, nested one level deeper.
+
+And I don't think this is unique to me. AI quietly started demanding the same skills from everyone: writing clear intent, breaking work into pieces, reviewing output you didn't write yourself, and unblocking when things stall. Those _are_ the tech lead skills. If you're working with agents, you've already been promoted into the role, whether you signed up for it or not. Most engineers are doing the job now and still think of themselves as "just coding." That gap between the work the tools actually demand and the way we still describe ourselves is exactly why so many people feel like AI took something from them instead of handing them a bigger lever.
+
+> [!NOTE]
+> This isn't me saying agents are the same as people. They're not. They don't carry context between projects the way a teammate does, they don't push back when your plan is wrong, and they'll confidently walk off a cliff if you let them. But the _shape_ of the work, keeping intent clear and keeping things moving, rhymes hard with what I was already doing.
+
+## Why This Lands as a Positive for Me
+
+If your identity as an engineer is wrapped up in being the person who writes the code, AI is going to feel like a threat, and I understand why those takes are everywhere.
+
+But if you've already made the shift to caring more about the outcome than about who typed which line, AI doesn't take the fun away. It gives you more of the part that was already fun: framing the problem, removing friction, and helping things ship.
+
+I got into this work because I like building things that matter and helping other people build them too. AI didn't change that. If anything, it gave me more leverage to do the part I'd already decided I loved most.
+
+It came as a bummer, sure. But mostly, it came as a benediction.
+
+<div className="img-center">
+  <Image
+    alt={`An Age of Empires priest`}
+    src={`/static/images/ai-turned-every-engineer-into-a-tech-lead-most-dont-know-it-yet/priest.gif`}
+    width={208}
+    height={249}
+  />
+</div>
+
+---
+
+Thanks for reading to the end!
+
+This is just my take, shaped by the seat I happen to sit in. If you measure your work differently, you'll probably land somewhere different, and I'd genuinely like to hear where. Feel free to comment below.
