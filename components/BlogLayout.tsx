@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 
 import { parseISO, format } from 'date-fns';
 import { SocialIcon as ReactSocialIcon } from 'react-social-icons/component';
@@ -6,6 +7,7 @@ import { SocialIcon as ReactSocialIcon } from 'react-social-icons/component';
 import Container from '@/components/Container';
 import CopyAsMarkdownButton from '@/components/CopyAsMarkdownButton';
 import styles from '@/styles/GradientAnimation.module.css';
+import type { PostFrontMatter } from '@/utils/mdx';
 import { openWindow } from '@/utils/openWindow';
 
 import { Comments } from './Comments';
@@ -29,7 +31,13 @@ function ShareSocialIcon({ network }: { network: string }) {
 const editUrl = (slug: string) =>
   `https://github.com/charpeni/charpeni.com/edit/main/posts/${slug}.mdx`;
 
-export default function BlogLayout({ children, frontMatter }) {
+export default function BlogLayout({
+  children,
+  frontMatter,
+}: {
+  children: ReactNode;
+  frontMatter: PostFrontMatter;
+}) {
   const postUrl = `https://charpeni.com/blog/${frontMatter.slug}`;
   // Posts may omit `image`. The in-page banner block is rendered only when
   // `image` is set. For social previews we prefer, in order:

@@ -15,7 +15,7 @@ import rehypeSlug from 'rehype-slug';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import type { ReadTimeResults } from 'reading-time';
 
-type PostFrontMatter = {
+export type PostFrontMatter = {
   title: string;
   publishedAt: string;
   /**
@@ -61,6 +61,26 @@ type PostFrontMatter = {
    */
   blurDataURL?: string;
 };
+
+/**
+ * The metadata-only slice of {@link PostFrontMatter} — the fields shared by
+ * list views, cards, and the build-time scripts (RSS, llms.txt). Consumers
+ * that only need to render or syndicate post metadata should `Pick` from this
+ * rather than redeclaring their own shape. Build scripts that run outside the
+ * bundler (`node --experimental-strip-types`) can `import type` this safely:
+ * it carries no runtime dependency on this module's MDX/plaiceholder imports.
+ */
+export type PostMeta = Pick<
+  PostFrontMatter,
+  | 'slug'
+  | 'title'
+  | 'summary'
+  | 'publishedAt'
+  | 'updatedAt'
+  | 'image'
+  | 'tags'
+  | 'readingTime'
+>;
 
 type Post = {
   mdxSource: MDXRemoteSerializeResult;
