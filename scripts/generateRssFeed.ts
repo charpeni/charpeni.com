@@ -80,7 +80,8 @@ function generateRssItem(post: PostMeta): string {
     const imagePath = path.join(process.cwd(), 'public', post.image);
     const imageSize = fs.statSync(imagePath).size;
     const ext = path.extname(post.image).toLowerCase();
-    const mimeType = MIME_TYPES[ext] ?? 'application/octet-stream';
+    const mimeType =
+      MIME_TYPES[ext as keyof typeof MIME_TYPES] ?? 'application/octet-stream';
     enclosure = `\n      <enclosure url="${escapeXml(imageUrl)}" length="${imageSize}" type="${mimeType}" />`;
   }
 
