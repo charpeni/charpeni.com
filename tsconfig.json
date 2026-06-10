@@ -13,13 +13,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/posts/*": ["posts/*"],
-      "@/layouts/*": ["layouts/*"],
-      "@/utils/*": ["utils/*"],
-      "@/styles/*": ["styles/*"]
+      "@/components/*": ["./components/*"],
+      "@/posts/*": ["./posts/*"],
+      "@/layouts/*": ["./layouts/*"],
+      "@/utils/*": ["./utils/*"],
+      "@/styles/*": ["./styles/*"]
     },
     "incremental": true,
     "plugins": [
