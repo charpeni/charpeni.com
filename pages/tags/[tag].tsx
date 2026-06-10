@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 import Container from '@/components/Container';
 import { getAllPostsFrontMatter } from '@/utils/mdx';
+import type { PostMeta } from '@/utils/mdx';
 
 const SITE_URL = 'https://charpeni.com';
 
@@ -16,14 +17,10 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-type TagPost = {
-  slug: string;
-  title: string;
-  summary: string;
-  publishedAt: string;
-  readingTime: { text: string };
-  tags: string[];
-};
+type TagPost = Pick<
+  PostMeta,
+  'slug' | 'title' | 'summary' | 'publishedAt' | 'readingTime' | 'tags'
+>;
 
 type Props = {
   tag: string;

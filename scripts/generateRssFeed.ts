@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import matter from 'gray-matter';
 
+import type { PostMeta as CanonicalPostMeta } from '../utils/mdx';
+
 const SITE_URL = 'https://charpeni.com';
 const AUTHOR_NAME = 'Nicolas Charpentier';
 const AUTHOR_EMAIL = 'blog@nicolascharpentier.com';
@@ -16,20 +18,16 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
 } as const;
 
-type PostMeta = {
-  slug: string;
-  title: string;
-  publishedAt: string;
-  updatedAt?: string;
-  summary: string;
-  /**
-   * Optional banner image (relative to `/public`). When omitted, the RSS
-   * `<enclosure>` is skipped — RSS readers that don't get an enclosure simply
-   * render the item without a thumbnail.
-   */
-  image?: string;
-  tags: string[];
-};
+/**
+ * The fields this script reads from a post's front matter. Derived from the
+ * canonical {@link CanonicalPostMeta} so the RSS shape can't drift from the
+ * source of truth in `utils/mdx.ts`. `image` is optional: when omitted, the
+ * RSS `<enclosure>` is skipped and readers render the item without a thumbnail.
+ */
+type PostMeta = Pick<
+  CanonicalPostMeta,
+  'slug' | 'title' | 'publishedAt' | 'updatedAt' | 'summary' | 'image' | 'tags'
+>;
 
 function escapeXml(text: string): string {
   return text

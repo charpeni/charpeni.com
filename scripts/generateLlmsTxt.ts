@@ -3,13 +3,15 @@ import path from 'node:path';
 
 import matter from 'gray-matter';
 
+import type { PostMeta as CanonicalPostMeta } from '../utils/mdx';
+
 const SITE_URL = 'https://charpeni.com';
 
-type PostMeta = {
-  slug: string;
-  title: string;
-  publishedAt: string;
-};
+/**
+ * The narrow slice this script reads, derived from the canonical
+ * {@link CanonicalPostMeta} in `utils/mdx.ts` so it can't drift.
+ */
+type PostMeta = Pick<CanonicalPostMeta, 'slug' | 'title' | 'publishedAt'>;
 
 function getPostsMeta(): PostMeta[] {
   const postsDir = path.join(process.cwd(), 'posts');

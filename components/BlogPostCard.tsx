@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 
 import type { LaneCell, RowGraph } from '@/utils/graph';
+import type { PostFrontMatter } from '@/utils/mdx';
 
 /**
  * Sentinel used in the highlight set to mark the main rail. Branch
@@ -10,13 +11,10 @@ import type { LaneCell, RowGraph } from '@/utils/graph';
  */
 export const MAIN_LANE = '__main__';
 
-type Props = {
-  title: string;
-  summary: string;
-  slug: string;
-  publishedAt: string;
-  readingTime: { text: string };
-  tags: string[];
+type Props = Pick<
+  PostFrontMatter,
+  'title' | 'summary' | 'slug' | 'publishedAt' | 'readingTime' | 'tags'
+> & {
   /**
    * Drawing directives for the rail at this row. When omitted the
    * card renders a plain main-only rail. Posts that carry a branch
