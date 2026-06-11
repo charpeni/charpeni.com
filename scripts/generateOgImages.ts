@@ -9,7 +9,7 @@
  * article title instead of the generic sitewide card.
  *
  * Run manually after adding or renaming a post:
- *   node --experimental-strip-types scripts/generateOgImages.ts
+ *   node scripts/generateOgImages.ts
  *
  * Then commit the regenerated PNG(s). Like `og-default.png`, these are
  * committed to the repo so the build pipeline never has to rasterize text —
