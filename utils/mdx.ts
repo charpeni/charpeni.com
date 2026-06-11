@@ -93,7 +93,44 @@ export function getPosts() {
   return fs.readdirSync(path.join(root, 'posts'));
 }
 
-export async function getPostBySlug(slug: string): Promise<Post> {
+/**
+ * Build-time memo cache for {@link getPostBySlug}, keyed by slug.
+ *
+ * Compiling a post is expensive — `serialize()` runs the full MDX pipeline
+ * (syntax highlighting via `rehype-prism-plus`, autolinked headings, callouts)
+ * and `getPlaiceholder()` decodes the banner image. The same posts are
+ * otherwise recompiled many times per build: `getAllPostsFrontMatter()` reads
+ * every post and is itself called once on the homepage plus once per tag in
+ * `pages/tags/[tag].tsx`'s `getStaticPaths`/`getStaticProps`, so a single build
+ * compiles each post on the order of dozens of times.
+ *
+ * We cache the in-flight Promise (not the resolved value) so concurrent callers
+ * — e.g. the `Promise.all` fan-out in `getAllPostsFrontMatter()` — share one
+ * compilation rather than racing to start their own.
+ *
+ * This is safe because post content is immutable for the lifetime of a build
+ * process (SSG runs to completion, then exits). The trade-off is that a long
+ * lived `next dev` process won't pick up edits to a post body until restarted.
+ */
+const postCache = new Map<string, Promise<Post>>();
+
+export function getPostBySlug(slug: string): Promise<Post> {
+  const cached = postCache.get(slug);
+  if (cached) {
+    return cached;
+  }
+
+  // Evict on failure so a transient error doesn't poison the cache for the
+  // rest of the build; the resolved value is what we want to keep around.
+  const promise = loadPostBySlug(slug).catch((error: unknown) => {
+    postCache.delete(slug);
+    throw error;
+  });
+  postCache.set(slug, promise);
+  return promise;
+}
+
+async function loadPostBySlug(slug: string): Promise<Post> {
   const source = fs.readFileSync(
     path.join(root, 'posts', `${slug}.mdx`),
     'utf8',
