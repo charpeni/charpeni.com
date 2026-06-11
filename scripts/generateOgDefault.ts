@@ -4,7 +4,7 @@
  * the `image` prop on `<Container>` (homepage, /disclaimer, /privacy-policy).
  *
  * Run manually after editing the SVG below:
- *   node --experimental-strip-types scripts/generateOgDefault.ts
+ *   node scripts/generateOgDefault.ts
  *
  * Then commit the regenerated PNG.
  *

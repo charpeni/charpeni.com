@@ -66,8 +66,8 @@ export type PostFrontMatter = {
  * The metadata-only slice of {@link PostFrontMatter} — the fields shared by
  * list views, cards, and the build-time scripts (RSS, llms.txt). Consumers
  * that only need to render or syndicate post metadata should `Pick` from this
- * rather than redeclaring their own shape. Build scripts that run outside the
- * bundler (`node --experimental-strip-types`) can `import type` this safely:
+ * rather than redeclaring their own shape. Build scripts that run directly
+ * with `node` can `import type` this safely:
  * it carries no runtime dependency on this module's MDX/plaiceholder imports.
  */
 export type PostMeta = Pick<

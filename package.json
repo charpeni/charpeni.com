@@ -7,8 +7,7 @@
   "packageManager": "pnpm@11.5.3+sha512.7ac1c919341c213a34dc0d02afb7143c5c26ac26ee8c4782deea821b8ac64d2134a081fd8941dae6e29bbb48f58dfc2b7fbceeccc07cb2f09d219d342a4969ed",
   "scripts": {
     "analyze": "ANALYZE=true pnpm build",
-    "build": "next build",
-    "postbuild": "next-sitemap && node --experimental-strip-types scripts/generateLlmsTxt.mts && node --experimental-strip-types scripts/generateRssFeed.mts",
+    "build": "next build && next-sitemap && node scripts/generateLlmsTxt.mts && node scripts/generateRssFeed.mts",
     "dev": "next",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
