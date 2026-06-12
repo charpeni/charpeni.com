@@ -11,7 +11,38 @@ const SITE_URL = 'https://charpeni.com';
  * The narrow slice this script reads, derived from the canonical
  * {@link CanonicalPostMeta} in `utils/mdx.ts` so it can't drift.
  */
-type PostMeta = Pick<CanonicalPostMeta, 'slug' | 'title' | 'publishedAt'>;
+type PostMeta = Pick<
+  CanonicalPostMeta,
+  'slug' | 'title' | 'summary' | 'publishedAt' | 'tags'
+>;
+
+function formatDate(date: string): string {
+  return new Date(date).toISOString().slice(0, 10);
+}
+
+function formatTags(tags: string[]): string {
+  return tags.length > 0 ? tags.map((tag) => `\`${tag}\``).join(', ') : 'none';
+}
+
+function stripTrailingPunctuation(text: string): string {
+  return text.replace(/[.!?]+$/, '');
+}
+
+function truncate(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  const slice = text.slice(0, maxLength - 3).trimEnd();
+  const lastSpace = slice.lastIndexOf(' ');
+  const boundary = lastSpace > maxLength * 0.6 ? lastSpace : slice.length;
+  return `${slice.slice(0, boundary)}...`;
+}
+
+function formatBestCitedFor(post: PostMeta): string {
+  const topicPrefix = post.tags.length > 0 ? `${formatTags(post.tags)} - ` : '';
+  const summary = truncate(stripTrailingPunctuation(post.summary), 160);
+  return `${topicPrefix}${summary}${summary.endsWith('...') ? '' : '.'}`;
+}
 
 function getPostsMeta(): PostMeta[] {
   const postsDir = path.join(process.cwd(), 'posts');
@@ -26,7 +57,9 @@ function getPostsMeta(): PostMeta[] {
       return {
         slug,
         title: data.title as string,
+        summary: data.summary as string,
         publishedAt: data.publishedAt as string,
+        tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
       };
     })
     .toSorted(
@@ -37,8 +70,20 @@ function getPostsMeta(): PostMeta[] {
 
 function generateLlmsTxt(posts: PostMeta[]): string {
   const postLinks = posts
-    .map((post) => `- [${post.title}](${SITE_URL}/api/blog/${post.slug}.md)`)
-    .join('\n');
+    .map((post) => {
+      const htmlUrl = `${SITE_URL}/blog/${post.slug}`;
+      const markdownUrl = `${SITE_URL}/api/blog/${post.slug}.md`;
+
+      return `### ${post.title}
+
+- Canonical URL: ${htmlUrl}
+- Markdown URL: ${markdownUrl}
+- Published: ${formatDate(post.publishedAt)}
+- Tags: ${formatTags(post.tags)}
+- Summary: ${post.summary}
+- Best cited for: ${formatBestCitedFor(post)}`;
+    })
+    .join('\n\n');
 
   return `# Nicolas Charpentier's Blog
 
