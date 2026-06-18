@@ -282,3 +282,18 @@ export function computeGraph(
 
   return { activeBranches, rows };
 }
+
+/**
+ * A short, deterministic 7-char hex "commit hash" for a post slug.
+ * Not cryptographically meaningful; just a stable pseudo-hash so the
+ * terminal's `git log` output looks right and `git show <hash>` is
+ * stable across renders.
+ */
+export function shortHash(slug: string): string {
+  let h = 2_166_136_261;
+  for (const ch of slug) {
+    h ^= ch.codePointAt(0) ?? 0;
+    h = Math.imul(h, 16_777_619);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0').slice(0, 7);
+}

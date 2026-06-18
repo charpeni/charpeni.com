@@ -3,12 +3,15 @@ import { useState, useEffect } from 'react';
 
 import { useTheme } from 'next-themes';
 
+import { useRetroMode } from '@/components/RetroModeContext';
+
 import { Moon } from './Moon';
 import { Sun } from './Sun';
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
+  const { isRetro, toggleRetro } = useRetroMode();
 
   // After mounting, we have access to the theme
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -24,7 +27,16 @@ export default function Header() {
       >
         {mounted ? resolvedTheme === 'dark' ? <Sun /> : <Moon /> : null}
       </button>
-      <div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className={`retro-mode-trigger retro-mode-trigger--${isRetro ? 'retro' : 'normal'}`}
+          onClick={toggleRetro}
+          aria-label={isRetro ? 'Exit retro mode' : 'ssh blog@charpeni.com'}
+          title={isRetro ? 'Exit retro mode' : 'ssh blog@charpeni.com'}
+        >
+          <span aria-hidden="true">&gt;_</span>
+        </button>
         <Link href="/" className="p-2 sm:p-4 text-gray-900 dark:text-gray-100">
           Home
         </Link>

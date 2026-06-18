@@ -118,7 +118,7 @@ export default function BlogLayout({
     >
       <article className="flex flex-col justify-center max-w-3xl mx-auto mb-16 w-full">
         <header className="mb-6 lg:mb-12">
-          <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight text-black dark:text-white">
+          <h1 className="font-black text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight text-black dark:text-white">
             {frontMatter.title}
           </h1>
         </header>

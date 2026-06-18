@@ -4,7 +4,7 @@ import { MDXRemote } from 'next-mdx-remote';
 
 import BlogLayout from '@/components/BlogLayout';
 import MDXComponents from '@/components/MDXComponents';
-import { getPosts, getPostBySlug } from '@/utils/mdx';
+import { getAllPostsFrontMatter, getPosts, getPostBySlug } from '@/utils/mdx';
 
 export default function Blog({
   mdxSource,
@@ -32,6 +32,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }: { params: { slug: string } }) {
   const post = await getPostBySlug(params.slug);
+  const posts = getAllPostsFrontMatter();
 
-  return { props: { ...post } };
+  return { props: { ...post, retroPosts: posts } };
 }
