@@ -266,7 +266,6 @@ export default function Home({
 }
 
 export async function getStaticProps() {
-  const posts = await getAllPostsFrontMatter();
-
-  return { props: { posts } };
+  const posts = getAllPostsFrontMatter();
+  return { props: { posts, retroPosts: posts } };
 }

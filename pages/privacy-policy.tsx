@@ -1,6 +1,6 @@
-import NextLink from 'next/link';
-
 import Container from '@/components/Container';
+import { LegalContent } from '@/components/LegalContent';
+import { getAllPostsFrontMatter } from '@/utils/mdx';
 
 export default function PrivacyPolicy() {
   return (
@@ -14,30 +14,14 @@ export default function PrivacyPolicy() {
           PRIVACY POLICY
         </h1>
         <div className="max-w-prose text-gray-600 dark:text-gray-400">
-          <p>
-            This website (
-            <a href="https://charpeni.com">https://charpeni.com</a>) does not
-            directly collect personal data on behalf of its author (Nicolas
-            Charpentier) and uses no cookies.
-          </p>
-          <p className="mt-4">
-            This website is hosted on Vercel (
-            <a href="https://vercel.com">https://vercel.com</a>). As such, when
-            loading this website, your IP address will be available to Vercel
-            and may be stored in their access logs, along with the information
-            which page specifically you loaded.
-          </p>
-          <p className="mt-4">
-            From this website, you can visit other websites by following
-            hyperlinks to such external sites. These other sites may have
-            different privacy policies and terms which are beyond control of the
-            author of <a href="https://charpeni.com">https://charpeni.com</a>.
-            See this website&apos;s{' '}
-            <NextLink href="/disclaimer">Legal Disclaimer</NextLink> for more
-            information.
-          </p>
+          <LegalContent variant="privacy-policy" />
         </div>
       </div>
     </Container>
   );
+}
+
+export async function getStaticProps() {
+  const posts = getAllPostsFrontMatter();
+  return { props: { retroPosts: posts } };
 }

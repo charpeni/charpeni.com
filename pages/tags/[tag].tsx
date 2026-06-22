@@ -25,6 +25,7 @@ type TagPost = Pick<
 type Props = {
   tag: string;
   posts: TagPost[];
+  retroPosts: PostMeta[];
 };
 
 export default function TagPage({
@@ -176,6 +177,7 @@ export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
     props: {
       tag,
       posts: filtered,
+      retroPosts: all,
     },
   };
 };
