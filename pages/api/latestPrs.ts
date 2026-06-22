@@ -1,12 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-type LatestPr = {
-  title: string;
-  url: string;
-  repo: string;
-  number: string;
-  publishedAt: string;
-};
+import type { LatestPr } from '@/components/retro-terminal/types';
 
 function decodeXml(text: string) {
   return text

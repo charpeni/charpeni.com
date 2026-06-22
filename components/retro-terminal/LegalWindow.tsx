@@ -14,6 +14,7 @@ export function LegalWindow({
   dragProps,
   resizeProps,
   onTitleDoubleClick,
+  compact,
 }: {
   win: OpenWin;
   active: boolean;
@@ -24,6 +25,7 @@ export function LegalWindow({
   dragProps: { onPointerDown: (e: React.PointerEvent) => void };
   resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
   onTitleDoubleClick?: () => void;
+  compact?: boolean;
 }) {
   const onContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -53,6 +55,7 @@ export function LegalWindow({
       resizeProps={resizeProps}
       onActivate={onActivate}
       onTitleDoubleClick={onTitleDoubleClick}
+      compact={compact}
     >
       <div className="retro-terminal-legal-window" onClickCapture={onContentClick}>
         <div className="retro-terminal-legal-title">{LEGAL_TITLES[variant]}</div>

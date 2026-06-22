@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 
-export function formatYearMonth(iso: string): string {
+export function formatIsoDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toISOString().slice(0, 10);

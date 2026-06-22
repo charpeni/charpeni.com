@@ -149,6 +149,7 @@ export function ShowTermWindow({
   resizeProps,
   onOpenBlogLink,
   onTitleDoubleClick,
+  compact,
 }: {
   win: OpenWin;
   active: boolean;
@@ -160,6 +161,7 @@ export function ShowTermWindow({
   resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
   onOpenBlogLink: (slug: string) => boolean;
   onTitleDoubleClick?: () => void;
+  compact?: boolean;
 }) {
   const { status: copyStatus, copy } = useCopyMarkdown(post.slug);
   const branch = branchOf(post);
@@ -193,6 +195,7 @@ export function ShowTermWindow({
       onActivate={onActivate}
       onKeyDown={onKeyDown}
       onTitleDoubleClick={onTitleDoubleClick}
+      compact={compact}
     >
       <ShowBody post={post} mdxState={mdxState} onOpenBlogLink={onOpenBlogLink} />
       <div className="retro-terminal-status">

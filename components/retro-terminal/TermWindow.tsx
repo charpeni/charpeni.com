@@ -12,6 +12,8 @@ export function TermWindow({
   onActivate,
   onKeyDown,
   onTitleDoubleClick,
+  windowRef,
+  compact,
 }: {
   win: OpenWin;
   active: boolean;
@@ -24,13 +26,16 @@ export function TermWindow({
   onActivate: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onTitleDoubleClick?: () => void;
+  windowRef?: React.Ref<HTMLDivElement>;
+  compact?: boolean;
 }) {
   const { geom } = win;
   return (
     <div
       className={`retro-terminal-window ${active ? 'retro-terminal-window--active' : ''}`}
       data-retro-window-id={win.id}
-      style={{ left: geom.x, top: geom.y, width: geom.w, height: geom.h, zIndex: 100 + win.z }}
+      ref={windowRef}
+      style={compact ? { zIndex: 100 + win.z } : { left: geom.x, top: geom.y, width: geom.w, height: geom.h, zIndex: 100 + win.z }}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {

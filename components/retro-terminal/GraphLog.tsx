@@ -4,7 +4,7 @@ import { BRANCH_TAGS, computeGraph, shortHash } from '@/utils/graph';
 import type { BranchTag, RowGraph } from '@/utils/graph';
 import type { PostFrontMatter } from '@/utils/mdx';
 
-import { formatYearMonth } from './format';
+import { formatIsoDate } from './format';
 import { GRAPH_LANE_GAP, GRAPH_MAIN_X, GRAPH_ROW_H, graphWidth } from './geometry';
 import { BRANCH_COLORS, branchOf } from './postUtils';
 
@@ -166,7 +166,7 @@ export function GraphLog({
                   >
                     {isMobile ? null : <GraphRail row={row} activeBranches={activeBranches} />}
                     <span className="retro-terminal-hash">{hash}</span>
-                    <span className="retro-terminal-date">{formatYearMonth(post.publishedAt)}</span>
+                    <span className="retro-terminal-date">{formatIsoDate(post.publishedAt)}</span>
                     {branch ? (
                       <span
                         className="retro-terminal-refs"

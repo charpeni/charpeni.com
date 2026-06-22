@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { formatYearMonth } from './format';
+import { formatIsoDate } from './format';
 import { TermWindow } from './TermWindow';
 
 import type { LatestPr, LatestPrsState, OpenWin } from './types';
@@ -13,6 +13,7 @@ export function LatestPrsWindow({
   dragProps,
   resizeProps,
   onTitleDoubleClick,
+  compact,
 }: {
   win: OpenWin;
   active: boolean;
@@ -21,6 +22,7 @@ export function LatestPrsWindow({
   dragProps: { onPointerDown: (e: React.PointerEvent) => void };
   resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
   onTitleDoubleClick?: () => void;
+  compact?: boolean;
 }) {
   const [state, setState] = useState<LatestPrsState>({ status: 'loading' });
 
@@ -53,6 +55,7 @@ export function LatestPrsWindow({
       resizeProps={resizeProps}
       onActivate={onActivate}
       onTitleDoubleClick={onTitleDoubleClick}
+      compact={compact}
     >
       <div className="retro-terminal-prs-window">
         <div className="retro-terminal-prs-toolbar">
@@ -81,7 +84,7 @@ export function LatestPrsWindow({
               <span className="retro-terminal-prs-number">{pr.number}</span>
               <span className="retro-terminal-prs-copy">
                 <span className="retro-terminal-prs-title">{pr.title}</span>
-                <span className="retro-terminal-prs-repo">{pr.repo} · {formatYearMonth(pr.publishedAt)}</span>
+                <span className="retro-terminal-prs-repo">{pr.repo} · {formatIsoDate(pr.publishedAt)}</span>
               </span>
             </a>
           )) : null}

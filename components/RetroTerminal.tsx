@@ -122,6 +122,7 @@ export default function RetroTerminal({
   const [mdxBySlug, setMdxBySlug] = useState<Record<string, MdxState>>({});
   const loadingSlugs = useRef(new Set<string>());
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const termWindowRef = useRef<HTMLDivElement | null>(null);
   const { setRetro } = useRetroMode();
 
   useEffect(() => {
@@ -376,8 +377,7 @@ export default function RetroTerminal({
 
   useEffect(() => {
     if (windows.find((win) => win.focused)?.id !== TERM_ID) return;
-    const term = document.querySelector<HTMLElement>(`[data-retro-window-id="${TERM_ID}"]`);
-    term?.focus({ preventScroll: true });
+    termWindowRef.current?.focus({ preventScroll: true });
   }, [windows]);
 
   const onLogKeyDown = (e: React.KeyboardEvent) => {
@@ -454,6 +454,8 @@ export default function RetroTerminal({
                 onActivate={() => focus(win.id)}
                 onKeyDown={onLogKeyDown}
                 onTitleDoubleClick={() => resetWindow(win.id)}
+                windowRef={termWindowRef}
+                compact={vw < 640}
               >
                 <GraphLog
                   posts={posts}
@@ -493,6 +495,7 @@ export default function RetroTerminal({
                 resizeProps={resizeHandleProps(win.id)}
                 onOpenBlogLink={openBlogSlug}
                 onTitleDoubleClick={() => resetWindow(win.id)}
+                compact={vw < 640}
               />
             );
           }
@@ -507,6 +510,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
+                compact={vw < 640}
               />
             );
           }
@@ -525,6 +529,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
+                compact={vw < 640}
               />
             );
           }
@@ -533,16 +538,12 @@ export default function RetroTerminal({
 
         {/* exit button — top-right corner, fits the cream theme */}
         <button
-          className="retro-toggle retro-toggle--retro"
+          className="retro-toggle retro-toggle--retro retro-terminal-exit"
           onClick={() => {
-            // Exit back to the route that entered retro mode. Internal terminal
-            // navigation uses history.replaceState, so reload after restoring it
-            // to make Next render the page that matches the intended URL.
             setRetro(false);
             globalThis.history.replaceState(globalThis.history.state, '', entryPath.current);
             globalThis.location.reload();
           }}
-          style={{ position: 'absolute', top: 12, right: 12, zIndex: 99_999, height: 32 }}
           aria-label="Exit terminal mode"
         >
           <span className="retro-toggle-dot" />

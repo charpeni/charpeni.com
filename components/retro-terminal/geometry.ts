@@ -1,7 +1,7 @@
 import { computeGraph, isBranchTag, shortHash } from '@/utils/graph';
 import type { PostFrontMatter } from '@/utils/mdx';
 
-import { formatYearMonth } from './format';
+import { formatIsoDate } from './format';
 
 import type { WinGeom, WinState } from './types';
 
@@ -26,7 +26,7 @@ function termFitWidth(posts: PostFrontMatter[]): number {
   for (const post of posts) {
     const branch = post.tags.find((t) => isBranchTag(t));
     const refs = branch ? `(${branch}) ` : '';
-    maxChars = Math.max(maxChars, `${shortHash(post.slug)} ${formatYearMonth(post.publishedAt)} ${refs}${post.title}`.length);
+    maxChars = Math.max(maxChars, `${shortHash(post.slug)} ${formatIsoDate(post.publishedAt)} ${refs}${post.title}`.length);
   }
   return Math.ceil(maxChars * ROW_CHAR_W + graphWidth(graph.activeBranches.length) + TERM_CHROME_W);
 }
