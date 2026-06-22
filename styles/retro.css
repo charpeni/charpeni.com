@@ -403,6 +403,66 @@
   }
 }
 
+@media (max-width: 639px) {
+  .retro-terminal-shell {
+    overflow: hidden;
+  }
+  .retro-terminal-desktop {
+    font-size: 12px;
+    background-size: 18px 18px;
+  }
+  .retro-terminal-crt {
+    opacity: 0.72;
+  }
+  .retro-terminal-profile-icon {
+    top: 56px;
+    left: 14px;
+    width: 70px;
+    padding: 7px 6px;
+  }
+  .retro-terminal-profile-icon-glyph {
+    width: 38px;
+    height: 38px;
+  }
+  .retro-terminal-profile-icon-label {
+    font-size: 9px;
+  }
+  .retro-terminal-profile {
+    top: 56px;
+    left: 94px;
+    width: calc(100vw - 108px);
+    max-height: 116px;
+    overflow: hidden;
+    padding: 9px 10px;
+    font-size: 10px;
+    line-height: 1.45;
+  }
+  .retro-terminal-profile-name {
+    font-size: 13px;
+  }
+  .retro-terminal-profile-email,
+  .retro-terminal-profile-current,
+  .retro-terminal-profile-links {
+    display: none;
+  }
+  .retro-terminal-footer {
+    display: none;
+  }
+  .retro-terminal-agent {
+    margin: 8px;
+  }
+  .retro-terminal-agent-user,
+  .retro-terminal-agent-step {
+    padding: 6px 8px;
+  }
+  .retro-terminal-agent-tool {
+    padding: 7px 8px;
+  }
+  .retro-terminal-agent-tool-name {
+    font-size: 10px;
+  }
+}
+
 .retro-terminal-agent {
   margin: 10px 12px 8px;
   border: 1px solid #d4c9a8;
@@ -1254,4 +1314,192 @@
 }
 .retro-toggle--retro .retro-toggle-dot {
   background: #b45309;
+}
+
+/* Final responsive overrides must stay last so they win over component sections above. */
+@media (max-width: 900px) {
+  .retro-terminal-titlebar {
+    min-height: 36px;
+    height: 36px;
+    padding: 0 6px 0 12px;
+  }
+  .retro-terminal-close {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .retro-terminal-resize {
+    width: 36px;
+    height: 36px;
+    padding: 0 6px 6px 0;
+    font-size: 16px;
+  }
+  .retro-terminal-row {
+    min-height: 32px;
+    padding: 3px 8px;
+  }
+  .retro-terminal-status {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 639px) {
+  .retro-toggle--retro {
+    top: 10px !important;
+    right: 10px !important;
+    min-height: 40px;
+    height: 40px !important;
+    padding: 0 11px;
+    font-size: 10px;
+  }
+  .retro-terminal-window {
+    position: fixed !important;
+    left: 10px !important;
+    right: 10px !important;
+    top: 184px !important;
+    bottom: 70px !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0;
+    min-height: 0;
+    max-height: none;
+    box-shadow: 2px 3px 0 rgba(122, 113, 96, 0.18), inset 3px 0 0 0 #b45309;
+  }
+  .retro-terminal-window:not(.retro-terminal-window--active) {
+    display: none;
+  }
+  .retro-terminal-titlebar {
+    height: 44px;
+    min-height: 44px;
+    gap: 7px;
+    padding: 0 0 0 10px;
+    cursor: default;
+  }
+  .retro-terminal-title-text {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .retro-terminal-close {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+  .retro-terminal-content {
+    padding: 6px 7px 10px;
+  }
+  .retro-terminal-log {
+    gap: 7px;
+  }
+  .retro-terminal-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "title"
+      "meta";
+    align-items: center;
+    gap: 2px;
+    min-height: 62px;
+    padding: 8px;
+    border: 1px solid #eadfc9;
+    background: #fffaf0;
+    white-space: normal;
+  }
+  .retro-terminal-row:hover,
+  .retro-terminal-row--selected {
+    border-color: #2a2a2a;
+    background: #f7ead0;
+  }
+  .retro-terminal-msg {
+    grid-area: title;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: clip;
+  }
+  .retro-terminal-hash,
+  .retro-terminal-date,
+  .retro-terminal-refs {
+    grid-area: meta;
+    font-size: 10px;
+  }
+  .retro-terminal-hash {
+    justify-self: start;
+  }
+  .retro-terminal-date {
+    justify-self: center;
+  }
+  .retro-terminal-refs {
+    justify-self: end;
+  }
+  .retro-terminal-status {
+    min-height: 42px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 9px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  .retro-terminal-window[data-retro-window-id="term"] .retro-terminal-status-hint {
+    font-size: 0;
+  }
+  .retro-terminal-window[data-retro-window-id="term"] .retro-terminal-status-hint::after {
+    content: "tap a commit to open";
+    font-size: 10px;
+  }
+  .retro-terminal-show-scroll {
+    padding: 10px 14px 14px;
+  }
+  .retro-terminal-show-title {
+    font-size: 17px;
+    line-height: 1.35;
+  }
+  .retro-terminal-show-meta {
+    font-size: 10px;
+  }
+  .retro-terminal-prose {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  .retro-terminal-prose h2 {
+    font-size: 1.25em;
+    line-height: 1.25;
+  }
+  .retro-terminal-prose pre {
+    margin-right: -6px;
+    margin-left: -6px;
+    font-size: 11px;
+  }
+  .retro-terminal-banner {
+    width: 100%;
+    border-radius: 4px;
+  }
+  .retro-terminal-comments,
+  .retro-terminal-window[data-retro-window-id^="show:"] {
+    top: 58px !important;
+    bottom: 10px !important;
+  }
+  .retro-terminal-resize {
+    display: none;
+  }
+  .retro-terminal-prs-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 10px;
+  }
+  .retro-terminal-prs-row {
+    grid-template-columns: 48px 1fr;
+    min-height: 58px;
+  }
+  .retro-terminal-prs-title {
+    white-space: normal;
+  }
+  .retro-terminal-legal-window {
+    padding: 14px 16px 18px;
+  }
 }

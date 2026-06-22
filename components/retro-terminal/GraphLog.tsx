@@ -80,12 +80,14 @@ export function GraphLog({
   cursor,
   onSelect,
   onOpen,
+  isMobile,
   contentRef,
 }: {
   posts: PostFrontMatter[];
   cursor: number;
   onSelect: (i: number) => void;
   onOpen: (i: number) => void;
+  isMobile: boolean;
   contentRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const graph = useMemo(() => computeGraph(posts, posts), [posts]);
@@ -159,10 +161,10 @@ export function GraphLog({
                       rowRefs.current[i] = el;
                     }}
                     className={`retro-terminal-row ${isSel ? 'retro-terminal-row--selected' : ''}`}
-                    onClick={() => onSelect(i)}
+                    onClick={() => (isMobile ? onOpen(i) : onSelect(i))}
                     onDoubleClick={() => onOpen(i)}
                   >
-                    <GraphRail row={row} activeBranches={activeBranches} />
+                    {isMobile ? null : <GraphRail row={row} activeBranches={activeBranches} />}
                     <span className="retro-terminal-hash">{hash}</span>
                     <span className="retro-terminal-date">{formatYearMonth(post.publishedAt)}</span>
                     {branch ? (

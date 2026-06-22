@@ -49,6 +49,7 @@ function readStoredTerminalState(): StoredTerminalState | null {
 }
 
 function storedShowWindows(posts: PostFrontMatter[], stored: StoredTerminalState | null, vw: number, vh: number): WinState[] {
+  if (vw < 640) return [];
   const slugs = new Set(posts.map((post) => post.slug));
   return (stored?.windows ?? [])
     .filter((win) => win.id.startsWith('show:') && slugs.has(win.id.slice('show:'.length)))
@@ -156,7 +157,7 @@ export default function RetroTerminal({
     setStates((prev) => {
       const z = maxZof(prev) + 1;
       if (prev[id]) return { ...prev, [id]: { ...prev[id], ...geom, z } };
-      const offset = (Object.keys(prev).length % 6) * 22;
+      const offset = id.startsWith('show:') ? 0 : (Object.keys(prev).length % 6) * 22;
       return { ...prev, [id]: { id, x: geom.x + offset, y: geom.y + offset, w: geom.w, h: geom.h, z } };
     });
   }, []);
@@ -459,6 +460,7 @@ export default function RetroTerminal({
                   cursor={cursor}
                   onSelect={setCursor}
                   onOpen={openAt}
+                  isMobile={vw < 900}
                   contentRef={contentRef}
                 />
                 <div className="retro-terminal-status">

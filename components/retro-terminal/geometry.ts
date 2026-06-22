@@ -70,6 +70,9 @@ export function legalGeom(vw: number, vh: number): WinGeom {
 
 export function clampWinToViewport(win: WinState, vw: number, vh: number): WinState {
   const h = Math.min(win.h, maxWindowHeight(vh));
+  if (win.id.startsWith('show:') && vw >= 640 && win.w < 640) {
+    return { ...win, ...showGeom(vw, vh) };
+  }
   const targetW = win.id.startsWith('show:') && win.w >= LEGACY_SHOW_WINDOW_W ? Math.max(win.w, showGeom(vw, vh).w) : win.w;
   const w = Math.max(MIN_W, Math.min(targetW, vw - win.x));
   const x = Math.max(0, Math.min(win.x, vw - Math.min(w, 40)));
