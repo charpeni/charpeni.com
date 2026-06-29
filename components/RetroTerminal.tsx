@@ -125,6 +125,20 @@ export default function RetroTerminal({
     globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor }));
   }, [cursor]);
 
+  useEffect(() => {
+    if (globalThis.location === undefined) return;
+    let top: WinState | null = null;
+    for (const win of Object.values(states)) {
+      if (win.id.startsWith('show:') && (top === null || win.z > top.z)) {
+        top = win;
+      }
+    }
+    const desiredSlug = top ? top.id.slice('show:'.length) : null;
+    const { pathname } = new URL(globalThis.location.href);
+    const currentSlug = pathname.startsWith('/blog/') ? pathname.slice('/blog/'.length) : null;
+    if (desiredSlug !== currentSlug) updatePostUrl(desiredSlug);
+  }, [states]);
+
   const focus = useCallback((id: string) => {
     setStates((prev) => {
       const w = prev[id];
@@ -152,16 +166,6 @@ export default function RetroTerminal({
       return next;
     });
   }, []);
-
-  const closeShow = useCallback((id: string) => {
-    close(id);
-    const slug = id.slice('show:'.length);
-    if (globalThis.location !== undefined) {
-      const currentPath = new URL(globalThis.location.href).pathname;
-      const currentSlug = currentPath === `/blog/${slug}` ? slug : null;
-      if (currentSlug === slug) updatePostUrl(null);
-    }
-  }, [close]);
 
   const move = useCallback((id: string, x: number, y: number) => {
     setStates((prev) => {
@@ -303,7 +307,6 @@ export default function RetroTerminal({
     loadMdx(post.slug);
     open(showWinId(post.slug), showGeom(vw, vh));
     setCursor(i);
-    updatePostUrl(post.slug);
   };
 
   const openBlogSlug = useCallback((slug: string) => {
@@ -312,7 +315,6 @@ export default function RetroTerminal({
     loadMdx(slug);
     open(showWinId(slug), showGeom(vw, vh));
     setCursor(index);
-    updatePostUrl(slug);
     return true;
   }, [loadMdx, open, posts, vh, vw]);
 
@@ -470,7 +472,7 @@ export default function RetroTerminal({
                 active={active}
                 post={post}
                 mdxState={mdxBySlug[slug]}
-                onClose={() => closeShow(win.id)}
+                onClose={() => close(win.id)}
                 onActivate={() => focus(win.id)}
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
