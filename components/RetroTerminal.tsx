@@ -62,12 +62,6 @@ function updatePostUrl(slug: string | null) {
   globalThis.history.replaceState(globalThis.history.state, '', nextPath);
 }
 
-function currentPathWithSearchAndHash() {
-  if (globalThis.location === undefined) return '/';
-  const { pathname, search, hash } = new URL(globalThis.location.href);
-  return `${pathname}${search}${hash}`;
-}
-
 function useViewport() {
   const [size, setSize] = useState(() => ({
     w: typeof globalThis.innerWidth === 'number' ? globalThis.innerWidth : 1200,
@@ -91,7 +85,6 @@ export default function RetroTerminal({
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
-  const entryPath = useRef(currentPathWithSearchAndHash());
 
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
@@ -529,7 +522,6 @@ export default function RetroTerminal({
           className="retro-toggle retro-toggle--retro retro-terminal-exit"
           onClick={() => {
             setRetro(false);
-            globalThis.history.replaceState(globalThis.history.state, '', entryPath.current);
             globalThis.location.reload();
           }}
           aria-label="Exit terminal mode"
