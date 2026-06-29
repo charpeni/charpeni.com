@@ -48,14 +48,6 @@ function readStoredTerminalState(): StoredTerminalState | null {
   }
 }
 
-function storedShowWindows(posts: PostFrontMatter[], stored: StoredTerminalState | null, vw: number, vh: number): WinState[] {
-  if (vw < 640) return [];
-  const slugs = new Set(posts.map((post) => post.slug));
-  return (stored?.windows ?? [])
-    .filter((win) => win.id.startsWith('show:') && slugs.has(win.id.slice('show:'.length)))
-    .map((win) => clampWinToViewport(win, vw, vh));
-}
-
 function initialPostSlug(posts: PostFrontMatter[]): string | null {
   if (globalThis.location === undefined) return null;
   const { pathname } = new URL(globalThis.location.href);
@@ -104,9 +96,6 @@ export default function RetroTerminal({
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
     const next: Record<string, WinState> = { [TERM_ID]: { id: TERM_ID, ...g, z: 1 } };
-    for (const win of storedShowWindows(posts, stored, vw, vh)) {
-      next[win.id] = win;
-    }
     if (urlPostSlug) {
       const id = showWinId(urlPostSlug);
       next[id] = { ...(next[id] ?? { id, ...showGeom(vw, vh) }), z: maxZof(next) + 1 };
@@ -140,9 +129,8 @@ export default function RetroTerminal({
 
   useEffect(() => {
     if (globalThis.localStorage === undefined) return;
-    const windows = Object.values(states).filter((win) => win.id.startsWith('show:'));
-    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor, windows }));
-  }, [cursor, states]);
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor }));
+  }, [cursor]);
 
   const focus = useCallback((id: string) => {
     setStates((prev) => {
