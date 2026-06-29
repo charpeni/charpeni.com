@@ -56,9 +56,20 @@ function initialPostSlug(posts: PostFrontMatter[]): string | null {
   return slug && posts.some((post) => post.slug === slug) ? slug : null;
 }
 
-function updatePostUrl(slug: string | null) {
+function pathForWindow(id: string | null) {
+  if (id?.startsWith('show:')) return `/blog/${id.slice('show:'.length)}`;
+  if (id?.startsWith('legal:')) {
+    const variant = id.slice('legal:'.length);
+    if (variant === 'disclaimer' || variant === 'privacy-policy') return `/${variant}`;
+  }
+  return '/';
+}
+
+function updateWindowUrl(id: string | null) {
   if (globalThis.location === undefined || globalThis.history === undefined) return;
-  const nextPath = slug ? `/blog/${slug}` : '/';
+  const nextPath = pathForWindow(id);
+  const { pathname } = new URL(globalThis.location.href);
+  if (pathname === nextPath) return;
   globalThis.history.replaceState(globalThis.history.state, '', nextPath);
 }
 
@@ -129,14 +140,11 @@ export default function RetroTerminal({
     if (globalThis.location === undefined) return;
     let top: WinState | null = null;
     for (const win of Object.values(states)) {
-      if (win.id.startsWith('show:') && (top === null || win.z > top.z)) {
+      if (top === null || win.z > top.z) {
         top = win;
       }
     }
-    const desiredSlug = top ? top.id.slice('show:'.length) : null;
-    const { pathname } = new URL(globalThis.location.href);
-    const currentSlug = pathname.startsWith('/blog/') ? pathname.slice('/blog/'.length) : null;
-    if (desiredSlug !== currentSlug) updatePostUrl(desiredSlug);
+    updateWindowUrl(top?.id ?? null);
   }, [states]);
 
   const focus = useCallback((id: string) => {
