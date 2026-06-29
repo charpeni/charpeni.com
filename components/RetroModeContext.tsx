@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 const COOKIE_NAME = 'retro-os';
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -16,6 +16,8 @@ const RetroModeContext = createContext<RetroModeContextValue>({
   toggleRetro: () => {},
   setRetro: () => {},
 });
+
+const useIsomorphicLayoutEffect = globalThis.window === undefined ? useEffect : useLayoutEffect;
 
 export function useRetroMode() {
   return useContext(RetroModeContext);
@@ -38,9 +40,22 @@ function writeCookie(name: string, value: boolean) {
 export function RetroModeProvider({ children }: { children: React.ReactNode }) {
   const [isRetro, setIsRetro] = useState(false);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsRetro(readCookie(COOKIE_NAME));
+  useIsomorphicLayoutEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    const retro = params.get('retro');
+    const fromUrl = retro === '1' || retro === 'true';
+
+    if (fromUrl) {
+      writeCookie(COOKIE_NAME, true);
+      params.delete('retro');
+      const search = params.toString();
+      const cleanUrl = globalThis.location.pathname + (search ? `?${search}` : '') + globalThis.location.hash;
+      globalThis.history.replaceState(globalThis.history.state, '', cleanUrl);
+    }
+
+    if (fromUrl || readCookie(COOKIE_NAME)) {
+      setIsRetro(true);
+    }
   }, []);
 
   const setRetro = useCallback((value: boolean) => {
@@ -49,11 +64,20 @@ export function RetroModeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleRetro = useCallback(() => {
-    setRetro(!isRetro);
-  }, [isRetro, setRetro]);
+    setIsRetro((prev) => {
+      const next = !prev;
+      writeCookie(COOKIE_NAME, next);
+      return next;
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ isRetro, toggleRetro, setRetro }),
+    [isRetro, toggleRetro, setRetro],
+  );
 
   return (
-    <RetroModeContext.Provider value={{ isRetro, toggleRetro, setRetro }}>
+    <RetroModeContext.Provider value={value}>
       {children}
     </RetroModeContext.Provider>
   );
