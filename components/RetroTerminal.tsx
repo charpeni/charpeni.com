@@ -48,14 +48,6 @@ function readStoredTerminalState(): StoredTerminalState | null {
   }
 }
 
-function storedShowWindows(posts: PostFrontMatter[], stored: StoredTerminalState | null, vw: number, vh: number): WinState[] {
-  if (vw < 640) return [];
-  const slugs = new Set(posts.map((post) => post.slug));
-  return (stored?.windows ?? [])
-    .filter((win) => win.id.startsWith('show:') && slugs.has(win.id.slice('show:'.length)))
-    .map((win) => clampWinToViewport(win, vw, vh));
-}
-
 function initialPostSlug(posts: PostFrontMatter[]): string | null {
   if (globalThis.location === undefined) return null;
   const { pathname } = new URL(globalThis.location.href);
@@ -64,16 +56,29 @@ function initialPostSlug(posts: PostFrontMatter[]): string | null {
   return slug && posts.some((post) => post.slug === slug) ? slug : null;
 }
 
-function updatePostUrl(slug: string | null) {
-  if (globalThis.location === undefined || globalThis.history === undefined) return;
-  const nextPath = slug ? `/blog/${slug}` : '/';
-  globalThis.history.replaceState(globalThis.history.state, '', nextPath);
+function initialLegalVariant(): LegalWindowVariant | null {
+  if (globalThis.location === undefined) return null;
+  const { pathname } = new URL(globalThis.location.href);
+  if (pathname === '/disclaimer') return 'disclaimer';
+  if (pathname === '/privacy-policy') return 'privacy-policy';
+  return null;
 }
 
-function currentPathWithSearchAndHash() {
-  if (globalThis.location === undefined) return '/';
-  const { pathname, search, hash } = new URL(globalThis.location.href);
-  return `${pathname}${search}${hash}`;
+function pathForWindow(id: string | null) {
+  if (id?.startsWith('show:')) return `/blog/${id.slice('show:'.length)}`;
+  if (id?.startsWith('legal:')) {
+    const variant = id.slice('legal:'.length);
+    if (variant === 'disclaimer' || variant === 'privacy-policy') return `/${variant}`;
+  }
+  return '/';
+}
+
+function updateWindowUrl(id: string | null) {
+  if (globalThis.location === undefined || globalThis.history === undefined) return;
+  const nextPath = pathForWindow(id);
+  const { pathname } = new URL(globalThis.location.href);
+  if (pathname === nextPath) return;
+  globalThis.history.replaceState(globalThis.history.state, '', nextPath);
 }
 
 function useViewport() {
@@ -99,17 +104,18 @@ export default function RetroTerminal({
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
-  const entryPath = useRef(currentPathWithSearchAndHash());
+  const urlLegalVariant = useMemo(() => initialLegalVariant(), []);
 
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
     const next: Record<string, WinState> = { [TERM_ID]: { id: TERM_ID, ...g, z: 1 } };
-    for (const win of storedShowWindows(posts, stored, vw, vh)) {
-      next[win.id] = win;
-    }
     if (urlPostSlug) {
       const id = showWinId(urlPostSlug);
       next[id] = { ...(next[id] ?? { id, ...showGeom(vw, vh) }), z: maxZof(next) + 1 };
+    }
+    if (urlLegalVariant) {
+      const id = legalWinId(urlLegalVariant);
+      next[id] = { id, ...legalGeom(vw, vh), z: maxZof(next) + 1 };
     }
     return next;
   });
@@ -140,9 +146,19 @@ export default function RetroTerminal({
 
   useEffect(() => {
     if (globalThis.localStorage === undefined) return;
-    const windows = Object.values(states).filter((win) => win.id.startsWith('show:'));
-    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor, windows }));
-  }, [cursor, states]);
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor }));
+  }, [cursor]);
+
+  useEffect(() => {
+    if (globalThis.location === undefined) return;
+    let top: WinState | null = null;
+    for (const win of Object.values(states)) {
+      if (top === null || win.z > top.z) {
+        top = win;
+      }
+    }
+    updateWindowUrl(top?.id ?? null);
+  }, [states]);
 
   const focus = useCallback((id: string) => {
     setStates((prev) => {
@@ -171,16 +187,6 @@ export default function RetroTerminal({
       return next;
     });
   }, []);
-
-  const closeShow = useCallback((id: string) => {
-    close(id);
-    const slug = id.slice('show:'.length);
-    if (globalThis.location !== undefined) {
-      const currentPath = new URL(globalThis.location.href).pathname;
-      const currentSlug = currentPath === `/blog/${slug}` ? slug : null;
-      if (currentSlug === slug) updatePostUrl(null);
-    }
-  }, [close]);
 
   const move = useCallback((id: string, x: number, y: number) => {
     setStates((prev) => {
@@ -322,7 +328,6 @@ export default function RetroTerminal({
     loadMdx(post.slug);
     open(showWinId(post.slug), showGeom(vw, vh));
     setCursor(i);
-    updatePostUrl(post.slug);
   };
 
   const openBlogSlug = useCallback((slug: string) => {
@@ -331,7 +336,6 @@ export default function RetroTerminal({
     loadMdx(slug);
     open(showWinId(slug), showGeom(vw, vh));
     setCursor(index);
-    updatePostUrl(slug);
     return true;
   }, [loadMdx, open, posts, vh, vw]);
 
@@ -489,7 +493,7 @@ export default function RetroTerminal({
                 active={active}
                 post={post}
                 mdxState={mdxBySlug[slug]}
-                onClose={() => closeShow(win.id)}
+                onClose={() => close(win.id)}
                 onActivate={() => focus(win.id)}
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
@@ -541,7 +545,6 @@ export default function RetroTerminal({
           className="retro-toggle retro-toggle--retro retro-terminal-exit"
           onClick={() => {
             setRetro(false);
-            globalThis.history.replaceState(globalThis.history.state, '', entryPath.current);
             globalThis.location.reload();
           }}
           aria-label="Exit terminal mode"
