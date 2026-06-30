@@ -56,6 +56,14 @@ function initialPostSlug(posts: PostFrontMatter[]): string | null {
   return slug && posts.some((post) => post.slug === slug) ? slug : null;
 }
 
+function initialLegalVariant(): LegalWindowVariant | null {
+  if (globalThis.location === undefined) return null;
+  const { pathname } = new URL(globalThis.location.href);
+  if (pathname === '/disclaimer') return 'disclaimer';
+  if (pathname === '/privacy-policy') return 'privacy-policy';
+  return null;
+}
+
 function pathForWindow(id: string | null) {
   if (id?.startsWith('show:')) return `/blog/${id.slice('show:'.length)}`;
   if (id?.startsWith('legal:')) {
@@ -96,6 +104,7 @@ export default function RetroTerminal({
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
+  const urlLegalVariant = useMemo(() => initialLegalVariant(), []);
 
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
@@ -103,6 +112,10 @@ export default function RetroTerminal({
     if (urlPostSlug) {
       const id = showWinId(urlPostSlug);
       next[id] = { ...(next[id] ?? { id, ...showGeom(vw, vh) }), z: maxZof(next) + 1 };
+    }
+    if (urlLegalVariant) {
+      const id = legalWinId(urlLegalVariant);
+      next[id] = { id, ...legalGeom(vw, vh), z: maxZof(next) + 1 };
     }
     return next;
   });
