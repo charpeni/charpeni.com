@@ -68,6 +68,12 @@ export function legalGeom(vw: number, vh: number): WinGeom {
   return { x: Math.max(20, Math.round((vw - w) / 2)), y: Math.max(20, Math.round((vh - h) / 2)), w, h };
 }
 
+export function notFoundGeom(vw: number, vh: number): WinGeom {
+  const w = Math.max(MIN_W, Math.min(620, vw - 40));
+  const h = clampWindowHeight(vh, Math.min(330, vh - 48));
+  return { x: Math.max(16, Math.round((vw - w) / 2)), y: Math.max(16, Math.round((vh - h) / 2)), w, h };
+}
+
 export function clampWinToViewport(win: WinState, vw: number, vh: number): WinState {
   const h = Math.min(win.h, maxWindowHeight(vh));
   if (win.id.startsWith('show:') && vw >= 640 && win.w < 640) {

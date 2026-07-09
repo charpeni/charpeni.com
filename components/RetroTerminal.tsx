@@ -1,5 +1,6 @@
 'use client';
 
+import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DesktopFooter, DesktopProfile } from '@/components/retro-terminal/DesktopChrome';
@@ -10,14 +11,16 @@ import {
   clampWinToViewport,
   legalGeom,
   maxWindowHeight,
+  notFoundGeom,
   prsGeom,
   showGeom,
   termGeom,
 } from '@/components/retro-terminal/geometry';
 import { GraphLog } from '@/components/retro-terminal/GraphLog';
-import { PRS_ID, STORAGE_KEY, TERM_ID, legalWinId, showWinId } from '@/components/retro-terminal/ids';
+import { NOT_FOUND_ID, PRS_ID, STORAGE_KEY, TERM_ID, legalWinId, showWinId } from '@/components/retro-terminal/ids';
 import { LatestPrsWindow } from '@/components/retro-terminal/LatestPrsWindow';
 import { LegalWindow } from '@/components/retro-terminal/LegalWindow';
+import { NotFoundWindow } from '@/components/retro-terminal/NotFoundWindow';
 import { branchOf } from '@/components/retro-terminal/postUtils';
 import { ShowTermWindow } from '@/components/retro-terminal/ShowWindow';
 import { TermWindow } from '@/components/retro-terminal/TermWindow';
@@ -64,19 +67,20 @@ function initialLegalVariant(): LegalWindowVariant | null {
   return null;
 }
 
-function pathForWindow(id: string | null) {
+function pathForWindow(id: string | null, currentPath: string) {
   if (id?.startsWith('show:')) return `/blog/${id.slice('show:'.length)}`;
   if (id?.startsWith('legal:')) {
     const variant = id.slice('legal:'.length);
     if (variant === 'disclaimer' || variant === 'privacy-policy') return `/${variant}`;
   }
+  if (id === NOT_FOUND_ID) return currentPath;
   return '/';
 }
 
 function updateWindowUrl(id: string | null) {
   if (globalThis.location === undefined || globalThis.history === undefined) return;
-  const nextPath = pathForWindow(id);
   const { pathname } = new URL(globalThis.location.href);
+  const nextPath = pathForWindow(id, pathname);
   if (pathname === nextPath) return;
   globalThis.history.replaceState(globalThis.history.state, '', nextPath);
 }
@@ -97,14 +101,17 @@ function useViewport() {
 
 export default function RetroTerminal({
   posts,
+  showNotFound = false,
 }: {
   posts: PostFrontMatter[];
+  showNotFound?: boolean;
 }) {
   const { w: vw, h: vh } = useViewport();
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
   const urlLegalVariant = useMemo(() => initialLegalVariant(), []);
+  const missingPath = useMemo(() => globalThis.location === undefined ? '/unknown' : globalThis.location.pathname, []);
 
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
@@ -116,6 +123,9 @@ export default function RetroTerminal({
     if (urlLegalVariant) {
       const id = legalWinId(urlLegalVariant);
       next[id] = { id, ...legalGeom(vw, vh), z: maxZof(next) + 1 };
+    }
+    if (showNotFound) {
+      next[NOT_FOUND_ID] = { id: NOT_FOUND_ID, ...notFoundGeom(vw, vh), z: maxZof(next) + 1 };
     }
     return next;
   });
@@ -217,6 +227,8 @@ export default function RetroTerminal({
         ? termGeom(vw, vh, posts)
         : id === PRS_ID
           ? prsGeom(vw, vh)
+          : id === NOT_FOUND_ID
+            ? notFoundGeom(vw, vh)
           : id.startsWith('legal:')
             ? legalGeom(vw, vh)
             : id.startsWith('show:')
@@ -410,6 +422,12 @@ export default function RetroTerminal({
 
   return (
     <div className="retro-terminal-shell" onClickCapture={onShellClickCapture}>
+      {showNotFound ? (
+        <Head>
+          <title>404 — Archive Object Not Found</title>
+          <meta name="robots" content="noindex, follow" />
+        </Head>
+      ) : null}
       <div className="retro-terminal-desktop">
         <div className="retro-terminal-crt" aria-hidden="true" />
         <DesktopProfile onOpenPrs={openPrs} />
@@ -509,6 +527,22 @@ export default function RetroTerminal({
                 key={win.id}
                 win={win}
                 active={active}
+                onClose={() => close(win.id)}
+                onActivate={() => focus(win.id)}
+                dragProps={titleDragProps(win.id)}
+                resizeProps={resizeHandleProps(win.id)}
+                onTitleDoubleClick={() => resetWindow(win.id)}
+                compact={vw < 640}
+              />
+            );
+          }
+          if (win.id === NOT_FOUND_ID) {
+            return (
+              <NotFoundWindow
+                key={win.id}
+                win={win}
+                active={active}
+                path={missingPath}
                 onClose={() => close(win.id)}
                 onActivate={() => focus(win.id)}
                 dragProps={titleDragProps(win.id)}
