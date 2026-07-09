@@ -26,6 +26,16 @@ type RetroPageProps = {
   retroPosts?: PostFrontMatter[];
 };
 
+function ThemeModeProvider({ children }: { children: React.ReactNode }) {
+  const { isRetro } = useRetroMode();
+
+  return (
+    <ThemeProvider attribute="class" forcedTheme={isRetro ? 'light' : undefined}>
+      {children}
+    </ThemeProvider>
+  );
+}
+
 function RetroModeGate({
   Component,
   pageProps,
@@ -56,12 +66,12 @@ export default function App({ Component, pageProps }: AppProps) {
         defer
       />
 
-      <ThemeProvider attribute="class">
-        <RetroModeProvider>
+      <RetroModeProvider>
+        <ThemeModeProvider>
           <RetroModeGate Component={Component} pageProps={pageProps} />
-        </RetroModeProvider>
+        </ThemeModeProvider>
         <SpeedInsights />
-      </ThemeProvider>
+      </RetroModeProvider>
     </>
   );
 }
