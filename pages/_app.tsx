@@ -23,6 +23,7 @@ const RetroTerminal = dynamic(() => import('@/components/RetroTerminal'), {
 });
 
 type RetroPageProps = {
+  retroNotFound?: boolean;
   retroPosts?: PostFrontMatter[];
 };
 
@@ -40,7 +41,7 @@ function RetroModeGate({
   const showTerminal = isRetro && posts;
 
   if (showTerminal) {
-    return <RetroTerminal posts={posts} />;
+    return <RetroTerminal posts={posts} showNotFound={retroProps.retroNotFound} />;
   }
   return <Component {...pageProps} />;
 }
