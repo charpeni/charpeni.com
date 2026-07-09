@@ -1,12 +1,15 @@
 import Giscus from '@giscus/react';
 import { useTheme } from 'next-themes';
 
+import { useRetroMode } from '@/components/RetroModeContext';
+
 type Props = {
   title: string;
 };
 
 export function Comments({ title }: Props) {
   const { resolvedTheme } = useTheme();
+  const { isRetro } = useRetroMode();
 
   return (
     <div className="flex flex-col justify-center max-w-2xl mx-auto mb-4 w-full">
@@ -21,7 +24,7 @@ export function Comments({ title }: Props) {
         reactionsEnabled="1"
         emitMetadata="0"
         inputPosition="top"
-        theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+        theme={isRetro || resolvedTheme !== 'dark' ? 'light' : 'dark'}
         lang="en"
         loading="lazy"
       />
