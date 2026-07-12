@@ -58,10 +58,16 @@ function ShowBody({
   post,
   mdxState,
   onOpenBlogLink,
+  copyStatus,
+  onCopy,
+  compact,
 }: {
   post: PostFrontMatter;
   mdxState?: MdxState;
   onOpenBlogLink: (slug: string) => boolean;
+  copyStatus: 'idle' | 'copying' | 'copied' | 'error';
+  onCopy: () => void;
+  compact?: boolean;
 }) {
   const hash = shortHash(post.slug);
   const branch = branchOf(post);
@@ -85,15 +91,27 @@ function ShowBody({
 
   return (
     <div className="retro-terminal-show-scroll" onClickCapture={onContentClick}>
-      <div className="retro-terminal-show-meta">
-        commit {hash}
-        {'\n'}Author: Nicolas Charpentier &lt;
-        <a href="mailto:blog@nicolascharpentier.com">blog@nicolascharpentier.com</a>
-        &gt;
-        {'\n'}Date:   {date}
-        {'\n'}Size:   {post.readingTime.text}
-        {branch ? `\nrefs:   refs/heads/${branch}` : ''}
-        {otherTags.length > 0 ? `\ntopic:  ${otherTags.join(', ')}` : ''}
+      <div className="retro-terminal-show-header">
+        <div className="retro-terminal-show-meta">
+          commit {hash}
+          {'\n'}Author: Nicolas Charpentier &lt;
+          <a href="mailto:blog@nicolascharpentier.com">blog@nicolascharpentier.com</a>
+          &gt;
+          {'\n'}Date:   {date}
+          {'\n'}Size:   {post.readingTime.text}
+          {branch ? `\nrefs:   refs/heads/${branch}` : ''}
+          {otherTags.length > 0 ? `\ntopic:  ${otherTags.join(', ')}` : ''}
+        </div>
+        {compact ? (
+          <button
+            type="button"
+            className="retro-terminal-copy-mobile"
+            onClick={onCopy}
+            disabled={copyStatus === 'copying'}
+          >
+            {copyStatus === 'copied' ? 'Copied' : copyStatus === 'error' ? 'Retry' : copyStatus === 'copying' ? 'Copying' : 'Copy'}
+          </button>
+        ) : null}
       </div>
       <div className="retro-terminal-show-title">{post.title}</div>
       {post.image ? (
@@ -197,19 +215,28 @@ export function ShowTermWindow({
       onTitleDoubleClick={onTitleDoubleClick}
       compact={compact}
     >
-      <ShowBody post={post} mdxState={mdxState} onOpenBlogLink={onOpenBlogLink} />
-      <div className="retro-terminal-status">
-        <span>
-          {branch ? (
-            <>
-              branch <b>refs/heads/{branch}</b>
-            </>
-          ) : (
-            <b>main</b>
-          )}
-        </span>
-        <span className="retro-terminal-status-hint">{hint}</span>
-      </div>
+      <ShowBody
+        post={post}
+        mdxState={mdxState}
+        onOpenBlogLink={onOpenBlogLink}
+        copyStatus={copyStatus}
+        onCopy={() => void copy()}
+        compact={compact}
+      />
+      {compact ? null : (
+        <div className="retro-terminal-status">
+          <span>
+            {branch ? (
+              <>
+                branch <b>refs/heads/{branch}</b>
+              </>
+            ) : (
+              <b>main</b>
+            )}
+          </span>
+          <span className="retro-terminal-status-hint">{hint}</span>
+        </div>
+      )}
     </TermWindow>
   );
 }

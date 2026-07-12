@@ -92,8 +92,9 @@ export function GraphLog({
 }) {
   const graph = useMemo(() => computeGraph(posts, posts), [posts]);
   const { activeBranches, rows } = graph;
-  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [agentPhase, setAgentPhase] = useState<'thinking' | 'indexing' | 'tool' | 'done'>('thinking');
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [agentPhase, setAgentPhase] = useState<'thinking' | 'indexing' | 'tool' | 'done'>(isMobile ? 'done' : 'thinking');
+  const visibleAgentPhase = isMobile ? 'done' : agentPhase;
 
   useEffect(() => {
     const el = rowRefs.current[cursor];
@@ -101,6 +102,8 @@ export function GraphLog({
   }, [cursor]);
 
   useEffect(() => {
+    if (isMobile) return;
+
     const indexingTimer = globalThis.setTimeout(() => setAgentPhase('indexing'), 900);
     const toolTimer = globalThis.setTimeout(() => setAgentPhase('tool'), 2100);
     const doneTimer = globalThis.setTimeout(() => setAgentPhase('done'), 3800);
@@ -109,7 +112,7 @@ export function GraphLog({
       globalThis.clearTimeout(toolTimer);
       globalThis.clearTimeout(doneTimer);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <>
@@ -121,23 +124,23 @@ export function GraphLog({
         <div className="retro-terminal-agent-step">
           <span className="retro-terminal-agent-orb" aria-hidden="true" />
           <span>
-            {agentPhase === 'thinking'
+            {visibleAgentPhase === 'thinking'
               ? 'Reading archive intent and route context'
-              : agentPhase === 'indexing'
+              : visibleAgentPhase === 'indexing'
                 ? 'Indexing posts, dates, and branch tags'
                 : 'Archive mapped to commit log'}
           </span>
-          {agentPhase === 'thinking' || agentPhase === 'indexing' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
+          {visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
         </div>
-        <div className={`retro-terminal-agent-tool ${agentPhase === 'thinking' || agentPhase === 'indexing' ? 'retro-terminal-agent-tool--pending' : ''}`}>
+        <div className={`retro-terminal-agent-tool ${visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? 'retro-terminal-agent-tool--pending' : ''}`}>
           <div className="retro-terminal-agent-tool-name">tool: archive.list_posts --format=git-log</div>
           <div className="retro-terminal-prompt-cmd">
-            {agentPhase === 'thinking' || agentPhase === 'indexing' ? 'queued' : '$ git log --graph --oneline --all --date=short'}
-            {agentPhase === 'tool' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
+            {visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? 'queued' : '$ git log --graph --oneline --all --date=short'}
+            {visibleAgentPhase === 'tool' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
           </div>
         </div>
       </div>
-      {agentPhase === 'done' ? (
+      {visibleAgentPhase === 'done' ? (
         <>
           <div className="retro-terminal-prompt-meta">
             connected to charpeni.com · {posts.length} commits · {BRANCH_TAGS.length} branches · HEAD at{' '}
@@ -155,12 +158,14 @@ export function GraphLog({
                 const branch = branchOf(post);
                 const isSel = i === cursor;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={post.slug}
                     ref={(el) => {
                       rowRefs.current[i] = el;
                     }}
                     className={`retro-terminal-row ${isSel ? 'retro-terminal-row--selected' : ''}`}
+                    aria-current={isSel ? 'true' : undefined}
                     onClick={() => (isMobile ? onOpen(i) : onSelect(i))}
                     onDoubleClick={() => onOpen(i)}
                   >
@@ -176,7 +181,7 @@ export function GraphLog({
                       </span>
                     ) : null}
                     <span className="retro-terminal-msg">{post.title}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -185,9 +190,9 @@ export function GraphLog({
       ) : (
         <div className="retro-terminal-content retro-terminal-content--loading" ref={contentRef} tabIndex={0}>
           <span className="retro-terminal-loading-line">
-            {agentPhase === 'thinking'
+            {visibleAgentPhase === 'thinking'
               ? 'Planning archive query'
-              : agentPhase === 'indexing'
+              : visibleAgentPhase === 'indexing'
                 ? 'Preparing graph lanes'
                 : 'Running archive.list_posts'}
             <span className="retro-terminal-agent-dots" aria-hidden="true" />
