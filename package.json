@@ -8,7 +8,7 @@
   "scripts": {
     "analyze": "ANALYZE=true pnpm build",
     "build": "next build && next-sitemap && node scripts/generateLlmsTxt.mts && node scripts/generateRssFeed.mts",
-    "dev": "next",
+    "dev": "node scripts/generateRssFeed.mts && next",
     "start": "next start",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write .",

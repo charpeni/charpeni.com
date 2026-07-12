@@ -2,8 +2,6 @@ import Image from 'next/image';
 
 import type { LegalWindowVariant } from './types';
 
-const RSS_URL = 'https://charpeni.com/blog/rss.xml';
-
 export function DesktopProfile({
   onOpenPrs,
   mobileExpanded = false,
@@ -86,7 +84,7 @@ export function DesktopProfile({
           {' · '}
           <a href="https://bsky.app/profile/charpeni.bsky.social" target="_blank" rel="noopener noreferrer">bsky.app/charpeni.bsky.social</a>
           {' · '}
-          <a href={RSS_URL} target="_blank" rel="noopener noreferrer">rss</a>
+          <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer">rss</a>
           {' · '}
           <a
             href="https://prs.charpeni.com"
@@ -121,7 +119,7 @@ export function DesktopFooter({ onOpenLegal }: { onOpenLegal: (variant: LegalWin
           }}
         >Privacy Policy</button>
         <span aria-hidden="true">|</span>
-        <a href={RSS_URL} target="_blank" rel="noopener noreferrer">RSS Feed</a>
+        <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer">RSS Feed</a>
       </div>
       <div>© 2021-present Nicolas Charpentier. All Rights Reserved.</div>
     </footer>
