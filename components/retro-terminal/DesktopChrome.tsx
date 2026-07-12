@@ -2,10 +2,45 @@ import Image from 'next/image';
 
 import type { LegalWindowVariant } from './types';
 
-export function DesktopProfile({ onOpenPrs }: { onOpenPrs: () => void }) {
+const RSS_URL = 'https://charpeni.com/blog/rss.xml';
+
+export function DesktopProfile({
+  onOpenPrs,
+  mobileExpanded = false,
+  onToggleMobile,
+}: {
+  onOpenPrs: () => void;
+  mobileExpanded?: boolean;
+  onToggleMobile?: () => void;
+}) {
   return (
     <>
-      <div className="retro-terminal-profile-icon" aria-label="Selected desktop item: profile.txt" aria-selected="true">
+      <button
+        type="button"
+        className="retro-terminal-profile-toggle"
+        aria-expanded={mobileExpanded}
+        aria-controls="retro-mobile-profile"
+        onClick={onToggleMobile}
+      >
+        <span className="retro-terminal-profile-toggle-glyph" aria-hidden="true">
+          <Image
+            src="/static/images/nicolas_charpentier.jpeg"
+            alt=""
+            width={36}
+            height={36}
+            sizes="36px"
+            className="retro-terminal-profile-icon-img"
+          />
+        </span>
+        <span className="retro-terminal-profile-toggle-copy">
+          <strong>Nicolas Charpentier</strong>
+          <span>Staff Software Engineer</span>
+        </span>
+        <span className="retro-terminal-profile-toggle-label">
+          {mobileExpanded ? 'Close [-]' : 'About [+]'}
+        </span>
+      </button>
+      <div className="retro-terminal-profile-icon" aria-label="Profile picture for Nicolas Charpentier">
         <div className="retro-terminal-profile-icon-glyph" aria-hidden="true">
           <Image
             src="/static/images/nicolas_charpentier.jpeg"
@@ -18,7 +53,11 @@ export function DesktopProfile({ onOpenPrs }: { onOpenPrs: () => void }) {
         </div>
         <div className="retro-terminal-profile-icon-label">profile.txt</div>
       </div>
-      <aside className="retro-terminal-profile" aria-label="About Nicolas Charpentier">
+      <aside
+        id="retro-mobile-profile"
+        className={`retro-terminal-profile ${mobileExpanded ? 'retro-terminal-profile--mobile-open' : ''}`}
+        aria-label="About Nicolas Charpentier"
+      >
         <div className="retro-terminal-profile-name">
           Nicolas Charpentier{' '}
           <a className="retro-terminal-profile-email" href="mailto:blog@nicolascharpentier.com">
@@ -47,7 +86,7 @@ export function DesktopProfile({ onOpenPrs }: { onOpenPrs: () => void }) {
           {' · '}
           <a href="https://bsky.app/profile/charpeni.bsky.social" target="_blank" rel="noopener noreferrer">bsky.app/charpeni.bsky.social</a>
           {' · '}
-          <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer">rss</a>
+          <a href={RSS_URL} target="_blank" rel="noopener noreferrer">rss</a>
           {' · '}
           <a
             href="https://prs.charpeni.com"
@@ -82,7 +121,7 @@ export function DesktopFooter({ onOpenLegal }: { onOpenLegal: (variant: LegalWin
           }}
         >Privacy Policy</button>
         <span aria-hidden="true">|</span>
-        <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer">RSS Feed</a>
+        <a href={RSS_URL} target="_blank" rel="noopener noreferrer">RSS Feed</a>
       </div>
       <div>© 2021-present Nicolas Charpentier. All Rights Reserved.</div>
     </footer>

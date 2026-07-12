@@ -107,6 +107,7 @@ export default function RetroTerminal({
   showNotFound?: boolean;
 }) {
   const { w: vw, h: vh } = useViewport();
+  const isPhoneLayout = vw < 640 || vh <= 500;
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
@@ -136,6 +137,7 @@ export default function RetroTerminal({
     return typeof storedCursor === 'number' && storedCursor >= 0 && storedCursor < posts.length ? storedCursor : 0;
   });
   const [mdxBySlug, setMdxBySlug] = useState<Record<string, MdxState>>({});
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const loadingSlugs = useRef(new Set<string>());
   const contentRef = useRef<HTMLDivElement | null>(null);
   const termWindowRef = useRef<HTMLDivElement | null>(null);
@@ -339,6 +341,7 @@ export default function RetroTerminal({
     if (!post) return;
     loadMdx(post.slug);
     open(showWinId(post.slug), showGeom(vw, vh));
+    setMobileProfileOpen(false);
     setCursor(i);
   };
 
@@ -428,9 +431,13 @@ export default function RetroTerminal({
           <meta name="robots" content="noindex, follow" />
         </Head>
       ) : null}
-      <div className="retro-terminal-desktop">
+      <div className={`retro-terminal-desktop ${mobileProfileOpen ? 'retro-terminal-desktop--profile-open' : ''} ${Object.keys(states).length === 0 ? 'retro-terminal-desktop--empty' : ''}`}>
         <div className="retro-terminal-crt" aria-hidden="true" />
-        <DesktopProfile onOpenPrs={openPrs} />
+        <DesktopProfile
+          onOpenPrs={openPrs}
+          mobileExpanded={mobileProfileOpen}
+          onToggleMobile={() => setMobileProfileOpen((open) => !open)}
+        />
         <DesktopFooter onOpenLegal={openLegal} />
 
         {states[TERM_ID] ? null : (
@@ -469,30 +476,40 @@ export default function RetroTerminal({
                 win={win}
                 active={active}
                 title="ssh blog@charpeni.com 'archive agent'"
-                onClose={() => close(win.id)}
-                onEscape={() => close(win.id)}
+                onClose={() => {
+                  close(win.id);
+                  setMobileProfileOpen(false);
+                }}
+                onEscape={() => {
+                  close(win.id);
+                  setMobileProfileOpen(false);
+                }}
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onActivate={() => focus(win.id)}
                 onKeyDown={onLogKeyDown}
                 onTitleDoubleClick={() => resetWindow(win.id)}
                 windowRef={termWindowRef}
-                compact={vw < 640}
+                 compact={isPhoneLayout}
               >
                 <GraphLog
                   posts={posts}
                   cursor={cursor}
                   onSelect={setCursor}
                   onOpen={openAt}
-                  isMobile={vw < 900}
+                  isMobile={vw < 900 || isPhoneLayout}
                   contentRef={contentRef}
                 />
                 <div className="retro-terminal-status">
-                  <span>
-                    <b>{posts.length}</b> commits · branch{' '}
-                    <b>{currentBranch ?? 'main'}</b> · cursor{' '}
-                    <b>{String(cursor + 1).padStart(2, '0')}</b>/{posts.length}
-                  </span>
+                  {isPhoneLayout ? (
+                    <span><b>{posts.length}</b> posts · <b>{cursor + 1}</b> selected</span>
+                  ) : (
+                    <span>
+                      <b>{posts.length}</b> commits · branch{' '}
+                      <b>{currentBranch ?? 'main'}</b> · cursor{' '}
+                      <b>{String(cursor + 1).padStart(2, '0')}</b>/{posts.length}
+                    </span>
+                  )}
                   <span className="retro-terminal-status-hint">
                     ↑/↓ move · enter show · dbl-click open · drag ◢ to resize
                   </span>
@@ -517,7 +534,7 @@ export default function RetroTerminal({
                 resizeProps={resizeHandleProps(win.id)}
                 onOpenBlogLink={openBlogSlug}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                compact={vw < 640}
+                 compact={isPhoneLayout}
               />
             );
           }
@@ -532,7 +549,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                compact={vw < 640}
+                 compact={isPhoneLayout}
               />
             );
           }
@@ -548,7 +565,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                compact={vw < 640}
+                 compact={isPhoneLayout}
               />
             );
           }
@@ -567,7 +584,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                compact={vw < 640}
+                 compact={isPhoneLayout}
               />
             );
           }
@@ -576,7 +593,11 @@ export default function RetroTerminal({
 
         {/* exit button — top-right corner, fits the cream theme */}
         <button
-          className="retro-toggle retro-toggle--retro retro-terminal-exit"
+          className={`retro-toggle retro-toggle--retro retro-terminal-exit ${
+            isPhoneLayout && windows.some((win) => win.focused && win.id.startsWith('show:'))
+              ? 'retro-terminal-exit--behind-reader'
+              : ''
+          }`}
           onClick={() => {
             setRetro(false);
             globalThis.location.reload();
