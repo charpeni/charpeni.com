@@ -1,0 +1,95 @@
+---
+title: 'Speeding Up Checkout in a Fast-Growing Monorepo with Blacksmith'
+publishedAt: '2026-07-14T12:00:00Z'
+summary: "We swapped actions/checkout for Blacksmith's cached checkout across our GitHub Actions. Mean checkout time dropped from 69s to 20s, reclaiming ~33 hours of runner time each weekday."
+tags: ['ci', 'performance', 'tooling', 'github-actions']
+---
+
+Our monorepo has been growing quickly: more packages, more contributors, more history, and, unsurprisingly, more CI jobs. At some point, I noticed we were spending a surprising amount of time before those jobs did any actual work. The culprit was checkout.
+
+We already run most of our CI on [Blacksmith](https://www.blacksmith.sh/) runners, and they ship [`useblacksmith/checkout`](https://github.com/useblacksmith/checkout), a drop-in replacement for `actions/checkout` built on top of their sticky disks. Switching to it was a one-line diff per workflow, so we rolled it out in a single pull request.
+
+**Mean checkout time went from ~69 seconds to ~20 seconds—about 33 hours of runner time reclaimed each weekday.** 🔥
+
+## The Checkout Tax
+
+In a monorepo, checkout gets more expensive in two ways. The repository itself gets heavier: more commits, more refs, and more objects to transfer on every clone. At the same time, the number of jobs grows through matrix builds, per-package pipelines, and deploy workflows.
+
+We run roughly **4,800 jobs a day**. Most checkouts were tolerable, but some took **2.5+ minutes** before the job even started. Those were the ones people noticed.
+
+## What Blacksmith's Checkout Does Differently
+
+`useblacksmith/checkout` is a fork of `actions/checkout`—same inputs, same behavior from your workflow's perspective—except it doesn't clone from GitHub on every run.
+
+Instead, it keeps a persistent git mirror of your repository on a [sticky disk](https://docs.blacksmith.sh/blacksmith-caching/git-checkout-caching), a disk that survives between workflow runs and gets mounted into your runner:
+
+1. **First run (hydration):** the action creates a full mirror of the repo on the sticky disk. This one-time run is slower than usual.
+2. **Every run after that:** the mirror is mounted and updated incrementally with `git fetch --prune`, transferring only the commits and refs that are new since the last run.
+3. **Concurrent jobs during hydration** automatically fall back to the standard `actions/checkout` behavior, so nothing blocks while the mirror warms up.
+
+The migration is straightforward:
+
+```diff
+-      - uses: actions/checkout@v4
++      - uses: useblacksmith/checkout@v4
+```
+
+That's it. All the inputs (`fetch-depth`, `submodules`, `token`, and friends) work the same.
+
+## The Numbers
+
+> [!NOTE]
+> I pulled these numbers from real jobs on `main` after the change was merged. This isn't a controlled benchmark, but it reflects what developers actually experienced. I won't share the exact PR or project specifics because it's a private monorepo.
+
+Checkout time across our Blacksmith jobs:
+
+- **Mean:** ~69s → ~20s. **A 71% reduction.**
+- **p50:** ~47s → ~10s (-79%).
+- **p90:** ~152s → ~60s (-61%).
+
+The p90 improvement matters more to me than the mean. A typical checkout being faster is nice, but the two-and-a-half-minute checkouts were the ones people actually noticed. Those now take about a minute.
+
+## What It Adds Up To
+
+For the Blacksmith-hosted jobs covered by this change, the aggregate savings are:
+
+- **~2,000 checkout-minutes reclaimed per weekday**—about 33 hours of runner time.
+- **~44,000 checkout-minutes per month.**
+
+In dollars: at our smallest x64 runner rate ($0.004/min), that's about **$176/month**, or $8 every weekday. The sticky disk the mirror lives on costs $0.50/GB/month, and ours is 3.56 GB—so $1.78/month. Net: **~$174/month, ~$2,100/year.**
+
+And that's a conservative estimate because it only prices the checkout step itself. When we benchmarked the change in the original PR, whole jobs roughly halved. A faster checkout means the runner spends more of its billable time doing actual work instead of downloading git objects.
+
+The dollars aren't really the point, though. Every PR and every deploy now gets faster feedback, and the improvement required very little migration work.
+
+## Gotchas
+
+Not much to report, which is part of the appeal, but a few things worth knowing:
+
+- **It only makes sense on Blacksmith runners.** Sticky disks are their primitive, so use `actions/checkout` elsewhere.
+- **The first run is slower.** Hydrating the mirror takes longer than a regular checkout, one time per repository. Concurrent jobs fall back to standard checkout while it happens, so this didn't cause any issues for us.
+- **The sticky disk isn't free.** It's $0.50/GB/month. For us that's $1.78/month against $176/month saved, but it's still worth checking the numbers for your own repository.
+
+## Should You Do It?
+
+If you're already running CI on Blacksmith, **yes**. It's an easy change to test, the inputs are the same, and the fallback behavior kept the rollout low-risk for us.
+
+If you're not using Blacksmith for CI yet, I think it's worth trying. We've had a good experience with it: the runners are faster, moving from GitHub-hosted runners is straightforward, and features like sticky disks unlock optimizations that would otherwise require more work.
+
+For us, this was a small change with a surprisingly large cumulative impact. If checkout has become noticeable in your CI, it's probably worth measuring.
+
+<div className="img-center">
+  <Image
+    alt={``}
+    src={`/static/images/racing-car.png`}
+    width={120}
+    height={120}
+  />
+  <Image
+    alt={``}
+    src={`/static/images/dashing-away.png`}
+    width={60}
+    height={60}
+    style={{ alignSelf: 'flex-end' }}
+  />
+</div>
