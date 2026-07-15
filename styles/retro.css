@@ -938,6 +938,11 @@
 .retro-terminal-prose pre::before {
   content: "$ cat source";
   display: block;
+  position: sticky;
+  left: -1.5em;
+  z-index: 2;
+  box-sizing: border-box;
+  width: calc(100% + 3em);
   margin: -1.25em -1.5em 1em;
   padding: 4px 10px;
   border-bottom: 1px solid #2a2a2a;
@@ -956,6 +961,19 @@
 .retro-terminal-prose pre code::before,
 .retro-terminal-prose pre code::after {
   content: "";
+}
+.retro-terminal-prose pre.shiki {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg) !important;
+}
+.retro-terminal-prose pre.shiki span {
+  color: var(--shiki-light) !important;
+}
+.retro-terminal-prose pre.twoslash {
+  --twoslash-popup-bg: #f4ecd8;
+  --twoslash-popup-color: #2a2a2a;
+  --twoslash-border-color: #d4c9a8;
+  --twoslash-docs-color: #7a7160;
 }
 .retro-terminal-prose .code-block {
   position: relative;

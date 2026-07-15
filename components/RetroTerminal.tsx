@@ -309,7 +309,11 @@ export default function RetroTerminal({
     if (!postSlugs.has(slug) || mdxBySlug[slug] || loadingSlugs.current.has(slug)) return;
 
     loadingSlugs.current.add(slug);
-    void fetch(`/api/blog-mdx/${encodeURIComponent(slug)}`)
+    const mdxUrl =
+      process.env.NODE_ENV === 'production'
+        ? `/blog-mdx/${encodeURIComponent(slug)}.json`
+        : `/api/blog-mdx/${encodeURIComponent(slug)}`;
+    void fetch(mdxUrl)
       .then((response) => {
         if (!response.ok) throw new Error(`Failed to load ${slug}`);
         return response.json() as Promise<{ mdxSource: MDXRemoteSerializeResult }>;

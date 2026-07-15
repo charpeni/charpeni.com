@@ -6,6 +6,7 @@ node_modules
 public/robots.txt
 public/sitemap*.xml
 public/blog/rss.xml
+public/blog-mdx
 public/llms.txt
 .vercel
 tsconfig.tsbuildinfo

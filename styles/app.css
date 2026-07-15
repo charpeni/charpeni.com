@@ -6,4 +6,4 @@
 
 /* Import other styles */
 @import './global.css';
-@import './prism-vsc-dark-plus.css';
+@import './shiki.css';

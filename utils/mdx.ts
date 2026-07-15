@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import rehypeShiki from '@shikijs/rehype';
+import {
+  defaultHoverInfoProcessor,
+  rendererRich,
+  transformerTwoslash,
+} from '@shikijs/twoslash';
 import matter from 'gray-matter';
 import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
 import { serialize } from 'next-mdx-remote/serialize';
@@ -9,7 +15,6 @@ import readingTime from 'reading-time';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeCallouts from 'rehype-callouts';
 import rehypeCodeTitles from 'rehype-code-titles';
-import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeSlug from 'rehype-slug';
 
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
@@ -89,6 +94,143 @@ type Post = {
 
 const root = process.cwd();
 
+function createTwoslashRenderer() {
+  const renderer = rendererRich({ queryRendering: 'line' });
+  const renderLineQuery = renderer.lineQuery;
+
+  if (!renderLineQuery) return renderer;
+
+  renderer.lineQuery = function (query, node) {
+    const result = renderLineQuery.call(this, query, node);
+    const content = defaultHoverInfoProcessor(query.text ?? '');
+    const prefixLength =
+      content.match(/^(?:const|let|var|type|function|class|enum)\s+/)?.[0]
+        .length ?? 0;
+    const target =
+      node?.type === 'element' && node.children[0]?.type === 'text'
+        ? node.children[0].value
+        : '';
+    const targetCenter = prefixLength + target.length / 2;
+
+    if (!targetCenter) return result;
+
+    const line = result[0];
+    if (line?.type !== 'element') return result;
+
+    const popup = line.children.find(
+      (child) =>
+        child.type === 'element' &&
+        String(child.properties.class).includes('twoslash-popup-container'),
+    );
+
+    if (popup?.type === 'element') {
+      popup.properties.style = `--twoslash-query-arrow-offset: calc(${targetCenter}ch - 1em); --twoslash-query-popup-offset: calc(1em - ${targetCenter}ch)`;
+    }
+
+    return result;
+  };
+
+  return renderer;
+}
+
+type ShikiTransformerOptions = { meta?: { __raw?: string } };
+
+function isTwoslash(options: ShikiTransformerOptions) {
+  return options.meta?.__raw?.split(/\s+/).includes('twoslash') ?? false;
+}
+
+function extractCopyableTwoslashCode(code: string) {
+  let lines = code.split('\n');
+  const cutBefore = lines.findLastIndex((line) =>
+    /^\s*\/\/ ---cut(?:-before)?---\s*$/.test(line),
+  );
+  if (cutBefore !== -1) lines = lines.slice(cutBefore + 1);
+
+  const cutAfter = lines.findIndex((line) =>
+    /^\s*\/\/ ---cut-after---\s*$/.test(line),
+  );
+  if (cutAfter !== -1) lines = lines.slice(0, cutAfter);
+
+  let insideCut = false;
+  return lines
+    .filter((line) => {
+      if (/^\s*\/\/ ---cut-start---\s*$/.test(line)) {
+        insideCut = true;
+        return false;
+      }
+      if (/^\s*\/\/ ---cut-end---\s*$/.test(line)) {
+        insideCut = false;
+        return false;
+      }
+      return !insideCut && !/^\s*\/\/ @\w+(?::.*)?\s*$/.test(line);
+    })
+    .join('\n');
+}
+
+function transformerTwoslashCopySource() {
+  let copySource: string | undefined;
+
+  return [
+    {
+      name: 'capture-twoslash-copy-source',
+      enforce: 'pre' as const,
+      preprocess(code: string, options: ShikiTransformerOptions) {
+        if (isTwoslash(options)) {
+          copySource = extractCopyableTwoslashCode(code);
+        }
+      },
+    },
+    {
+      name: 'attach-twoslash-copy-source',
+      enforce: 'post' as const,
+      root(
+        node: {
+          children: Array<{
+            type: string;
+            tagName?: string;
+            children?: unknown[];
+          }>;
+        },
+      ) {
+        const pre = node.children.find(
+          (child) => child.type === 'element' && child.tagName === 'pre',
+        );
+        if (copySource === undefined || !pre?.children) return;
+
+        pre.children.push({
+          type: 'element',
+          tagName: 'span',
+          properties: {
+            className: ['twoslash-copy-source'],
+            hidden: true,
+          },
+          children: [{ type: 'text', value: copySource }],
+        });
+        copySource = undefined;
+      },
+    },
+  ];
+}
+
+function normalizeInlineTwoslashQueries() {
+  return {
+    name: 'normalize-inline-twoslash-queries',
+    preprocess(code: string, options: ShikiTransformerOptions) {
+      if (!isTwoslash(options)) return;
+
+      return code.replaceAll(
+        /^(\s*(?:const|let|var|type|function|class|enum)\s+([\w$]+).*?)\s+\/\/\s*\^\?(.*)$/gm,
+        (line, statement: string, identifier: string, documentedType: string) => {
+          const identifierOffset = statement.indexOf(identifier);
+          if (identifierOffset < 2) return line;
+
+          return `${statement}\n//${' '.repeat(identifierOffset - 2)}^?${documentedType}`;
+        },
+      );
+    },
+  };
+}
+
 export function getPosts() {
   return fs.readdirSync(path.join(root, 'posts'));
 }
@@ -97,7 +239,7 @@ export function getPosts() {
  * Build-time memo cache for {@link getPostBySlug}, keyed by slug.
  *
  * Compiling a post is expensive — `serialize()` runs the full MDX pipeline
- * (syntax highlighting via `rehype-prism-plus`, autolinked headings, callouts)
+ * (syntax highlighting via Shiki, autolinked headings, callouts)
  * and `getPlaiceholder()` decodes the banner image. The same posts are
  * otherwise recompiled many times per build: `getAllPostsFrontMatter()` reads
  * every post and is itself called once on the homepage plus once per tag in
@@ -161,7 +303,29 @@ async function loadPostBySlug(slug: string): Promise<Post> {
         ],
         rehypeCodeTitles,
         rehypeCallouts,
-        [rehypePrismPlus, { showLineNumbers: true }],
+        [
+          rehypeShiki,
+          {
+            themes: {
+              light: 'github-light',
+              dark: 'dark-plus',
+            },
+            defaultColor: 'dark',
+            transformers: [
+              ...transformerTwoslashCopySource(),
+              normalizeInlineTwoslashQueries(),
+              transformerTwoslash({
+                explicitTrigger: true,
+                renderer: createTwoslashRenderer(),
+                twoslashOptions: {
+                  handbookOptions: {
+                    noStaticSemanticInfo: true,
+                  },
+                },
+              }),
+            ],
+          },
+        ],
       ],
     },
   });
@@ -241,7 +405,7 @@ function buildFrontMatter(
  *
  * List/tag views (the homepage, `pages/tags/[tag]`) only ever read
  * {@link PostFrontMatter} fields — never `mdxSource` — so they don't need the
- * expensive `serialize()` pass (syntax highlighting via `rehype-prism-plus`,
+ * expensive `serialize()` pass (syntax highlighting via Shiki,
  * autolinked headings, callouts) that {@link loadPostBySlug} runs. This path
  * also skips the plaiceholder blur (`blurDataURL`), which those views don't
  * render either.

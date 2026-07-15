@@ -12,7 +12,7 @@ Let's have a peek at it.
 
 For the following object combined to a [`const` assertion](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) to allow TypeScript to take the most specific type of the expression and set properties to `readonly`:
 
-```typescript
+```typescript twoslash
 const data = {
   a: 'value-a',
   b: 'value-b',
@@ -22,7 +22,9 @@ const data = {
 
 You would expect [`Object.values`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/values) to return the literal values of the object, and you'll be right:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 const values = Object.values(data);
 //    ^? const values: ("value-a" | "value-b" | "value-c")[]
 ```
@@ -33,7 +35,9 @@ But what about `Object.keys` and `Object.entries`?
 
 Calling `Object.keys` with our object returns `string[]`:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 const keys = Object.keys(data);
 //    ^? const keys: string[]
 ```
@@ -61,7 +65,9 @@ Fortunately, TypeScript offers a [`keyof` type operator](https://www.typescriptl
 > [!WARNING]
 > Be mindful that this is only effective if you know the object is immutable and won't contain any extra properties.
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 // Type is followed by `& {}` so we could simplify the type as the actual content rather than just displaying `Keys`
 type Keys = (keyof typeof data)[] & {};
 //   ^? type Keys = ("a" | "b" | "c")[]
@@ -69,21 +75,27 @@ type Keys = (keyof typeof data)[] & {};
 
 Then, once we captured what are the possible values of the keys, we can cast the result of `Object.keys` to our type:
 
-```typescript
-const typedKeys = Object.keys(data) as Keys;
-//    ^? const typedKeys: ("a" | "b" | "c")[]
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+type Keys = (keyof typeof data)[] & {};
+// ---cut---
+const typedKeys = Object.keys(data) as Keys; // ^? const typedKeys: ("a" | "b" | "c")[]
 ```
 
 Or alternatively, the inlined version:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 const typedKeys = Object.keys(data) as (keyof typeof data)[];
 //    ^? const typedKeys: ("a" | "b" | "c")[]
 ```
 
 We can even push it a little bit further and create a generic function that will wrap this up for us:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 function keysFromObject<T extends object>(object: T): (keyof T)[] {
   return Object.keys(object) as (keyof T)[];
 }
@@ -98,7 +110,9 @@ The same thing applies to `Object.entries`.
 
 `value` works as expected, but `key` is typed as a `string`:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 const entries = Object.entries(data).map(
   ([key, value]) => [key, value],
   // ^? (parameter) key: string
@@ -109,7 +123,9 @@ const entries = Object.entries(data).map(
 
 We can still leverage the `keyof` type operator combined with a generic type to capture the keys of the object and then cast the result of `Object.entries` to our type:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 type Entries<T> = {
   [K in keyof T]: [K, T[K]];
 }[keyof T][];
@@ -122,7 +138,14 @@ const typedEntries = (Object.entries(data) as Entries<typeof data>).map(
 
 Again, we can push this a little further by either using [`Entries`](https://github.com/sindresorhus/type-fest/blob/main/source/entries.d.ts) from [`type-fest`](https://github.com/sindresorhus/type-fest):
 
-```typescript
+```typescript twoslash
+// @filename: node_modules/type-fest/index.d.ts
+export type Entries<T> = {
+  [K in keyof T]: [K, T[K]];
+}[keyof T][];
+// @filename: index.ts
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+// ---cut---
 import type { Entries } from 'type-fest';
 
 const typedEntries = (Object.entries(data) as Entries<typeof data>).map(
@@ -133,7 +156,12 @@ const typedEntries = (Object.entries(data) as Entries<typeof data>).map(
 
 Or by creating our own generic function:
 
-```typescript
+```typescript twoslash
+const data = { a: 'value-a', b: 'value-b', c: 'value-c' } as const;
+type Entries<T> = {
+  [K in keyof T]: [K, T[K]];
+}[keyof T][];
+// ---cut---
 function entriesFromObject<T extends object>(object: T): Entries<T> {
   return Object.entries(object) as Entries<T>;
 }

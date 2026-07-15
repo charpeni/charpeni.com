@@ -188,6 +188,7 @@ a {
 /* Code block copy button */
 .code-block {
   position: relative;
+  container-type: inline-size;
 }
 
 .code-block pre {

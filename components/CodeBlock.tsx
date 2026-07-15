@@ -7,10 +7,20 @@ export default function CodeBlock(props: React.HTMLAttributes<HTMLPreElement>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
-    const code = preRef.current?.querySelector('code');
-    if (!code) return;
+    let text = preRef.current?.querySelector(
+      '.twoslash-copy-source',
+    )?.textContent;
+    if (text === undefined) {
+      const code = preRef.current?.querySelector('code');
+      if (!code) return;
 
-    const text = code.textContent ?? '';
+      const copy = code.cloneNode(true) as HTMLElement;
+      for (const line of copy.querySelectorAll('.twoslash-meta-line')) {
+        line.replaceWith('\n');
+      }
+      text = copy.textContent ?? '';
+    }
+
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

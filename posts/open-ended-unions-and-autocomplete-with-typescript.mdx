@@ -12,7 +12,8 @@ Unions shine when you need flexibility in parameter types or when working with l
 
 Take colors, for instance. You could type them simply as strings, but why not also provide a union of potential color options?
 
-```typescript
+```typescript twoslash
+// @errors: 2345
 type Colors = 'red' | 'blue' | 'yellow';
 //   ^? type Colors = "red" | "blue" | "yellow"
 
@@ -21,7 +22,7 @@ function paint(color: Colors) {
 }
 
 paint('red'); // Works as expected
-paint('green'); // Argument of type '"green"' is not assignable to parameter of type 'Colors'.
+paint('green');
 ```
 
 [🔗 TypeScript Playground](https://www.typescriptlang.org/play?#code/C4TwDgpgBAwg9gGzgJwM5QLxQOTIgE2ygB8cAjBAVwiNOxAgSQHdsBuAKAHouo+A9APwcOAM0oA7AMbAAlnAlQwAQ1kTgACimIUALlg60ASigBvDn20TUiCADokAcy2GjnAL4iVazbgLY3KB4oAHUUAGt0ZXQIAA9IGQIOb3UNbEc8CAkAtiDeAEFkR0oAWyzgKDhRKFBIHAAiDIgs+qJZdAk4CujUWUcJZQpoYDglZWRlMuAIZErq2uhseCQ0bDsgA)
@@ -30,7 +31,7 @@ It works well, but as soon as someone will try to use a new color, it won't be a
 
 A naive way of doing it could be to use a union of literal strings and then `string`:
 
-```typescript
+```typescript twoslash
 type Colors = 'red' | 'blue' | 'yellow' | string;
 //   ^? type Colors = string
 ```
@@ -45,7 +46,7 @@ Doing that will simplify `Colors` as `string` because they are ultimately all ex
 
 Use `string & {}` instead:
 
-```ts
+```ts twoslash
 type Colors = 'red' | 'blue' | 'yellow' | (string & {});
 //   ^? type Colors = (string & {}) | "red" | "blue" | "yellow"
 
@@ -72,7 +73,7 @@ It works! 🎉 It's a way to achieve loose autocomplete on literal string unions
 
 The reason behind it is that in order to prevent literal types from being squashed as `string`, we can use the base type `string` and make an intersection with `{}` or `Record<never, never>` (matches any non-null and non-undefined type) and therefore literal types will be treated as distinguishable types as they are seen as different by the compiler `string` vs. `string & {}`. Technically speaking, `string` and `string & {}` are the same, but it tricks the compiler to not eagerly reduce them:
 
-```typescript
+```typescript twoslash
 type AreTheSame = string extends string & {} ? true : false;
 //   ^? type AreTheSame = true
 ```
@@ -84,7 +85,7 @@ type AreTheSame = string extends string & {} ? true : false;
 
 The same thing could be done for `number`:
 
-```typescript
+```typescript twoslash
 type Gap = 0 | 8 | 16 | (number & {});
 //   ^? type Gap = 0 | (number & {}) | 8 | 16
 
