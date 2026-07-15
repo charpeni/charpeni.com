@@ -30,6 +30,9 @@ import type { PostFrontMatter } from '@/utils/mdx';
 
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 
+const HOME_TITLE =
+  'Nicolas Charpentier — Frontend Infrastructure & Developer Tooling';
+
 function maxZof(states: Record<string, WinState>): number {
   let max = 0;
   for (const w of Object.values(states)) {
@@ -393,14 +396,29 @@ export default function RetroTerminal({
         };
       });
   }, [states, vw, vh]);
+  const focusedWindowId = windows.find((win) => win.focused)?.id;
+  const pageTitle = (() => {
+    if (focusedWindowId === NOT_FOUND_ID) return '404 — Page Not Found';
+    if (focusedWindowId === legalWinId('disclaimer')) {
+      return 'Disclaimer | Nicolas Charpentier';
+    }
+    if (focusedWindowId === legalWinId('privacy-policy')) {
+      return 'Privacy Policy | Nicolas Charpentier';
+    }
+    if (focusedWindowId?.startsWith('show:')) {
+      const post = postById(focusedWindowId.slice('show:'.length));
+      if (post) return `${post.title} | Nicolas Charpentier`;
+    }
+    return HOME_TITLE;
+  })();
 
   useEffect(() => {
-    if (windows.find((win) => win.focused)?.id !== TERM_ID) return;
+    if (focusedWindowId !== TERM_ID) return;
     termWindowRef.current?.focus({ preventScroll: true });
-  }, [windows]);
+  }, [focusedWindowId]);
 
   const onLogKeyDown = (e: React.KeyboardEvent) => {
-    if (windows.find((win) => win.focused)?.id !== TERM_ID) return;
+    if (focusedWindowId !== TERM_ID) return;
     switch (e.key) {
       case 'ArrowDown': {
         e.preventDefault();
@@ -425,12 +443,12 @@ export default function RetroTerminal({
 
   return (
     <div className="retro-terminal-shell" onClickCapture={onShellClickCapture}>
-      {showNotFound ? (
-        <Head>
-          <title>404 — Archive Object Not Found</title>
+      <Head>
+        <title>{pageTitle}</title>
+        {showNotFound ? (
           <meta name="robots" content="noindex, follow" />
-        </Head>
-      ) : null}
+        ) : null}
+      </Head>
       <div className={`retro-terminal-desktop ${mobileProfileOpen ? 'retro-terminal-desktop--profile-open' : ''} ${Object.keys(states).length === 0 ? 'retro-terminal-desktop--empty' : ''}`}>
         <div className="retro-terminal-crt" aria-hidden="true" />
         <DesktopProfile
