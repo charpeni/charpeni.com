@@ -7,6 +7,11 @@ module.exports = withBundleAnalyzer({
   images: {
     qualities: [100, 75],
   },
+  outputFileTracingIncludes: {
+    '/api/blog-mdx/*': [
+      './node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/*.d.ts',
+    ],
+  },
   async headers() {
     return [
       {
