@@ -4,6 +4,10 @@ import { getPostBySlug, getPosts } from '@/utils/mdx';
 
 const validSlugs = new Set(getPosts().map((post) => post.replace(/\.mdx$/, '')));
 
+export const config = {
+  maxDuration: 60,
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { slug } = req.query;
 
