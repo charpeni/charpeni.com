@@ -1,28 +1,11 @@
-const path = require('node:path');
-
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
-
-const typescriptLibGlob = `./${path
-  .relative(
-    process.cwd(),
-    path.join(
-      path.dirname(require.resolve('typescript/package.json')),
-      'lib',
-      '*.d.ts',
-    ),
-  )
-  .split(path.sep)
-  .join('/')}`;
 
 module.exports = withBundleAnalyzer({
   reactStrictMode: true,
   images: {
     qualities: [100, 75],
-  },
-  outputFileTracingIncludes: {
-    '/api/blog-mdx/*': [typescriptLibGlob],
   },
   async headers() {
     return [
