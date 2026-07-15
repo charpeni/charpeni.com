@@ -133,11 +133,90 @@ function createTwoslashRenderer() {
   return renderer;
 }
 
+type ShikiTransformerOptions = { meta?: { __raw?: string } };
+
+function isTwoslash(options: ShikiTransformerOptions) {
+  return options.meta?.__raw?.split(/\s+/).includes('twoslash') ?? false;
+}
+
+function extractCopyableTwoslashCode(code: string) {
+  let lines = code.split('\n');
+  const cutBefore = lines.findLastIndex((line) =>
+    /^\s*\/\/ ---cut(?:-before)?---\s*$/.test(line),
+  );
+  if (cutBefore !== -1) lines = lines.slice(cutBefore + 1);
+
+  const cutAfter = lines.findIndex((line) =>
+    /^\s*\/\/ ---cut-after---\s*$/.test(line),
+  );
+  if (cutAfter !== -1) lines = lines.slice(0, cutAfter);
+
+  let insideCut = false;
+  return lines
+    .filter((line) => {
+      if (/^\s*\/\/ ---cut-start---\s*$/.test(line)) {
+        insideCut = true;
+        return false;
+      }
+      if (/^\s*\/\/ ---cut-end---\s*$/.test(line)) {
+        insideCut = false;
+        return false;
+      }
+      return !insideCut && !/^\s*\/\/ @\w+(?::.*)?\s*$/.test(line);
+    })
+    .join('\n');
+}
+
+function transformerTwoslashCopySource() {
+  let copySource: string | undefined;
+
+  return [
+    {
+      name: 'capture-twoslash-copy-source',
+      enforce: 'pre' as const,
+      preprocess(code: string, options: ShikiTransformerOptions) {
+        if (isTwoslash(options)) {
+          copySource = extractCopyableTwoslashCode(code);
+        }
+      },
+    },
+    {
+      name: 'attach-twoslash-copy-source',
+      enforce: 'post' as const,
+      root(
+        node: {
+          children: Array<{
+            type: string;
+            tagName?: string;
+            children?: unknown[];
+          }>;
+        },
+      ) {
+        const pre = node.children.find(
+          (child) => child.type === 'element' && child.tagName === 'pre',
+        );
+        if (copySource === undefined || !pre?.children) return;
+
+        pre.children.push({
+          type: 'element',
+          tagName: 'span',
+          properties: {
+            className: ['twoslash-copy-source'],
+            hidden: true,
+          },
+          children: [{ type: 'text', value: copySource }],
+        });
+        copySource = undefined;
+      },
+    },
+  ];
+}
+
 function normalizeInlineTwoslashQueries() {
   return {
     name: 'normalize-inline-twoslash-queries',
-    preprocess(code: string, options: { meta?: { __raw?: string } }) {
-      if (!options.meta?.__raw?.split(/\s+/).includes('twoslash')) return;
+    preprocess(code: string, options: ShikiTransformerOptions) {
+      if (!isTwoslash(options)) return;
 
       return code.replaceAll(
         /^(\s*(?:const|let|var|type|function|class|enum)\s+([\w$]+).*?)\s+\/\/\s*\^\?(.*)$/gm,
@@ -233,6 +312,7 @@ async function loadPostBySlug(slug: string): Promise<Post> {
             },
             defaultColor: 'dark',
             transformers: [
+              ...transformerTwoslashCopySource(),
               normalizeInlineTwoslashQueries(),
               transformerTwoslash({
                 explicitTrigger: true,
