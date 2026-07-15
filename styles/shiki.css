@@ -1,0 +1,73 @@
+pre.shiki {
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+  font-family:
+    Menlo, Monaco, Consolas, 'Andale Mono', 'Ubuntu Mono', 'Courier New',
+    monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 4;
+}
+
+pre.shiki > code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  counter-reset: code-line;
+}
+
+pre.shiki .line {
+  display: inline-block;
+  width: auto;
+  min-width: 100%;
+}
+
+pre.shiki .line::before {
+  display: inline-block;
+  width: 2rem;
+  margin-right: 1rem;
+  color: #858585;
+  text-align: right;
+  content: counter(code-line);
+  counter-increment: code-line;
+}
+
+pre.twoslash {
+  --twoslash-popup-bg: #252526;
+  --twoslash-popup-color: #d4d4d4;
+  --twoslash-border-color: #454545;
+  --twoslash-docs-color: #b4b4b4;
+}
+
+pre.twoslash .twoslash-query-line {
+  padding-left: 3rem;
+}
+
+pre.twoslash .twoslash-query-line .twoslash-popup-container {
+  max-width: calc(100cqi - 5rem);
+  margin-left: calc(var(--twoslash-query-popup-offset, 0px) - 5px);
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+}
+
+pre.twoslash .twoslash-query-line .twoslash-popup-arrow {
+  left: calc(1em + var(--twoslash-query-arrow-offset, 0px) + 5px);
+}
+
+pre.twoslash .twoslash-popup-code {
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  pre.shiki {
+    color: var(--shiki-light) !important;
+    background-color: var(--shiki-light-bg) !important;
+  }
+
+  pre.shiki span {
+    color: var(--shiki-light) !important;
+  }
+}

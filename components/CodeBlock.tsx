@@ -10,7 +10,11 @@ export default function CodeBlock(props: React.HTMLAttributes<HTMLPreElement>) {
     const code = preRef.current?.querySelector('code');
     if (!code) return;
 
-    const text = code.textContent ?? '';
+    const copy = code.cloneNode(true) as HTMLElement;
+    for (const line of copy.querySelectorAll('.twoslash-meta-line')) {
+      line.replaceWith('\n');
+    }
+    const text = copy.textContent ?? '';
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

@@ -19,7 +19,7 @@ Before we jump into details of how to test TypeScript types, let's see what led 
 
 We had a specific context where we were migrating from a REST API to a GraphQL API, the data on the REST API was represented as an [enum](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#enums), but the GraphQL API used a union of [string literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types):
 
-```typescript
+```typescript twoslash
 enum OldEnum {
   Apple = 'apple',
   Orange = 'orange',
@@ -33,14 +33,19 @@ We can see that they are both equivalent because they will both contain the same
 
 If we have a function that takes an `OldEnum` as a parameter, we can't pass a `NewUnion` to it because the compiler doesn't know that they are equivalent:
 
-```typescript
+```typescript twoslash
+// @errors: 2345
+enum OldEnum {
+  Apple = 'apple',
+  Orange = 'orange',
+}
+// ---cut---
 function doSomethingWithOldEnum(param: OldEnum) {
   console.log(param);
 }
 
 doSomethingWithOldEnum(OldEnum.Apple); // OK
 doSomethingWithOldEnum('apple');
-// ^ Argument of type '"apple"' is not assignable to parameter of type 'OldEnum'.(2345)
 ```
 
 Doing the reverse situation would have been possible because we can validate an enum value against a union of string literals:
@@ -58,7 +63,18 @@ But how do we pass `NewUnion` to a function that expects an `OldEnum`?
 
 We'll need to use a [type assertion](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions) to tell the compiler to trust us because we visually confirmed that they are both equivalent, and therefore we're letting the compiler know:
 
-```typescript
+```typescript twoslash
+enum OldEnum {
+  Apple = 'apple',
+  Orange = 'orange',
+}
+
+type NewUnion = 'apple' | 'orange';
+
+function doSomethingWithOldEnum(param: OldEnum) {
+  console.log(param);
+}
+// ---cut---
 function convertNewUnionToOldEnum(param: NewUnion) {
   return param as OldEnum;
 }
@@ -81,7 +97,12 @@ First thing we need to do, is exactly like we did previously, we need to assert 
 
 First, we can convert the enum into a union of string literals using a [template literal](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html):
 
-```typescript
+```typescript twoslash
+enum OldEnum {
+  Apple = 'apple',
+  Orange = 'orange',
+}
+// ---cut---
 // We can convert the old enum into a union with template literal
 type OldEnumAsUnion = `${OldEnum}`;
 //   ^? type OldEnumAsUnion = "apple" | "orange"
@@ -89,7 +110,7 @@ type OldEnumAsUnion = `${OldEnum}`;
 
 Then, we can visually assert that they are equivalent:
 
-```typescript
+```typescript twoslash
 type NewUnion = 'apple' | 'orange';
 //   ^? type NewUnion = "apple" | "orange"
 ```

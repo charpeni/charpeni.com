@@ -1,5 +1,6 @@
 import '@/styles/app.css';
 import '@/styles/retro.css';
+import '@shikijs/twoslash/style-rich.css';
 import 'rehype-callouts/theme/obsidian';
 import 'react-social-icons/bsky.app';
 import 'react-social-icons/github';
