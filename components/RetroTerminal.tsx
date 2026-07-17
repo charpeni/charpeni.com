@@ -77,12 +77,27 @@ function pathForWindow(id: string | null, currentPath: string) {
   return '/';
 }
 
-function updateWindowUrl(id: string | null) {
+function updateWindowUrl(id: string | null, push: boolean) {
   if (globalThis.location === undefined || globalThis.history === undefined) return;
   const { pathname } = new URL(globalThis.location.href);
   const nextPath = pathForWindow(id, pathname);
   if (pathname === nextPath) return;
-  globalThis.history.replaceState(globalThis.history.state, '', nextPath);
+  if (push) {
+    globalThis.history.pushState(globalThis.history.state, '', nextPath);
+  } else {
+    globalThis.history.replaceState(globalThis.history.state, '', nextPath);
+  }
+}
+
+function windowIdForPath(pathname: string, postSlugs: ReadonlySet<string>): string | null {
+  const blogMatch = /^\/blog\/([^/]+)$/.exec(pathname);
+  if (blogMatch) {
+    const slug = decodeURIComponent(blogMatch[1]);
+    return postSlugs.has(slug) ? showWinId(slug) : null;
+  }
+  if (pathname === '/disclaimer') return legalWinId('disclaimer');
+  if (pathname === '/privacy-policy') return legalWinId('privacy-policy');
+  return null;
 }
 
 function useViewport() {
@@ -161,6 +176,7 @@ export default function RetroTerminal({
     globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor }));
   }, [cursor]);
 
+  const syncedWindowIds = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (globalThis.location === undefined) return;
     let top: WinState | null = null;
@@ -169,7 +185,12 @@ export default function RetroTerminal({
         top = win;
       }
     }
-    updateWindowUrl(top?.id ?? null);
+    const topId = top?.id ?? null;
+    const prevIds = syncedWindowIds.current;
+    const isUrlWindow = topId !== null && (topId.startsWith('show:') || topId.startsWith('legal:'));
+    const push = isUrlWindow && prevIds !== null && !prevIds.has(topId);
+    syncedWindowIds.current = new Set(Object.keys(states));
+    updateWindowUrl(topId, push);
   }, [states]);
 
   const focus = useCallback((id: string) => {
@@ -335,6 +356,35 @@ export default function RetroTerminal({
   useEffect(() => {
     if (currentPost) loadMdx(currentPost.slug);
   }, [currentPost, loadMdx]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const targetId = windowIdForPath(globalThis.location.pathname, postSlugs);
+      setStates((prev) => {
+        let next = prev;
+        for (const id of Object.keys(prev)) {
+          const isUrlWindow = id.startsWith('show:') || id.startsWith('legal:');
+          if (isUrlWindow && id !== targetId) {
+            if (next === prev) next = { ...prev };
+            delete next[id];
+          }
+        }
+        if (targetId) {
+          const existing = next[targetId];
+          const geom = targetId.startsWith('legal:')
+            ? legalGeom(vw, vh)
+            : showGeom(vw, vh);
+          const base: WinState = existing ?? { id: targetId, ...geom, z: 0 };
+          const z = maxZof(next) + 1;
+          if (next === prev) next = { ...prev };
+          next[targetId] = { ...base, z };
+        }
+        return next;
+      });
+    };
+    globalThis.addEventListener('popstate', onPopState);
+    return () => globalThis.removeEventListener('popstate', onPopState);
+  }, [postSlugs, vh, vw]);
 
   const openAt = (i: number) => {
     const post = postByIndex(i);
