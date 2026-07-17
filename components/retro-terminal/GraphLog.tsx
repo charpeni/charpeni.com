@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { BRANCH_TAGS, computeGraph, shortHash } from '@/utils/graph';
 import type { BranchTag, RowGraph } from '@/utils/graph';
@@ -6,7 +6,28 @@ import type { PostFrontMatter } from '@/utils/mdx';
 
 import { formatIsoDate } from './format';
 import { GRAPH_LANE_GAP, GRAPH_MAIN_X, GRAPH_ROW_H, graphWidth } from './geometry';
+import { AGENT_INTRO_SEEN_KEY } from './ids';
 import { BRANCH_COLORS, branchOf } from './postUtils';
+
+function hasSeenAgentIntro(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(AGENT_INTRO_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markAgentIntroSeen() {
+  try {
+    globalThis.localStorage?.setItem(AGENT_INTRO_SEEN_KEY, '1');
+  } catch {
+    return;
+  }
+}
+
+function prefersReducedMotion(): boolean {
+  return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
 
 function GraphRail({
   row,
@@ -93,8 +114,21 @@ export function GraphLog({
   const graph = useMemo(() => computeGraph(posts, posts), [posts]);
   const { activeBranches, rows } = graph;
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [agentPhase, setAgentPhase] = useState<'thinking' | 'indexing' | 'tool' | 'done'>(isMobile ? 'done' : 'thinking');
+  const [shouldPlayIntro] = useState(() => !isMobile && !hasSeenAgentIntro() && !prefersReducedMotion());
+  const [agentPhase, setAgentPhase] = useState<'thinking' | 'indexing' | 'tool' | 'done'>(shouldPlayIntro ? 'thinking' : 'done');
   const visibleAgentPhase = isMobile ? 'done' : agentPhase;
+  const introTimersRef = useRef<ReturnType<typeof globalThis.setTimeout>[]>([]);
+
+  const clearIntroTimers = useCallback(() => {
+    for (const timer of introTimersRef.current) globalThis.clearTimeout(timer);
+    introTimersRef.current = [];
+  }, []);
+
+  const completeIntro = useCallback(() => {
+    clearIntroTimers();
+    markAgentIntroSeen();
+    setAgentPhase('done');
+  }, [clearIntroTimers]);
 
   useEffect(() => {
     const el = rowRefs.current[cursor];
@@ -102,21 +136,37 @@ export function GraphLog({
   }, [cursor]);
 
   useEffect(() => {
-    if (isMobile) return;
+    if (!shouldPlayIntro) return;
 
-    const indexingTimer = globalThis.setTimeout(() => setAgentPhase('indexing'), 900);
-    const toolTimer = globalThis.setTimeout(() => setAgentPhase('tool'), 2100);
-    const doneTimer = globalThis.setTimeout(() => setAgentPhase('done'), 3800);
-    return () => {
-      globalThis.clearTimeout(indexingTimer);
-      globalThis.clearTimeout(toolTimer);
-      globalThis.clearTimeout(doneTimer);
+    introTimersRef.current = [
+      globalThis.setTimeout(() => setAgentPhase('indexing'), 900),
+      globalThis.setTimeout(() => setAgentPhase('tool'), 2100),
+      globalThis.setTimeout(completeIntro, 3800),
+    ];
+    return clearIntroTimers;
+  }, [shouldPlayIntro, completeIntro, clearIntroTimers]);
+
+  useEffect(() => {
+    if (visibleAgentPhase === 'done') return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift') return;
+      const target = e.target;
+      if (e.key === 'Enter' && target instanceof Element && target.closest('[data-retro-window-id="term"]')) {
+        e.stopPropagation();
+      }
+      completeIntro();
     };
-  }, [isMobile]);
+    globalThis.addEventListener('keydown', onKeyDown, true);
+    return () => globalThis.removeEventListener('keydown', onKeyDown, true);
+  }, [visibleAgentPhase, completeIntro]);
 
   return (
     <>
-      <div className="retro-terminal-agent">
+      <div
+        className="retro-terminal-agent"
+        onClick={visibleAgentPhase === 'done' ? undefined : completeIntro}
+      >
         <div className="retro-terminal-agent-user">
           <span className="retro-terminal-agent-mark">›</span>
           <span>List charpeni.com blog posts</span>
@@ -188,7 +238,18 @@ export function GraphLog({
           </div>
         </>
       ) : (
-        <div className="retro-terminal-content retro-terminal-content--loading" ref={contentRef} tabIndex={0}>
+        <div
+          className="retro-terminal-content retro-terminal-content--loading"
+          ref={contentRef}
+          tabIndex={0}
+          onClick={completeIntro}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
+            completeIntro();
+          }}
+          role="button"
+          aria-label="Skip intro"
+        >
           <span className="retro-terminal-loading-line">
             {visibleAgentPhase === 'thinking'
               ? 'Planning archive query'
@@ -197,6 +258,7 @@ export function GraphLog({
                 : 'Running archive.list_posts'}
             <span className="retro-terminal-agent-dots" aria-hidden="true" />
           </span>
+          <span className="retro-terminal-loading-skip" aria-hidden="true">click or press any key to skip</span>
         </div>
       )}
     </>
