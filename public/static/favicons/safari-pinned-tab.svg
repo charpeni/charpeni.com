@@ -1,14 +1,1 @@
-<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
- "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
- width="512" height="512" viewBox="0 0 512 512">
-<g fill="#000000">
-  <!-- < bracket -->
-  <polygon points="80,256 200,136 230,166 140,256 230,346 200,376"/>
-  <!-- / slash -->
-  <polygon points="235,380 277,380 297,132 255,132"/>
-  <!-- > bracket -->
-  <polygon points="432,256 312,136 282,166 372,256 282,346 312,376"/>
-</g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" version="1.0" viewBox="0 0 512 512"><g fill="#000"><polygon points="80 256 200 136 230 166 140 256 230 346 200 376"/><polygon points="235 380 277 380 297 132 255 132"/><polygon points="432 256 312 136 282 166 372 256 282 346 312 376"/></g></svg>
