@@ -10,6 +10,7 @@
     "build": "next build && node scripts/generateBlogMdx.mts && next-sitemap && node scripts/generateLlmsTxt.mts && node scripts/generateRssFeed.mts",
     "dev": "node scripts/generateRssFeed.mts && next",
     "start": "next start",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs",
     "type-check": "next typegen && tsc --pretty --noEmit",
     "format": "prettier --write .",
     "lint": "eslint ."
