@@ -5,6 +5,17 @@ import { TermWindow } from './TermWindow';
 
 import type { LatestPr, LatestPrsState, OpenWin } from './types';
 
+type Props = {
+  win: OpenWin;
+  active: boolean;
+  onClose: () => void;
+  onActivate: () => void;
+  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
+  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
+  onTitleDoubleClick?: () => void;
+  compact?: boolean;
+};
+
 export function LatestPrsWindow({
   win,
   active,
@@ -14,16 +25,7 @@ export function LatestPrsWindow({
   resizeProps,
   onTitleDoubleClick,
   compact,
-}: {
-  win: OpenWin;
-  active: boolean;
-  onClose: () => void;
-  onActivate: () => void;
-  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
-  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
-  onTitleDoubleClick?: () => void;
-  compact?: boolean;
-}) {
+}: Props) {
   const [state, setState] = useState<LatestPrsState>({ status: 'loading' });
 
   useEffect(() => {

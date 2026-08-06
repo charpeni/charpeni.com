@@ -56,6 +56,15 @@ const TERMINAL_MDX_COMPONENTS = {
   Image: TerminalImage,
 };
 
+type ShowBodyProps = {
+  post: PostFrontMatter;
+  mdxState?: MdxState;
+  onOpenBlogLink: (slug: string) => boolean;
+  copyStatus: 'idle' | 'copying' | 'copied' | 'error';
+  onCopy: () => void;
+  compact?: boolean;
+};
+
 function ShowBody({
   post,
   mdxState,
@@ -63,14 +72,7 @@ function ShowBody({
   copyStatus,
   onCopy,
   compact,
-}: {
-  post: PostFrontMatter;
-  mdxState?: MdxState;
-  onOpenBlogLink: (slug: string) => boolean;
-  copyStatus: 'idle' | 'copying' | 'copied' | 'error';
-  onCopy: () => void;
-  compact?: boolean;
-}) {
+}: ShowBodyProps) {
   const hash = shortHash(post.slug);
   const branch = branchOf(post);
   const date = formatLongDate(post.publishedAt);
@@ -183,6 +185,20 @@ function ShowBody({
   );
 }
 
+type ShowTermWindowProps = {
+  win: OpenWin;
+  active: boolean;
+  post: PostFrontMatter;
+  mdxState?: MdxState;
+  onClose: () => void;
+  onActivate: () => void;
+  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
+  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
+  onOpenBlogLink: (slug: string) => boolean;
+  onTitleDoubleClick?: () => void;
+  compact?: boolean;
+};
+
 export function ShowTermWindow({
   win,
   active,
@@ -195,19 +211,7 @@ export function ShowTermWindow({
   onOpenBlogLink,
   onTitleDoubleClick,
   compact,
-}: {
-  win: OpenWin;
-  active: boolean;
-  post: PostFrontMatter;
-  mdxState?: MdxState;
-  onClose: () => void;
-  onActivate: () => void;
-  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
-  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
-  onOpenBlogLink: (slug: string) => boolean;
-  onTitleDoubleClick?: () => void;
-  compact?: boolean;
-}) {
+}: ShowTermWindowProps) {
   const { status: copyStatus, copy } = useCopyMarkdown(post.slug);
   const branch = branchOf(post);
 

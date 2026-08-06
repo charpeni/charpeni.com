@@ -2,15 +2,17 @@ import Image from 'next/image';
 
 import type { LegalWindowVariant } from './types';
 
+type DesktopProfileProps = {
+  onOpenPrs: () => void;
+  mobileExpanded?: boolean;
+  onToggleMobile?: () => void;
+};
+
 export function DesktopProfile({
   onOpenPrs,
   mobileExpanded = false,
   onToggleMobile,
-}: {
-  onOpenPrs: () => void;
-  mobileExpanded?: boolean;
-  onToggleMobile?: () => void;
-}) {
+}: DesktopProfileProps) {
   return (
     <>
       <button
@@ -145,11 +147,11 @@ export function DesktopProfile({
   );
 }
 
-export function DesktopFooter({
-  onOpenLegal,
-}: {
+type DesktopFooterProps = {
   onOpenLegal: (variant: LegalWindowVariant) => void;
-}) {
+};
+
+export function DesktopFooter({ onOpenLegal }: DesktopFooterProps) {
   return (
     <footer className="retro-terminal-footer">
       <div className="retro-terminal-footer-links">

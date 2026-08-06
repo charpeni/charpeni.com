@@ -141,13 +141,12 @@ function useViewport() {
   return size;
 }
 
-export default function RetroTerminal({
-  posts,
-  showNotFound = false,
-}: {
+type Props = {
   posts: PostFrontMatter[];
   showNotFound?: boolean;
-}) {
+};
+
+export default function RetroTerminal({ posts, showNotFound = false }: Props) {
   const { w: vw, h: vh } = useViewport();
   const isPhoneLayout = vw < 640 || vh <= 500;
   const bounds: WinGeom = { x: 0, y: 0, w: vw, h: vh };

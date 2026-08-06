@@ -1,5 +1,21 @@
 import type { OpenWin } from './types';
 
+type Props = {
+  win: OpenWin;
+  active: boolean;
+  title: string;
+  children: React.ReactNode;
+  onClose: () => void;
+  onEscape?: () => void;
+  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
+  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
+  onActivate: () => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+  onTitleDoubleClick?: () => void;
+  windowRef?: React.Ref<HTMLDivElement>;
+  compact?: boolean;
+};
+
 export function TermWindow({
   win,
   active,
@@ -14,21 +30,7 @@ export function TermWindow({
   onTitleDoubleClick,
   windowRef,
   compact,
-}: {
-  win: OpenWin;
-  active: boolean;
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-  onEscape?: () => void;
-  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
-  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
-  onActivate: () => void;
-  onKeyDown?: (e: React.KeyboardEvent) => void;
-  onTitleDoubleClick?: () => void;
-  windowRef?: React.Ref<HTMLDivElement>;
-  compact?: boolean;
-}) {
+}: Props) {
   const { geom } = win;
   return (
     <div
