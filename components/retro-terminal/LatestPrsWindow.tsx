@@ -60,34 +60,44 @@ export function LatestPrsWindow({
       <div className="retro-terminal-prs-window">
         <div className="retro-terminal-prs-toolbar">
           <span>latest open source contributions</span>
-          <a href="https://prs.charpeni.com" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://prs.charpeni.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Open latest PRs ↗
           </a>
         </div>
         <div className="retro-terminal-prs-list">
           {state.status === 'loading' ? (
-            <div className="retro-terminal-prs-message">Fetching recent pull requests...</div>
+            <div className="retro-terminal-prs-message">
+              Fetching recent pull requests...
+            </div>
           ) : null}
           {state.status === 'error' ? (
             <div className="retro-terminal-prs-message">
               Could not load the feed. Use the external link above.
             </div>
           ) : null}
-          {state.status === 'ready' ? state.prs.map((pr) => (
-            <a
-              key={pr.url}
-              className="retro-terminal-prs-row"
-              href={pr.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="retro-terminal-prs-number">{pr.number}</span>
-              <span className="retro-terminal-prs-copy">
-                <span className="retro-terminal-prs-title">{pr.title}</span>
-                <span className="retro-terminal-prs-repo">{pr.repo} · {formatIsoDate(pr.publishedAt)}</span>
-              </span>
-            </a>
-          )) : null}
+          {state.status === 'ready'
+            ? state.prs.map((pr) => (
+                <a
+                  key={pr.url}
+                  className="retro-terminal-prs-row"
+                  href={pr.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="retro-terminal-prs-number">{pr.number}</span>
+                  <span className="retro-terminal-prs-copy">
+                    <span className="retro-terminal-prs-title">{pr.title}</span>
+                    <span className="retro-terminal-prs-repo">
+                      {pr.repo} · {formatIsoDate(pr.publishedAt)}
+                    </span>
+                  </span>
+                </a>
+              ))
+            : null}
         </div>
       </div>
     </TermWindow>

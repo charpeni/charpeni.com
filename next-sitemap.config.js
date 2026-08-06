@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/filename-case */
 const fs = require('node:fs');
 const path = require('node:path');
 const matter = require('gray-matter');

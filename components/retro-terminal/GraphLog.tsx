@@ -5,7 +5,12 @@ import type { BranchTag, RowGraph } from '@/utils/graph';
 import type { PostFrontMatter } from '@/utils/mdx';
 
 import { formatIsoDate } from './format';
-import { GRAPH_LANE_GAP, GRAPH_MAIN_X, GRAPH_ROW_H, graphWidth } from './geometry';
+import {
+  GRAPH_LANE_GAP,
+  GRAPH_MAIN_X,
+  GRAPH_ROW_H,
+  graphWidth,
+} from './geometry';
 import { AGENT_INTRO_SEEN_KEY } from './ids';
 import { BRANCH_COLORS, branchOf } from './postUtils';
 
@@ -26,7 +31,13 @@ function markAgentIntroSeen() {
 }
 
 function prefersReducedMotion(): boolean {
-  return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  return (
+    globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  );
+}
+
+function laneX(index: number): number {
+  return GRAPH_MAIN_X + GRAPH_LANE_GAP * (index + 1);
 }
 
 function GraphRail({
@@ -40,8 +51,6 @@ function GraphRail({
   const mid = height / 2;
   const mainColor = '#7a7160';
   const width = graphWidth(activeBranches.length);
-  const laneX = (i: number) => GRAPH_MAIN_X + GRAPH_LANE_GAP * (i + 1);
-
   return (
     <svg
       className="retro-terminal-graph"
@@ -52,13 +61,32 @@ function GraphRail({
       focusable="false"
     >
       {row.mainTopLine ? (
-        <line className="retro-terminal-graph-line" x1={GRAPH_MAIN_X} y1={0} x2={GRAPH_MAIN_X} y2={mid} stroke={mainColor} />
+        <line
+          className="retro-terminal-graph-line"
+          x1={GRAPH_MAIN_X}
+          y1={0}
+          x2={GRAPH_MAIN_X}
+          y2={mid}
+          stroke={mainColor}
+        />
       ) : null}
       {row.mainBottomLine ? (
-        <line className="retro-terminal-graph-line" x1={GRAPH_MAIN_X} y1={mid} x2={GRAPH_MAIN_X} y2={height} stroke={mainColor} />
+        <line
+          className="retro-terminal-graph-line"
+          x1={GRAPH_MAIN_X}
+          y1={mid}
+          x2={GRAPH_MAIN_X}
+          y2={height}
+          stroke={mainColor}
+        />
       ) : null}
       {row.mainOrb ? (
-        <circle className="retro-terminal-graph-orb retro-terminal-graph-orb--main" cx={GRAPH_MAIN_X} cy={mid} r={4} />
+        <circle
+          className="retro-terminal-graph-orb retro-terminal-graph-orb--main"
+          cx={GRAPH_MAIN_X}
+          cy={mid}
+          r={4}
+        />
       ) : null}
       {activeBranches.map((branch, i) => {
         const cell = row.lanes[i];
@@ -67,10 +95,24 @@ function GraphRail({
         return (
           <g key={branch}>
             {cell.topLine ? (
-              <line className="retro-terminal-graph-line" x1={x} y1={0} x2={x} y2={mid} stroke={color} />
+              <line
+                className="retro-terminal-graph-line"
+                x1={x}
+                y1={0}
+                x2={x}
+                y2={mid}
+                stroke={color}
+              />
             ) : null}
             {cell.bottomLine ? (
-              <line className="retro-terminal-graph-line" x1={x} y1={mid} x2={x} y2={height} stroke={color} />
+              <line
+                className="retro-terminal-graph-line"
+                x1={x}
+                y1={mid}
+                x2={x}
+                y2={height}
+                stroke={color}
+              />
             ) : null}
             {cell.topSprout ? (
               <path
@@ -87,7 +129,13 @@ function GraphRail({
               />
             ) : null}
             {cell.laneOrb ? (
-              <circle className="retro-terminal-graph-orb" cx={x} cy={mid} r={4} fill={color} />
+              <circle
+                className="retro-terminal-graph-orb"
+                cx={x}
+                cy={mid}
+                r={4}
+                fill={color}
+              />
             ) : null}
           </g>
         );
@@ -114,8 +162,12 @@ export function GraphLog({
   const graph = useMemo(() => computeGraph(posts, posts), [posts]);
   const { activeBranches, rows } = graph;
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [shouldPlayIntro] = useState(() => !isMobile && !hasSeenAgentIntro() && !prefersReducedMotion());
-  const [agentPhase, setAgentPhase] = useState<'thinking' | 'indexing' | 'tool' | 'done'>(shouldPlayIntro ? 'thinking' : 'done');
+  const [shouldPlayIntro] = useState(
+    () => !isMobile && !hasSeenAgentIntro() && !prefersReducedMotion(),
+  );
+  const [agentPhase, setAgentPhase] = useState<
+    'thinking' | 'indexing' | 'tool' | 'done'
+  >(shouldPlayIntro ? 'thinking' : 'done');
   const visibleAgentPhase = isMobile ? 'done' : agentPhase;
   const introTimersRef = useRef<ReturnType<typeof globalThis.setTimeout>[]>([]);
 
@@ -150,9 +202,19 @@ export function GraphLog({
     if (visibleAgentPhase === 'done') return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Meta' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift') return;
+      if (
+        e.key === 'Meta' ||
+        e.key === 'Control' ||
+        e.key === 'Alt' ||
+        e.key === 'Shift'
+      )
+        return;
       const target = e.target;
-      if (e.key === 'Enter' && target instanceof Element && target.closest('[data-retro-window-id="term"]')) {
+      if (
+        e.key === 'Enter' &&
+        target instanceof Element &&
+        target.closest('[data-retro-window-id="term"]')
+      ) {
         e.stopPropagation();
       }
       completeIntro();
@@ -180,27 +242,36 @@ export function GraphLog({
                 ? 'Indexing posts, dates, and branch tags'
                 : 'Archive mapped to commit log'}
           </span>
-          {visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
+          {visibleAgentPhase === 'thinking' ||
+          visibleAgentPhase === 'indexing' ? (
+            <span className="retro-terminal-agent-dots" aria-hidden="true" />
+          ) : null}
         </div>
-        <div className={`retro-terminal-agent-tool ${visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? 'retro-terminal-agent-tool--pending' : ''}`}>
-          <div className="retro-terminal-agent-tool-name">tool: archive.list_posts --format=git-log</div>
+        <div
+          className={`retro-terminal-agent-tool ${visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? 'retro-terminal-agent-tool--pending' : ''}`}
+        >
+          <div className="retro-terminal-agent-tool-name">
+            tool: archive.list_posts --format=git-log
+          </div>
           <div className="retro-terminal-prompt-cmd">
-            {visibleAgentPhase === 'thinking' || visibleAgentPhase === 'indexing' ? 'queued' : '$ git log --graph --oneline --all --date=short'}
-            {visibleAgentPhase === 'tool' ? <span className="retro-terminal-agent-dots" aria-hidden="true" /> : null}
+            {visibleAgentPhase === 'thinking' ||
+            visibleAgentPhase === 'indexing'
+              ? 'queued'
+              : '$ git log --graph --oneline --all --date=short'}
+            {visibleAgentPhase === 'tool' ? (
+              <span className="retro-terminal-agent-dots" aria-hidden="true" />
+            ) : null}
           </div>
         </div>
       </div>
       {visibleAgentPhase === 'done' ? (
         <>
           <div className="retro-terminal-prompt-meta">
-            connected to charpeni.com · {posts.length} commits · {BRANCH_TAGS.length} branches · HEAD at{' '}
+            connected to charpeni.com · {posts.length} commits ·{' '}
+            {BRANCH_TAGS.length} branches · HEAD at{' '}
             {posts[0] ? shortHash(posts[0].slug) : '—'}
           </div>
-          <div
-            ref={contentRef}
-            className="retro-terminal-content"
-            tabIndex={0}
-          >
+          <div ref={contentRef} className="retro-terminal-content" tabIndex={0}>
             <div className="retro-terminal-log">
               {posts.map((post, i) => {
                 const row = rows[i];
@@ -219,9 +290,13 @@ export function GraphLog({
                     onClick={() => (isMobile ? onOpen(i) : onSelect(i))}
                     onDoubleClick={() => onOpen(i)}
                   >
-                    {isMobile ? null : <GraphRail row={row} activeBranches={activeBranches} />}
+                    {isMobile ? null : (
+                      <GraphRail row={row} activeBranches={activeBranches} />
+                    )}
                     <span className="retro-terminal-hash">{hash}</span>
-                    <span className="retro-terminal-date">{formatIsoDate(post.publishedAt)}</span>
+                    <span className="retro-terminal-date">
+                      {formatIsoDate(post.publishedAt)}
+                    </span>
                     {branch ? (
                       <span
                         className="retro-terminal-refs"
@@ -258,7 +333,9 @@ export function GraphLog({
                 : 'Running archive.list_posts'}
             <span className="retro-terminal-agent-dots" aria-hidden="true" />
           </span>
-          <span className="retro-terminal-loading-skip" aria-hidden="true">click or press any key to skip</span>
+          <span className="retro-terminal-loading-skip" aria-hidden="true">
+            click or press any key to skip
+          </span>
         </div>
       )}
     </>

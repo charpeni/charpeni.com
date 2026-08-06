@@ -10,9 +10,9 @@ type BlogPageData = {
 };
 
 function parseBlogPageData(filePath: string): BlogPageData {
-  const page = JSON.parse(fs.readFileSync(filePath, 'utf8')) as
-    | Partial<BlogPageData>
-    | null;
+  const page = JSON.parse(
+    fs.readFileSync(filePath, 'utf8'),
+  ) as Partial<BlogPageData> | null;
 
   if (typeof page?.pageProps?.mdxSource?.compiledSource !== 'string') {
     throw new TypeError(`Missing compiled MDX source in ${filePath}`);

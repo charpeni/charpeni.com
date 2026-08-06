@@ -27,7 +27,9 @@ function TerminalImage({ alt, width, height, style, ...props }: ImageProps) {
   const h = dimension(height);
 
   if (!w || !h) {
-    return <Image alt={alt} width={width} height={height} style={style} {...props} />;
+    return (
+      <Image alt={alt} width={width} height={height} style={style} {...props} />
+    );
   }
 
   const frameStyle: CSSProperties = {
@@ -75,8 +77,18 @@ function ShowBody({
   const otherTags = post.tags.filter((t) => !isBranch(t));
 
   const onContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    )
+      return;
+    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>(
+      'a[href]',
+    );
     if (!anchor) return;
 
     const url = new URL(anchor.href, globalThis.location.href);
@@ -95,10 +107,12 @@ function ShowBody({
         <div className="retro-terminal-show-meta">
           commit {hash}
           {'\n'}Author: Nicolas Charpentier &lt;
-          <a href="mailto:blog@nicolascharpentier.com">blog@nicolascharpentier.com</a>
+          <a href="mailto:blog@nicolascharpentier.com">
+            blog@nicolascharpentier.com
+          </a>
           &gt;
-          {'\n'}Date:   {date}
-          {'\n'}Size:   {post.readingTime.text}
+          {'\n'}Date: {date}
+          {'\n'}Size: {post.readingTime.text}
           {branch ? `\nrefs:   refs/heads/${branch}` : ''}
           {otherTags.length > 0 ? `\ntopic:  ${otherTags.join(', ')}` : ''}
         </div>
@@ -109,7 +123,13 @@ function ShowBody({
             onClick={onCopy}
             disabled={copyStatus === 'copying'}
           >
-            {copyStatus === 'copied' ? 'Copied' : copyStatus === 'error' ? 'Retry' : copyStatus === 'copying' ? 'Copying' : 'Copy'}
+            {copyStatus === 'copied'
+              ? 'Copied'
+              : copyStatus === 'error'
+                ? 'Retry'
+                : copyStatus === 'copying'
+                  ? 'Copying'
+                  : 'Copy'}
           </button>
         ) : null}
       </div>
@@ -130,7 +150,10 @@ function ShowBody({
       {mdxState?.status === 'ready' ? (
         <>
           <div className="prose retro-terminal-prose">
-            <MDXRemote {...mdxState.source} components={TERMINAL_MDX_COMPONENTS} />
+            <MDXRemote
+              {...mdxState.source}
+              components={TERMINAL_MDX_COMPONENTS}
+            />
           </div>
           <div className="retro-terminal-comments">
             <div className="retro-terminal-comments-title">comments</div>
@@ -140,7 +163,9 @@ function ShowBody({
       ) : null}
       {mdxState ? null : (
         <div className="retro-terminal-loading-post" aria-busy="true">
-          <div className="retro-terminal-show-meta">loading object from remote archive...</div>
+          <div className="retro-terminal-show-meta">
+            loading object from remote archive...
+          </div>
           <div className="retro-terminal-skeleton-line retro-terminal-skeleton-line--wide" />
           <div className="retro-terminal-skeleton-line" />
           <div className="retro-terminal-skeleton-line retro-terminal-skeleton-line--short" />
@@ -150,7 +175,9 @@ function ShowBody({
         </div>
       )}
       {mdxState?.status === 'error' ? (
-        <div className="retro-terminal-show-meta">error: could not load post body</div>
+        <div className="retro-terminal-show-meta">
+          error: could not load post body
+        </div>
       ) : null}
     </div>
   );
@@ -185,9 +212,14 @@ export function ShowTermWindow({
   const branch = branchOf(post);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== 'c' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if (e.key !== 'c' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)
+      return;
     const t = e.target as HTMLElement | null;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if (
+      t &&
+      (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+    )
+      return;
     e.preventDefault();
     void copy();
   };

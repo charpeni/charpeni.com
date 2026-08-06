@@ -80,7 +80,7 @@ export default function Home({
     } else if (currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [currentPage, totalPages]);
 
   return (

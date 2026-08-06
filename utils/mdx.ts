@@ -183,15 +183,13 @@ function transformerTwoslashCopySource() {
     {
       name: 'attach-twoslash-copy-source',
       enforce: 'post' as const,
-      root(
-        node: {
-          children: Array<{
-            type: string;
-            tagName?: string;
-            children?: unknown[];
-          }>;
-        },
-      ) {
+      root(node: {
+        children: Array<{
+          type: string;
+          tagName?: string;
+          children?: unknown[];
+        }>;
+      }) {
         const pre = node.children.find(
           (child) => child.type === 'element' && child.tagName === 'pre',
         );
@@ -220,7 +218,12 @@ function normalizeInlineTwoslashQueries() {
 
       return code.replaceAll(
         /^(\s*(?:const|let|var|type|function|class|enum)\s+([\w$]+).*?)\s+\/\/\s*\^\?(.*)$/gm,
-        (line, statement: string, identifier: string, documentedType: string) => {
+        (
+          line,
+          statement: string,
+          identifier: string,
+          documentedType: string,
+        ) => {
           const identifierOffset = statement.indexOf(identifier);
           if (identifierOffset < 2) return line;
 

@@ -20,6 +20,8 @@ jobs:
             command: pnpm lint
           - task: test
             command: pnpm test
+          - task: format
+            command: pnpm format:check
           - task: type-check
             command: pnpm type-check
           - task: build

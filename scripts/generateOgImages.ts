@@ -90,9 +90,15 @@ async function buildSvg(title: string): Promise<string> {
 
   // Title wrapping. We pick a font size based on overall length so short,
   // punchy titles get a bigger treatment and long ones stay readable.
-  const fontSize = title.length > 60 ? 64 : (title.length > 40 ? 76 : 88);
-  const maxCharsPerLine =
-    title.length > 60 ? 26 : (title.length > 40 ? 22 : 18);
+  let fontSize = 88;
+  let maxCharsPerLine = 18;
+  if (title.length > 60) {
+    fontSize = 64;
+    maxCharsPerLine = 26;
+  } else if (title.length > 40) {
+    fontSize = 76;
+    maxCharsPerLine = 22;
+  }
   const lines = wrapTitle(title, maxCharsPerLine).slice(0, 4);
   const lineHeight = Math.round(fontSize * 1.15);
 

@@ -175,9 +175,7 @@ export default function BlogPostCard({
                 stroke="currentColor"
                 strokeWidth={1}
                 vectorEffect="non-scaling-stroke"
-                className={
-                  laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined
-                }
+                className={laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined}
               />
             );
           })}
@@ -193,9 +191,7 @@ export default function BlogPostCard({
                 strokeWidth={1}
                 fill="none"
                 vectorEffect="non-scaling-stroke"
-                className={
-                  laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined
-                }
+                className={laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined}
               />
             );
           })}
@@ -217,9 +213,7 @@ export default function BlogPostCard({
                 strokeWidth={1}
                 fill="none"
                 vectorEffect="non-scaling-stroke"
-                className={
-                  laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined
-                }
+                className={laneHighlighted(idx) ? HIGHLIGHT_STROKE : undefined}
               />
             );
           })}

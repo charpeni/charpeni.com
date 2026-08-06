@@ -1,7 +1,7 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+
 import fs from 'node:fs';
 import path from 'node:path';
-
-import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { absolutizeMarkdownLinks } from '@/utils/absolutizeMarkdownLinks';
 

@@ -2,7 +2,12 @@ import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 
 export type WinGeom = { x: number; y: number; w: number; h: number };
 export type WinState = WinGeom & { id: string; z: number };
-export type OpenWin = { id: string; geom: WinGeom; z: number; focused: boolean };
+export type OpenWin = {
+  id: string;
+  geom: WinGeom;
+  z: number;
+  focused: boolean;
+};
 
 export type MdxState =
   | { status: 'ready'; source: MDXRemoteSerializeResult }

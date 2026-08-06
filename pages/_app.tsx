@@ -8,7 +8,6 @@ import 'react-social-icons/linkedin';
 import 'react-social-icons/mailto';
 import 'react-social-icons/rss';
 import 'react-social-icons/x';
-
 import type { AppProps } from 'next/app';
 import dynamic from 'next/dynamic';
 import Script from 'next/script';
@@ -32,7 +31,10 @@ function ThemeModeProvider({ children }: { children: React.ReactNode }) {
   const { isRetro } = useRetroMode();
 
   return (
-    <ThemeProvider attribute="class" forcedTheme={isRetro ? 'light' : undefined}>
+    <ThemeProvider
+      attribute="class"
+      forcedTheme={isRetro ? 'light' : undefined}
+    >
       {children}
     </ThemeProvider>
   );
@@ -52,7 +54,9 @@ function RetroModeGate({
   const showTerminal = isRetro && posts;
 
   if (showTerminal) {
-    return <RetroTerminal posts={posts} showNotFound={retroProps.retroNotFound} />;
+    return (
+      <RetroTerminal posts={posts} showNotFound={retroProps.retroNotFound} />
+    );
   }
   return <Component {...pageProps} />;
 }

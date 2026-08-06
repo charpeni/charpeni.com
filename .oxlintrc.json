@@ -1,0 +1,85 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "react",
+    "nextjs",
+    "import",
+    "jsx-a11y",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "env": {
+    "browser": true,
+    "builtin": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "public/**",
+    "next.config.js",
+    "next-sitemap.config.js",
+    "postcss.config.js"
+  ],
+  "options": {
+    "reportUnusedDisableDirectives": "error"
+  },
+  "rules": {
+    "import/no-anonymous-default-export": "warn",
+    "import/no-unassigned-import": "off",
+    "jsx-a11y/alt-text": [
+      "warn",
+      {
+        "elements": ["img"],
+        "img": ["Image"]
+      }
+    ],
+    "jsx-a11y/anchor-has-content": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "jsx-a11y/no-noninteractive-tabindex": "off",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "no-await-in-loop": "off",
+    "no-underscore-dangle": "off",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "react/no-array-index-key": "off",
+    "react/react-compiler": "error",
+    "react/react-in-jsx-scope": "off",
+    "typescript/consistent-type-imports": "error",
+    "unicorn/no-document-cookie": "error",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "camelCase"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{jsx,tsx}"],
+      "rules": {
+        "no-console": "error",
+        "unicorn/filename-case": "off",
+        "unicorn/no-null": "off",
+        "unicorn/no-nested-ternary": "off"
+      }
+    }
+  ]
+}

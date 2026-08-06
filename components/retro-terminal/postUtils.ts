@@ -10,4 +10,5 @@ export const BRANCH_COLORS: Record<string, string> = {
 };
 
 export const isBranch = (tag: string) => isBranchTag(tag);
-export const branchOf = (post: { tags: string[] }) => post.tags.find((t) => isBranch(t));
+export const branchOf = (post: { tags: string[] }) =>
+  post.tags.find((t) => isBranch(t));

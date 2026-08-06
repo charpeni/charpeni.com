@@ -44,8 +44,8 @@ export function NotFoundWindow({
             $ archive-agent resolve {path}
           </p>
           <p>
-            <strong>fatal:</strong> pathspec &apos;{path}&apos; did not match any
-            file known to the archive.
+            <strong>fatal:</strong> pathspec &apos;{path}&apos; did not match
+            any file known to the archive.
           </p>
           <p>The object may have moved, or it never existed.</p>
           <Link href="/" className="retro-terminal-not-found-link">
