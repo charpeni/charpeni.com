@@ -250,13 +250,17 @@ export function getPosts() {
  * — e.g. the `Promise.all` fan-out in `getAllPostsFrontMatter()` — share one
  * compilation rather than racing to start their own.
  *
- * This is safe because post content is immutable for the lifetime of a build
- * process (SSG runs to completion, then exits). The trade-off is that a long
- * lived `next dev` process won't pick up edits to a post body until restarted.
+ * This is safe during production builds because post content is immutable for
+ * the lifetime of the process (SSG runs to completion, then exits). Development
+ * bypasses the cache so edits to a post body are recompiled for live reload.
  */
 const postCache = new Map<string, Promise<Post>>();
 
 export function getPostBySlug(slug: string): Promise<Post> {
+  if (process.env.NODE_ENV === 'development') {
+    return loadPostBySlug(slug);
+  }
+
   const cached = postCache.get(slug);
   if (cached) {
     return cached;
