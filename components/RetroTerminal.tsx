@@ -619,7 +619,7 @@ export default function RetroTerminal({
         <DesktopProfile
           onOpenPrs={openPrs}
           mobileExpanded={mobileProfileOpen}
-          onToggleMobile={() => setMobileProfileOpen((open) => !open)}
+          onToggleMobile={() => setMobileProfileOpen((isOpen) => !isOpen)}
         />
         <DesktopFooter onOpenLegal={openLegal} />
 
