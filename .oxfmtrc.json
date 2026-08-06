@@ -25,5 +25,5 @@
       "unknown"
     ]
   },
-  "ignorePatterns": [".next", ".vercel", "pnpm-lock.yaml"]
+  "ignorePatterns": [".next", ".vercel", "next-env.d.ts", "pnpm-lock.yaml"]
 }
