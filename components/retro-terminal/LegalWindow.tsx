@@ -4,6 +4,19 @@ import { TermWindow } from './TermWindow';
 
 import type { LegalWindowVariant, OpenWin } from './types';
 
+type Props = {
+  win: OpenWin;
+  active: boolean;
+  variant: LegalWindowVariant;
+  onOpenLegal: (variant: LegalWindowVariant) => void;
+  onClose: () => void;
+  onActivate: () => void;
+  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
+  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
+  onTitleDoubleClick?: () => void;
+  compact?: boolean;
+};
+
 export function LegalWindow({
   win,
   active,
@@ -15,18 +28,7 @@ export function LegalWindow({
   resizeProps,
   onTitleDoubleClick,
   compact,
-}: {
-  win: OpenWin;
-  active: boolean;
-  variant: LegalWindowVariant;
-  onOpenLegal: (variant: LegalWindowVariant) => void;
-  onClose: () => void;
-  onActivate: () => void;
-  dragProps: { onPointerDown: (e: React.PointerEvent) => void };
-  resizeProps: { onPointerDown: (e: React.PointerEvent) => void };
-  onTitleDoubleClick?: () => void;
-  compact?: boolean;
-}) {
+}: Props) {
   const onContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
       e.defaultPrevented ||

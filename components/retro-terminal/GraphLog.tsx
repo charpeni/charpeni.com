@@ -40,13 +40,12 @@ function laneX(index: number): number {
   return GRAPH_MAIN_X + GRAPH_LANE_GAP * (index + 1);
 }
 
-function GraphRail({
-  row,
-  activeBranches,
-}: {
+type GraphRailProps = {
   row: RowGraph;
   activeBranches: BranchTag[];
-}) {
+};
+
+function GraphRail({ row, activeBranches }: GraphRailProps) {
   const height = GRAPH_ROW_H;
   const mid = height / 2;
   const mainColor = '#7a7160';
@@ -144,6 +143,15 @@ function GraphRail({
   );
 }
 
+type GraphLogProps = {
+  posts: PostFrontMatter[];
+  cursor: number;
+  onSelect: (i: number) => void;
+  onOpen: (i: number) => void;
+  isMobile: boolean;
+  contentRef: React.RefObject<HTMLDivElement | null>;
+};
+
 export function GraphLog({
   posts,
   cursor,
@@ -151,14 +159,7 @@ export function GraphLog({
   onOpen,
   isMobile,
   contentRef,
-}: {
-  posts: PostFrontMatter[];
-  cursor: number;
-  onSelect: (i: number) => void;
-  onOpen: (i: number) => void;
-  isMobile: boolean;
-  contentRef: React.RefObject<HTMLDivElement | null>;
-}) {
+}: GraphLogProps) {
   const graph = useMemo(() => computeGraph(posts, posts), [posts]);
   const { activeBranches, rows } = graph;
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([]);

@@ -44,7 +44,11 @@ function writeCookie(name: string, value: boolean) {
   document.cookie = `${name}=${value ? '1' : '0'}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
 }
 
-export function RetroModeProvider({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode;
+};
+
+export function RetroModeProvider({ children }: Props) {
   const [isRetro, setIsRetro] = useState(false);
 
   useIsomorphicLayoutEffect(() => {

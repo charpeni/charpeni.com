@@ -4,6 +4,18 @@ import { TermWindow } from './TermWindow';
 
 import type { OpenWin } from './types';
 
+type Props = {
+  win: OpenWin;
+  active: boolean;
+  path: string;
+  onClose: () => void;
+  onActivate: () => void;
+  dragProps: { onPointerDown: (event: React.PointerEvent) => void };
+  resizeProps: { onPointerDown: (event: React.PointerEvent) => void };
+  onTitleDoubleClick: () => void;
+  compact: boolean;
+};
+
 export function NotFoundWindow({
   win,
   active,
@@ -14,17 +26,7 @@ export function NotFoundWindow({
   resizeProps,
   onTitleDoubleClick,
   compact,
-}: {
-  win: OpenWin;
-  active: boolean;
-  path: string;
-  onClose: () => void;
-  onActivate: () => void;
-  dragProps: { onPointerDown: (event: React.PointerEvent) => void };
-  resizeProps: { onPointerDown: (event: React.PointerEvent) => void };
-  onTitleDoubleClick: () => void;
-  compact: boolean;
-}) {
+}: Props) {
   return (
     <TermWindow
       win={win}

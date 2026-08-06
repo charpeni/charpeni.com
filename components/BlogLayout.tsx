@@ -12,7 +12,11 @@ import { openWindow } from '@/utils/openWindow';
 
 import { Comments } from './Comments';
 
-function ShareSocialIcon({ network }: { network: string }) {
+type ShareSocialIconProps = {
+  network: string;
+};
+
+function ShareSocialIcon({ network }: ShareSocialIconProps) {
   const socialIconWidth = 40;
   const socialIconStyle = {
     width: socialIconWidth,
@@ -31,13 +35,12 @@ function ShareSocialIcon({ network }: { network: string }) {
 const editUrl = (slug: string) =>
   `https://github.com/charpeni/charpeni.com/edit/main/posts/${slug}.mdx`;
 
-export default function BlogLayout({
-  children,
-  frontMatter,
-}: {
+type BlogLayoutProps = {
   children: ReactNode;
   frontMatter: PostFrontMatter;
-}) {
+};
+
+export default function BlogLayout({ children, frontMatter }: BlogLayoutProps) {
   const postUrl = `https://charpeni.com/blog/${frontMatter.slug}`;
   // Posts may omit `image`. The in-page banner block is rendered only when
   // `image` is set. For social previews we prefer, in order:
