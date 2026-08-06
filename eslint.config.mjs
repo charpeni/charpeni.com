@@ -1,16 +1,13 @@
 import pluginJs from '@eslint/js';
-import next from 'eslint-config-next';
+import typescriptEslintPlugin from '@typescript-eslint/eslint-plugin';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
-import nextTypescript from 'eslint-config-next/typescript';
 import pluginReact from 'eslint-plugin-react';
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
 
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
   ...nextCoreWebVitals,
-  ...nextTypescript,
   {
     ignores: [
       '.next/**',
@@ -23,10 +20,8 @@ const config = [
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   eslintPluginUnicorn.configs['recommended'],
-  ...next,
   {
     rules: {
       'import/order': [
@@ -64,14 +59,6 @@ const config = [
       ],
       'react/react-in-jsx-scope': 'off',
       'tailwindcss/no-custom-classname': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/filename-case': [
         'error',
@@ -92,9 +79,37 @@ const config = [
     },
   },
   {
+    files: ['**/*.{mts,cts}'],
+    plugins: {
+      '@typescript-eslint': typescriptEslintPlugin,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+    },
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
     },
   },
 ];
