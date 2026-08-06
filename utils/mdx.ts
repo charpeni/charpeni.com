@@ -287,7 +287,15 @@ async function loadPostBySlug(slug: string): Promise<Post> {
   // matter, we skip the plaiceholder pass entirely and let the layout fall
   // back to the sitewide default OG image for social previews.
   const blurDataURL = await loadBlurDataURL(data.image);
-  const mdxSource = await serialize(content, {
+  const mdxSource = await serializeMdxContent(content);
+
+  const frontMatter = buildFrontMatter(slug, data, content, blurDataURL);
+
+  return { mdxSource, frontMatter };
+}
+
+export function serializeMdxContent(content: string) {
+  return serialize(content, {
     blockJS: false,
     mdxOptions: {
       remarkPlugins: [],
@@ -333,10 +341,6 @@ async function loadPostBySlug(slug: string): Promise<Post> {
       ],
     },
   });
-
-  const frontMatter = buildFrontMatter(slug, data, content, blurDataURL);
-
-  return { mdxSource, frontMatter };
 }
 
 /**
