@@ -14,7 +14,7 @@ export default function Header() {
   const { isRetro, toggleRetro } = useRetroMode();
 
   // After mounting, we have access to the theme
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // oxlint-disable-next-line react/react-compiler -- Theme state is only available after hydration.
   useEffect(() => setMounted(true), []);
 
   return (

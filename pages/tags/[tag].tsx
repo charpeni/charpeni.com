@@ -112,10 +112,7 @@ export default function TagPage({
                     </p>
                   </Link>
                   {post.tags.length > 0 && (
-                    <ul
-                      className="mt-3 flex flex-wrap gap-2"
-                      aria-label="Tags"
-                    >
+                    <ul className="mt-3 flex flex-wrap gap-2" aria-label="Tags">
                       {post.tags.map((t) => (
                         <li key={t}>
                           <Link

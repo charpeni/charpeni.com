@@ -67,8 +67,21 @@ We need to widen the type of `TOP_PICKS` to be able to check whether a selection
 First we can try out widening `TOP_PICKS` by casting it as `ReadonlyArray<string>` and you can see that it works! (or kind of)
 
 ```typescript twoslash
-type AllFruits = 'Apple' | 'Banana' | 'Orange' | 'Grape' | 'Watermelon' | 'Pineapple' | 'Mango' | 'Strawberry' | 'Peach' | 'Pear';
-const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
+type AllFruits =
+  | 'Apple'
+  | 'Banana'
+  | 'Orange'
+  | 'Grape'
+  | 'Watermelon'
+  | 'Pineapple'
+  | 'Mango'
+  | 'Strawberry'
+  | 'Peach'
+  | 'Pear';
+const TOP_PICKS = [
+  'Apple',
+  'Peach',
+] as const satisfies ReadonlyArray<AllFruits>;
 // ---cut---
 function scenario(selection: AllFruits) {
   if ((TOP_PICKS as ReadonlyArray<string>).includes(selection)) {
@@ -86,8 +99,21 @@ But... it feels like cheating a little bit when we know that it can't be a strin
 We could be a little bit more precise here, rather than casting it as `string`, we could widen the type of `TOP_PICKS` to expand it to the full domain of its supset, so it does match with `selection` type.
 
 ```typescript twoslash
-type AllFruits = 'Apple' | 'Banana' | 'Orange' | 'Grape' | 'Watermelon' | 'Pineapple' | 'Mango' | 'Strawberry' | 'Peach' | 'Pear';
-const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
+type AllFruits =
+  | 'Apple'
+  | 'Banana'
+  | 'Orange'
+  | 'Grape'
+  | 'Watermelon'
+  | 'Pineapple'
+  | 'Mango'
+  | 'Strawberry'
+  | 'Peach'
+  | 'Pear';
+const TOP_PICKS = [
+  'Apple',
+  'Peach',
+] as const satisfies ReadonlyArray<AllFruits>;
 // ---cut---
 function scenario(selection: AllFruits) {
   if ((TOP_PICKS as ReadonlyArray<AllFruits>).includes(selection)) {
@@ -111,8 +137,21 @@ Meaning that, within the if/else condition, we know that if `selection` was incl
 Let's extract the exact same logic we used previously, but this time, we'll define it in its own function as a [type guard](https://www.typescriptlang.org/docs/handbook/2/narrowing.html) combined with a [type predicate](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)!
 
 ```typescript twoslash
-type AllFruits = 'Apple' | 'Banana' | 'Orange' | 'Grape' | 'Watermelon' | 'Pineapple' | 'Mango' | 'Strawberry' | 'Peach' | 'Pear';
-const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
+type AllFruits =
+  | 'Apple'
+  | 'Banana'
+  | 'Orange'
+  | 'Grape'
+  | 'Watermelon'
+  | 'Pineapple'
+  | 'Mango'
+  | 'Strawberry'
+  | 'Peach'
+  | 'Pear';
+const TOP_PICKS = [
+  'Apple',
+  'Peach',
+] as const satisfies ReadonlyArray<AllFruits>;
 // ---cut---
 function isTopPick(
   selection: AllFruits,
@@ -134,8 +173,21 @@ The beauty of this can be observed here, we were able to check if a value (super
 If `isTopPick` returns `true`, the `selection` type is narrowed down to `"Apple" | "Peach"`.
 
 ```typescript twoslash
-type AllFruits = 'Apple' | 'Banana' | 'Orange' | 'Grape' | 'Watermelon' | 'Pineapple' | 'Mango' | 'Strawberry' | 'Peach' | 'Pear';
-const TOP_PICKS = ['Apple', 'Peach'] as const satisfies ReadonlyArray<AllFruits>;
+type AllFruits =
+  | 'Apple'
+  | 'Banana'
+  | 'Orange'
+  | 'Grape'
+  | 'Watermelon'
+  | 'Pineapple'
+  | 'Mango'
+  | 'Strawberry'
+  | 'Peach'
+  | 'Pear';
+const TOP_PICKS = [
+  'Apple',
+  'Peach',
+] as const satisfies ReadonlyArray<AllFruits>;
 function isTopPick(
   selection: AllFruits,
 ): selection is (typeof TOP_PICKS)[number] {

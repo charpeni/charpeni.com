@@ -35,7 +35,17 @@ export function TermWindow({
       className={`retro-terminal-window ${active ? 'retro-terminal-window--active' : ''}`}
       data-retro-window-id={win.id}
       ref={windowRef}
-      style={compact ? { zIndex: 100 + win.z } : { left: geom.x, top: geom.y, width: geom.w, height: geom.h, zIndex: 100 + win.z }}
+      style={
+        compact
+          ? { zIndex: 100 + win.z }
+          : {
+              left: geom.x,
+              top: geom.y,
+              width: geom.w,
+              height: geom.h,
+              zIndex: 100 + win.z,
+            }
+      }
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -74,7 +84,9 @@ export function TermWindow({
         </button>
       </div>
       {children}
-      <div className="retro-terminal-resize" {...resizeProps}>◢</div>
+      <div className="retro-terminal-resize" {...resizeProps}>
+        ◢
+      </div>
     </div>
   );
 }

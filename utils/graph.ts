@@ -225,7 +225,8 @@ export function computeGraph(
       //     up to);
       //   - bottom half is symmetric.
       const inRange =
-        (info.extendsAbove || idx >= top) && (info.extendsBelow || idx <= bottom);
+        (info.extendsAbove || idx >= top) &&
+        (info.extendsBelow || idx <= bottom);
       cell.topLine = inRange && (info.extendsAbove || idx > top);
       cell.bottomLine = inRange && (info.extendsBelow || idx < bottom);
 

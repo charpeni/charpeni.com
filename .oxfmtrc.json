@@ -1,0 +1,29 @@
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "sortPackageJson": false,
+  "sortImports": {
+    "customGroups": [
+      {
+        "groupName": "react-and-next",
+        "elementNamePattern": ["react", "next", "next/**"]
+      },
+      {
+        "groupName": "internal-aliases",
+        "elementNamePattern": ["@/**"]
+      }
+    ],
+    "groups": [
+      "react-and-next",
+      "value-builtin",
+      "value-external",
+      "internal-aliases",
+      "value-internal",
+      ["value-parent", "value-sibling", "value-index"],
+      "type-import",
+      "unknown"
+    ]
+  },
+  "ignorePatterns": [".next", ".vercel", "pnpm-lock.yaml"]
+}

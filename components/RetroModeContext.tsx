@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 const COOKIE_NAME = 'retro-os';
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -17,7 +25,8 @@ const RetroModeContext = createContext<RetroModeContextValue>({
   setRetro: () => {},
 });
 
-const useIsomorphicLayoutEffect = globalThis.window === undefined ? useEffect : useLayoutEffect;
+const useIsomorphicLayoutEffect =
+  globalThis.window === undefined ? useEffect : useLayoutEffect;
 
 export function useRetroMode() {
   return useContext(RetroModeContext);
@@ -25,15 +34,13 @@ export function useRetroMode() {
 
 function readCookie(name: string): boolean {
   if (typeof document === 'undefined') return false;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${name}=([^;]*)`),
-  );
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? match[1] === '1' : false;
 }
 
 function writeCookie(name: string, value: boolean) {
   if (typeof document === 'undefined') return;
-  // eslint-disable-next-line unicorn/no-document-cookie
+  // oxlint-disable-next-line unicorn/no-document-cookie
   document.cookie = `${name}=${value ? '1' : '0'}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
 }
 
@@ -49,7 +56,10 @@ export function RetroModeProvider({ children }: { children: React.ReactNode }) {
       writeCookie(COOKIE_NAME, true);
       params.delete('retro');
       const search = params.toString();
-      const cleanUrl = globalThis.location.pathname + (search ? `?${search}` : '') + globalThis.location.hash;
+      const cleanUrl =
+        globalThis.location.pathname +
+        (search ? `?${search}` : '') +
+        globalThis.location.hash;
       globalThis.history.replaceState(globalThis.history.state, '', cleanUrl);
     }
 

@@ -3,7 +3,10 @@
 import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DesktopFooter, DesktopProfile } from '@/components/retro-terminal/DesktopChrome';
+import {
+  DesktopFooter,
+  DesktopProfile,
+} from '@/components/retro-terminal/DesktopChrome';
 import {
   MIN_H,
   MIN_W,
@@ -17,14 +20,28 @@ import {
   termGeom,
 } from '@/components/retro-terminal/geometry';
 import { GraphLog } from '@/components/retro-terminal/GraphLog';
-import { NOT_FOUND_ID, PRS_ID, STORAGE_KEY, TERM_ID, legalWinId, showWinId } from '@/components/retro-terminal/ids';
+import {
+  NOT_FOUND_ID,
+  PRS_ID,
+  STORAGE_KEY,
+  TERM_ID,
+  legalWinId,
+  showWinId,
+} from '@/components/retro-terminal/ids';
 import { LatestPrsWindow } from '@/components/retro-terminal/LatestPrsWindow';
 import { LegalWindow } from '@/components/retro-terminal/LegalWindow';
 import { NotFoundWindow } from '@/components/retro-terminal/NotFoundWindow';
 import { branchOf } from '@/components/retro-terminal/postUtils';
 import { ShowTermWindow } from '@/components/retro-terminal/ShowWindow';
 import { TermWindow } from '@/components/retro-terminal/TermWindow';
-import type { LegalWindowVariant, MdxState, OpenWin, StoredTerminalState, WinGeom, WinState } from '@/components/retro-terminal/types';
+import type {
+  LegalWindowVariant,
+  MdxState,
+  OpenWin,
+  StoredTerminalState,
+  WinGeom,
+  WinState,
+} from '@/components/retro-terminal/types';
 import { useRetroMode } from '@/components/RetroModeContext';
 import type { PostFrontMatter } from '@/utils/mdx';
 
@@ -74,14 +91,16 @@ function pathForWindow(id: string | null, currentPath: string) {
   if (id?.startsWith('show:')) return `/blog/${id.slice('show:'.length)}`;
   if (id?.startsWith('legal:')) {
     const variant = id.slice('legal:'.length);
-    if (variant === 'disclaimer' || variant === 'privacy-policy') return `/${variant}`;
+    if (variant === 'disclaimer' || variant === 'privacy-policy')
+      return `/${variant}`;
   }
   if (id === NOT_FOUND_ID) return currentPath;
   return '/';
 }
 
 function updateWindowUrl(id: string | null, push: boolean) {
-  if (globalThis.location === undefined || globalThis.history === undefined) return;
+  if (globalThis.location === undefined || globalThis.history === undefined)
+    return;
   const { pathname } = new URL(globalThis.location.href);
   const nextPath = pathForWindow(id, pathname);
   if (pathname === nextPath) return;
@@ -92,7 +111,10 @@ function updateWindowUrl(id: string | null, push: boolean) {
   }
 }
 
-function windowIdForPath(pathname: string, postSlugs: ReadonlySet<string>): string | null {
+function windowIdForPath(
+  pathname: string,
+  postSlugs: ReadonlySet<string>,
+): string | null {
   const blogMatch = /^\/blog\/([^/]+)$/.exec(pathname);
   if (blogMatch) {
     const slug = decodeURIComponent(blogMatch[1]);
@@ -106,10 +128,12 @@ function windowIdForPath(pathname: string, postSlugs: ReadonlySet<string>): stri
 function useViewport() {
   const [size, setSize] = useState(() => ({
     w: typeof globalThis.innerWidth === 'number' ? globalThis.innerWidth : 1200,
-    h: typeof globalThis.innerHeight === 'number' ? globalThis.innerHeight : 800,
+    h:
+      typeof globalThis.innerHeight === 'number' ? globalThis.innerHeight : 800,
   }));
   useEffect(() => {
-    const update = () => setSize({ w: globalThis.innerWidth, h: globalThis.innerHeight });
+    const update = () =>
+      setSize({ w: globalThis.innerWidth, h: globalThis.innerHeight });
     update();
     globalThis.addEventListener('resize', update);
     return () => globalThis.removeEventListener('resize', update);
@@ -130,29 +154,50 @@ export default function RetroTerminal({
   const stored = useMemo(() => readStoredTerminalState(), []);
   const urlPostSlug = useMemo(() => initialPostSlug(posts), [posts]);
   const urlLegalVariant = useMemo(() => initialLegalVariant(), []);
-  const missingPath = useMemo(() => globalThis.location === undefined ? '/unknown' : globalThis.location.pathname, []);
+  const missingPath = useMemo(
+    () =>
+      globalThis.location === undefined
+        ? '/unknown'
+        : globalThis.location.pathname,
+    [],
+  );
 
   const [states, setStates] = useState<Record<string, WinState>>(() => {
     const g = termGeom(vw, vh, posts);
-    const next: Record<string, WinState> = { [TERM_ID]: { id: TERM_ID, ...g, z: 1 } };
+    const next: Record<string, WinState> = {
+      [TERM_ID]: { id: TERM_ID, ...g, z: 1 },
+    };
     if (urlPostSlug) {
       const id = showWinId(urlPostSlug);
-      next[id] = { ...(next[id] ?? { id, ...showGeom(vw, vh) }), z: maxZof(next) + 1 };
+      next[id] = {
+        ...(next[id] ?? { id, ...showGeom(vw, vh) }),
+        z: maxZof(next) + 1,
+      };
     }
     if (urlLegalVariant) {
       const id = legalWinId(urlLegalVariant);
       next[id] = { id, ...legalGeom(vw, vh), z: maxZof(next) + 1 };
     }
     if (showNotFound) {
-      next[NOT_FOUND_ID] = { id: NOT_FOUND_ID, ...notFoundGeom(vw, vh), z: maxZof(next) + 1 };
+      next[NOT_FOUND_ID] = {
+        id: NOT_FOUND_ID,
+        ...notFoundGeom(vw, vh),
+        z: maxZof(next) + 1,
+      };
     }
     return next;
   });
   const [cursor, setCursor] = useState(() => {
-    const urlPostIndex = urlPostSlug ? posts.findIndex((post) => post.slug === urlPostSlug) : -1;
+    const urlPostIndex = urlPostSlug
+      ? posts.findIndex((post) => post.slug === urlPostSlug)
+      : -1;
     if (urlPostIndex >= 0) return urlPostIndex;
     const storedCursor = stored?.cursor;
-    return typeof storedCursor === 'number' && storedCursor >= 0 && storedCursor < posts.length ? storedCursor : 0;
+    return typeof storedCursor === 'number' &&
+      storedCursor >= 0 &&
+      storedCursor < posts.length
+      ? storedCursor
+      : 0;
   });
   const [mdxBySlug, setMdxBySlug] = useState<Record<string, MdxState>>({});
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
@@ -190,7 +235,9 @@ export default function RetroTerminal({
     }
     const topId = top?.id ?? null;
     const prevIds = syncedWindowIds.current;
-    const isUrlWindow = topId !== null && (topId.startsWith('show:') || topId.startsWith('legal:'));
+    const isUrlWindow =
+      topId !== null &&
+      (topId.startsWith('show:') || topId.startsWith('legal:'));
     const push = isUrlWindow && prevIds !== null && !prevIds.has(topId);
     syncedWindowIds.current = new Set(Object.keys(states));
     updateWindowUrl(topId, push);
@@ -210,8 +257,20 @@ export default function RetroTerminal({
     setStates((prev) => {
       const z = maxZof(prev) + 1;
       if (prev[id]) return { ...prev, [id]: { ...prev[id], ...geom, z } };
-      const offset = id.startsWith('show:') ? 0 : (Object.keys(prev).length % 6) * 22;
-      return { ...prev, [id]: { id, x: geom.x + offset, y: geom.y + offset, w: geom.w, h: geom.h, z } };
+      const offset = id.startsWith('show:')
+        ? 0
+        : (Object.keys(prev).length % 6) * 22;
+      return {
+        ...prev,
+        [id]: {
+          id,
+          x: geom.x + offset,
+          y: geom.y + offset,
+          w: geom.w,
+          h: geom.h,
+          z,
+        },
+      };
     });
   }, []);
 
@@ -224,46 +283,60 @@ export default function RetroTerminal({
     });
   }, []);
 
-  const move = useCallback((id: string, x: number, y: number) => {
-    setStates((prev) => {
-      const w = prev[id];
-      if (!w) return prev;
-      const cx = Math.max(0, Math.min(x, bounds.w - 40));
-      const cy = Math.max(0, Math.min(y, bounds.h - 24));
-      return { ...prev, [id]: { ...w, x: cx, y: cy } };
-    });
-  }, [bounds.w, bounds.h]);
+  const move = useCallback(
+    (id: string, x: number, y: number) => {
+      setStates((prev) => {
+        const w = prev[id];
+        if (!w) return prev;
+        const cx = Math.max(0, Math.min(x, bounds.w - 40));
+        const cy = Math.max(0, Math.min(y, bounds.h - 24));
+        return { ...prev, [id]: { ...w, x: cx, y: cy } };
+      });
+    },
+    [bounds.w, bounds.h],
+  );
 
-  const resize = useCallback((id: string, w: number, h: number) => {
-    setStates((prev) => {
-      const win = prev[id];
-      if (!win) return prev;
-      const cw = Math.max(MIN_W, Math.min(w, bounds.w - win.x));
-      const maxHeight = Math.min(maxWindowHeight(bounds.h), id === PRS_ID ? PRS_WINDOW_MAX_H : bounds.h, bounds.h - win.y);
-      const ch = Math.min(Math.max(MIN_H, h), maxHeight);
-      return { ...prev, [id]: { ...win, w: cw, h: ch } };
-    });
-  }, [bounds.w, bounds.h]);
+  const resize = useCallback(
+    (id: string, w: number, h: number) => {
+      setStates((prev) => {
+        const win = prev[id];
+        if (!win) return prev;
+        const cw = Math.max(MIN_W, Math.min(w, bounds.w - win.x));
+        const maxHeight = Math.min(
+          maxWindowHeight(bounds.h),
+          id === PRS_ID ? PRS_WINDOW_MAX_H : bounds.h,
+          bounds.h - win.y,
+        );
+        const ch = Math.min(Math.max(MIN_H, h), maxHeight);
+        return { ...prev, [id]: { ...win, w: cw, h: ch } };
+      });
+    },
+    [bounds.w, bounds.h],
+  );
 
-  const resetWindow = useCallback((id: string) => {
-    setStates((prev) => {
-      const win = prev[id];
-      if (!win) return prev;
-      const defaultGeom = id === TERM_ID
-        ? termGeom(vw, vh, posts)
-        : id === PRS_ID
-          ? prsGeom(vw, vh)
-          : id === NOT_FOUND_ID
-            ? notFoundGeom(vw, vh)
-          : id.startsWith('legal:')
-            ? legalGeom(vw, vh)
-            : id.startsWith('show:')
-              ? showGeom(vw, vh)
-              : null;
-      if (!defaultGeom) return prev;
-      return { ...prev, [id]: { ...win, ...defaultGeom } };
-    });
-  }, [posts, vh, vw]);
+  const resetWindow = useCallback(
+    (id: string) => {
+      setStates((prev) => {
+        const win = prev[id];
+        if (!win) return prev;
+        const defaultGeom =
+          id === TERM_ID
+            ? termGeom(vw, vh, posts)
+            : id === PRS_ID
+              ? prsGeom(vw, vh)
+              : id === NOT_FOUND_ID
+                ? notFoundGeom(vw, vh)
+                : id.startsWith('legal:')
+                  ? legalGeom(vw, vh)
+                  : id.startsWith('show:')
+                    ? showGeom(vw, vh)
+                    : null;
+        if (!defaultGeom) return prev;
+        return { ...prev, [id]: { ...win, ...defaultGeom } };
+      });
+    },
+    [posts, vh, vw],
+  );
 
   const titleDragProps = useCallback(
     (id: string) => ({
@@ -279,15 +352,18 @@ export default function RetroTerminal({
         const pointerId = e.pointerId;
         const onMove = (ev: PointerEvent) => {
           if (ev.pointerId !== pointerId) return;
-          move(id, originX + (ev.clientX - startPx), originY + (ev.clientY - startPy));
+          move(
+            id,
+            originX + (ev.clientX - startPx),
+            originY + (ev.clientY - startPy),
+          );
         };
         const onUp = (ev: PointerEvent) => {
           if (ev.pointerId !== pointerId) return;
           globalThis.removeEventListener('pointermove', onMove);
-          globalThis.removeEventListener('pointerup', onUp);
         };
         globalThis.addEventListener('pointermove', onMove);
-        globalThis.addEventListener('pointerup', onUp);
+        globalThis.addEventListener('pointerup', onUp, { once: true });
       },
     }),
     [states, focus, move],
@@ -307,15 +383,18 @@ export default function RetroTerminal({
         const pointerId = e.pointerId;
         const onMove = (ev: PointerEvent) => {
           if (ev.pointerId !== pointerId) return;
-          resize(id, startW + (ev.clientX - startPx), startH + (ev.clientY - startPy));
+          resize(
+            id,
+            startW + (ev.clientX - startPx),
+            startH + (ev.clientY - startPy),
+          );
         };
         const onUp = (ev: PointerEvent) => {
           if (ev.pointerId !== pointerId) return;
           globalThis.removeEventListener('pointermove', onMove);
-          globalThis.removeEventListener('pointerup', onUp);
         };
         globalThis.addEventListener('pointermove', onMove);
-        globalThis.addEventListener('pointerup', onUp);
+        globalThis.addEventListener('pointerup', onUp, { once: true });
       },
     }),
     [states, focus, resize],
@@ -323,32 +402,48 @@ export default function RetroTerminal({
 
   const postByIndex = useCallback((i: number) => posts[i], [posts]);
   const postById = (slug: string) => posts.find((p) => p.slug === slug);
-  const postSlugs = useMemo(() => new Set(posts.map((post) => post.slug)), [posts]);
+  const postSlugs = useMemo(
+    () => new Set(posts.map((post) => post.slug)),
+    [posts],
+  );
   const currentPost = postByIndex(cursor);
 
-  const loadMdx = useCallback((slug: string) => {
-    if (!postSlugs.has(slug) || mdxBySlug[slug] || loadingSlugs.current.has(slug)) return;
+  const loadMdx = useCallback(
+    (slug: string) => {
+      if (
+        !postSlugs.has(slug) ||
+        mdxBySlug[slug] ||
+        loadingSlugs.current.has(slug)
+      )
+        return;
 
-    loadingSlugs.current.add(slug);
-    const mdxUrl =
-      process.env.NODE_ENV === 'production'
-        ? `/blog-mdx/${encodeURIComponent(slug)}.json`
-        : `/api/blog-mdx/${encodeURIComponent(slug)}`;
-    void fetch(mdxUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error(`Failed to load ${slug}`);
-        return response.json() as Promise<{ mdxSource: MDXRemoteSerializeResult }>;
-      })
-      .then(({ mdxSource }) => {
-        setMdxBySlug((prev) => ({ ...prev, [slug]: { status: 'ready', source: mdxSource } }));
-      })
-      .catch(() => {
-        setMdxBySlug((prev) => ({ ...prev, [slug]: { status: 'error' } }));
-      })
-      .finally(() => {
-        loadingSlugs.current.delete(slug);
-      });
-  }, [mdxBySlug, postSlugs]);
+      loadingSlugs.current.add(slug);
+      const mdxUrl =
+        process.env.NODE_ENV === 'production'
+          ? `/blog-mdx/${encodeURIComponent(slug)}.json`
+          : `/api/blog-mdx/${encodeURIComponent(slug)}`;
+      void fetch(mdxUrl)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Failed to load ${slug}`);
+          return response.json() as Promise<{
+            mdxSource: MDXRemoteSerializeResult;
+          }>;
+        })
+        .then(({ mdxSource }) => {
+          setMdxBySlug((prev) => ({
+            ...prev,
+            [slug]: { status: 'ready', source: mdxSource },
+          }));
+        })
+        .catch(() => {
+          setMdxBySlug((prev) => ({ ...prev, [slug]: { status: 'error' } }));
+        })
+        .finally(() => {
+          loadingSlugs.current.delete(slug);
+        });
+    },
+    [mdxBySlug, postSlugs],
+  );
 
   useEffect(() => {
     const slugs = Object.keys(states)
@@ -402,26 +497,42 @@ export default function RetroTerminal({
     setCursor(i);
   };
 
-  const openBlogSlug = useCallback((slug: string) => {
-    const index = posts.findIndex((post) => post.slug === slug);
-    if (index === -1) return false;
-    loadMdx(slug);
-    open(showWinId(slug), showGeom(vw, vh));
-    setCursor(index);
-    return true;
-  }, [loadMdx, open, posts, vh, vw]);
+  const openBlogSlug = useCallback(
+    (slug: string) => {
+      const index = posts.findIndex((post) => post.slug === slug);
+      if (index === -1) return false;
+      loadMdx(slug);
+      open(showWinId(slug), showGeom(vw, vh));
+      setCursor(index);
+      return true;
+    },
+    [loadMdx, open, posts, vh, vw],
+  );
 
   const openPrs = useCallback(() => {
     open(PRS_ID, prsGeom(vw, vh));
   }, [open, vh, vw]);
 
-  const openLegal = useCallback((variant: LegalWindowVariant) => {
-    open(legalWinId(variant), legalGeom(vw, vh));
-  }, [open, vh, vw]);
+  const openLegal = useCallback(
+    (variant: LegalWindowVariant) => {
+      open(legalWinId(variant), legalGeom(vw, vh));
+    },
+    [open, vh, vw],
+  );
 
   const onShellClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    )
+      return;
+    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>(
+      'a[href]',
+    );
     if (!anchor) return;
 
     const url = new URL(anchor.href, globalThis.location.href);
@@ -499,11 +610,11 @@ export default function RetroTerminal({
     <div className="retro-terminal-shell" onClickCapture={onShellClickCapture}>
       <Head>
         <title>{pageTitle}</title>
-        {showNotFound ? (
-          <meta name="robots" content="noindex, follow" />
-        ) : null}
+        {showNotFound ? <meta name="robots" content="noindex, follow" /> : null}
       </Head>
-      <div className={`retro-terminal-desktop ${mobileProfileOpen ? 'retro-terminal-desktop--profile-open' : ''} ${Object.keys(states).length === 0 ? 'retro-terminal-desktop--empty' : ''}`}>
+      <div
+        className={`retro-terminal-desktop ${mobileProfileOpen ? 'retro-terminal-desktop--profile-open' : ''} ${Object.keys(states).length === 0 ? 'retro-terminal-desktop--empty' : ''}`}
+      >
         <div className="retro-terminal-crt" aria-hidden="true" />
         <DesktopProfile
           onOpenPrs={openPrs}
@@ -562,7 +673,7 @@ export default function RetroTerminal({
                 onKeyDown={onLogKeyDown}
                 onTitleDoubleClick={() => resetWindow(win.id)}
                 windowRef={termWindowRef}
-                 compact={isPhoneLayout}
+                compact={isPhoneLayout}
               >
                 <GraphLog
                   posts={posts}
@@ -574,12 +685,15 @@ export default function RetroTerminal({
                 />
                 <div className="retro-terminal-status">
                   {isPhoneLayout ? (
-                    <span><b>{posts.length}</b> posts · <b>{cursor + 1}</b> selected</span>
+                    <span>
+                      <b>{posts.length}</b> posts · <b>{cursor + 1}</b> selected
+                    </span>
                   ) : (
                     <span>
                       <b>{posts.length}</b> commits · branch{' '}
                       <b>{currentBranch ?? 'main'}</b> · cursor{' '}
-                      <b>{String(cursor + 1).padStart(2, '0')}</b>/{posts.length}
+                      <b>{String(cursor + 1).padStart(2, '0')}</b>/
+                      {posts.length}
                     </span>
                   )}
                   <span className="retro-terminal-status-hint">
@@ -606,7 +720,7 @@ export default function RetroTerminal({
                 resizeProps={resizeHandleProps(win.id)}
                 onOpenBlogLink={openBlogSlug}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                 compact={isPhoneLayout}
+                compact={isPhoneLayout}
               />
             );
           }
@@ -621,7 +735,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                 compact={isPhoneLayout}
+                compact={isPhoneLayout}
               />
             );
           }
@@ -637,13 +751,14 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                 compact={isPhoneLayout}
+                compact={isPhoneLayout}
               />
             );
           }
           if (win.id.startsWith('legal:')) {
             const variant = win.id.slice('legal:'.length) as LegalWindowVariant;
-            if (variant !== 'disclaimer' && variant !== 'privacy-policy') return null;
+            if (variant !== 'disclaimer' && variant !== 'privacy-policy')
+              return null;
             return (
               <LegalWindow
                 key={win.id}
@@ -656,7 +771,7 @@ export default function RetroTerminal({
                 dragProps={titleDragProps(win.id)}
                 resizeProps={resizeHandleProps(win.id)}
                 onTitleDoubleClick={() => resetWindow(win.id)}
-                 compact={isPhoneLayout}
+                compact={isPhoneLayout}
               />
             );
           }
@@ -666,7 +781,8 @@ export default function RetroTerminal({
         {/* exit button — top-right corner, fits the cream theme */}
         <button
           className={`retro-toggle retro-toggle--retro retro-terminal-exit ${
-            isPhoneLayout && windows.some((win) => win.focused && win.id.startsWith('show:'))
+            isPhoneLayout &&
+            windows.some((win) => win.focused && win.id.startsWith('show:'))
               ? 'retro-terminal-exit--behind-reader'
               : ''
           }`}

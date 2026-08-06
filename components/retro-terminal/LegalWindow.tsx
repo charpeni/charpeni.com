@@ -28,8 +28,18 @@ export function LegalWindow({
   compact?: boolean;
 }) {
   const onContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    )
+      return;
+    const anchor = (e.target as Element | null)?.closest<HTMLAnchorElement>(
+      'a[href]',
+    );
     if (!anchor) return;
 
     const url = new URL(anchor.href, globalThis.location.href);
@@ -57,15 +67,24 @@ export function LegalWindow({
       onTitleDoubleClick={onTitleDoubleClick}
       compact={compact}
     >
-      <div className="retro-terminal-legal-window" onClickCapture={onContentClick}>
-        <div className="retro-terminal-legal-title">{LEGAL_TITLES[variant]}</div>
+      <div
+        className="retro-terminal-legal-window"
+        onClickCapture={onContentClick}
+      >
+        <div className="retro-terminal-legal-title">
+          {LEGAL_TITLES[variant]}
+        </div>
         <div className="retro-terminal-legal-content">
           <LegalContent variant={variant} />
         </div>
       </div>
       <div className="retro-terminal-status">
-        <span><b>{variant}</b></span>
-        <span className="retro-terminal-status-hint">esc close · drag ◢ to resize</span>
+        <span>
+          <b>{variant}</b>
+        </span>
+        <span className="retro-terminal-status-hint">
+          esc close · drag ◢ to resize
+        </span>
       </div>
     </TermWindow>
   );
