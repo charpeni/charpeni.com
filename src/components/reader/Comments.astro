@@ -1,0 +1,19 @@
+---
+/**
+ * Giscus comments host. Just the anchor element — the actual giscus embed is
+ * injected by the page-level enhancer (src/components/Enhancer.astro) on load
+ * AND on `os:window-opened`, so comments work both on a server-rendered post
+ * page (deep link / refresh) and inside a client-opened terminal window whose
+ * content is adopted from a fetched partial. Discussions are keyed by post
+ * TITLE (mapping="specific"), so `title` must stay byte-identical or threads
+ * detach.
+ */
+type Props = { title: string };
+const { title } = Astro.props;
+---
+
+<div
+  class="giscus-host flex flex-col justify-center max-w-2xl mx-auto mb-4 w-full"
+  data-giscus-term={title}
+>
+</div>

@@ -2,7 +2,7 @@
 
 My personal website and blog.
 
-Built with [Next.js](https://nextjs.org/), [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), and deployed on [Vercel](https://vercel.com/).
+Built with [Astro](https://astro.build/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS](https://tailwindcss.com/), and deployed on [Cloudflare](https://www.cloudflare.com/).
 
 Thanks to [Alex Nault](https://github.com/alexnault) for the motivation and the inspiration behind this.
 

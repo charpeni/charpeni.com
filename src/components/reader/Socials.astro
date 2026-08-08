@@ -1,0 +1,37 @@
+---
+import { SocialIcon } from 'react-social-icons/component';
+
+import 'react-social-icons/bsky.app';
+import 'react-social-icons/github';
+import 'react-social-icons/linkedin';
+import 'react-social-icons/mailto';
+import 'react-social-icons/rss';
+import 'react-social-icons/x';
+
+/** Port of components/MySocials.tsx — the social icon row. */
+const socials: Array<{ url: string; network?: string }> = [
+  { url: 'https://github.com/charpeni' },
+  { url: 'https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/' },
+  { url: 'https://x.com/charpeni_' },
+  { url: 'https://bsky.app/profile/charpeni.bsky.social' },
+  { url: 'mailto:blog@nicolascharpentier.com' },
+  { url: '/blog/rss.xml', network: 'rss' },
+];
+---
+
+<div class="flex flex-row items-center space-x-2">
+  {
+    socials.map((social) => (
+      <div class="rounded-full hover:bg-gray-100">
+        <SocialIcon
+          url={social.url}
+          network={social.network}
+          bgColor="transparent"
+          fgColor="#757575"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+      </div>
+    ))
+  }
+</div>

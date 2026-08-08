@@ -1,0 +1,64 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import Footer from '@/components/reader/Footer.astro';
+import Header from '@/components/reader/Header.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getReadingStats, sortByPublishedAt } from '@/utils/postMeta';
+
+import type { TermPost } from '@/utils/retro';
+
+const all = sortByPublishedAt(await getCollection('posts'));
+const termPosts: TermPost[] = all.map((p) => ({
+  slug: p.id,
+  title: p.data.title,
+  publishedAt: p.data.publishedAt,
+  tags: p.data.tags,
+  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
+  image: p.data.image,
+}));
+---
+
+<BaseLayout
+  title="404 — Page Not Found"
+  description="The requested page could not be found."
+  noIndex
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="not-found" notFoundPath="/unknown" />
+
+  <main
+    id="skip"
+    class="reader-only mx-auto flex min-h-[60vh] w-full max-w-4xl flex-col justify-center py-20 px-8"
+  >
+    <p class="mb-3 font-mono text-sm text-gray-500 dark:text-gray-400">
+      error: 404
+    </p>
+    <h1
+      class="mb-5 text-4xl font-bold tracking-tight text-black dark:text-white md:text-6xl"
+    >
+      This page wandered off.
+    </h1>
+    <p
+      class="mb-8 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-400"
+    >
+      The address may be outdated, or the page may have moved somewhere else in
+      the archive.
+    </p>
+    <a
+      href="/"
+      class="w-fit border-b border-blue-600 pb-1 font-mono text-sm text-blue-600 transition-colors hover:border-black hover:text-black dark:border-blue-400 dark:text-blue-400 dark:hover:border-white dark:hover:text-white"
+    >
+      ← return to the blog
+    </a>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  // The 404 window shows the actual requested path.
+  const path = location.pathname;
+  const command = document.querySelector('[data-not-found-command]');
+  if (command) command.textContent = `$ archive-agent resolve ${path}`;
+</script>

@@ -1,0 +1,358 @@
+---
+import TermLog from '@/components/desktop/TermLog.astro';
+import Window from '@/components/desktop/Window.astro';
+import LegalContent from '@/components/reader/LegalContent.astro';
+import { shortHash } from '@/utils/graph';
+import {
+  branchOf,
+  formatLongDate,
+  isBranch,
+  windowTitle,
+} from '@/utils/retro';
+
+import type { TermPost } from '@/utils/retro';
+
+/**
+ * The server-rendered terminal desktop — DEFAULT presentation of every page.
+ * DOM structure and class names mirror the old client-only RetroTerminal.tsx
+ * (see styles/retro.css); the DesktopManager island adopts these nodes and
+ * adds behavior. Reader mode (html[data-reader]) un-applies the entire skin
+ * and hides `.retro-only` chrome, letting the focused window's content flow
+ * as a plain document.
+ */
+
+type Focused =
+  | 'term'
+  | 'show'
+  | 'legal:disclaimer'
+  | 'legal:privacy-policy'
+  | 'not-found';
+
+type Props = {
+  posts: TermPost[];
+  focused: Focused;
+  /** Required when focused === 'show'. */
+  post?: TermPost;
+  notFoundPath?: string;
+};
+
+const { posts, focused, post, notFoundPath = '/unknown' } = Astro.props;
+
+const cursor =
+  focused === 'show' && post
+    ? Math.max(
+        0,
+        posts.findIndex((p) => p.slug === post.slug),
+      )
+    : 0;
+
+const showBranch = post ? branchOf(post) : undefined;
+const showOtherTags = post ? post.tags.filter((t) => !isBranch(t)) : [];
+const showMetaBefore = post
+  ? `commit ${shortHash(post.slug)}\nAuthor: Nicolas Charpentier <`
+  : '';
+const showMetaAfter = post
+  ? `>\nDate: ${formatLongDate(post.publishedAt)}\nSize: ${post.readingTimeText}` +
+    (showBranch ? `\nrefs:   refs/heads/${showBranch}` : '') +
+    (showOtherTags.length > 0 ? `\ntopic:  ${showOtherTags.join(', ')}` : '')
+  : '';
+const legalVariant = focused.startsWith('legal:')
+  ? (focused.slice(6) as 'disclaimer' | 'privacy-policy')
+  : undefined;
+---
+
+<div class="retro-terminal-shell" data-desktop-shell>
+  <div class="retro-terminal-desktop">
+    <div class="retro-terminal-crt retro-only" aria-hidden="true"></div>
+
+    <button
+      type="button"
+      class="retro-terminal-profile-toggle retro-only"
+      aria-expanded="false"
+      aria-controls="retro-mobile-profile"
+      data-profile-toggle
+    >
+      <span class="retro-terminal-profile-toggle-glyph" aria-hidden="true">
+        <img
+          class="retro-terminal-profile-icon-img"
+          src="/static/images/nicolas_charpentier.jpeg"
+          alt=""
+          width="36"
+          height="36"
+        />
+      </span>
+      <span class="retro-terminal-profile-toggle-copy">
+        <strong>Nicolas Charpentier</strong><span
+          >Staff Software Engineer</span
+        >
+      </span>
+      <span class="retro-terminal-profile-toggle-label" data-profile-label
+        >About [+]</span
+      >
+    </button>
+
+    <div
+      class="retro-terminal-profile-icon retro-only"
+      aria-label="Profile picture for Nicolas Charpentier"
+    >
+      <div class="retro-terminal-profile-icon-glyph" aria-hidden="true">
+        <img
+          class="retro-terminal-profile-icon-img"
+          src="/static/images/nicolas_charpentier.jpeg"
+          alt=""
+          width="58"
+          height="58"
+        />
+      </div>
+      <div class="retro-terminal-profile-icon-label">profile.txt</div>
+    </div>
+
+    <aside
+      id="retro-mobile-profile"
+      class="retro-terminal-profile retro-only"
+      aria-label="About Nicolas Charpentier"
+    >
+      <div class="retro-terminal-profile-name">
+        Nicolas Charpentier{' '}
+        <a
+          class="retro-terminal-profile-email"
+          href="mailto:blog@nicolascharpentier.com"
+          >&lt;blog@nicolascharpentier.com&gt;</a
+        >
+      </div>
+      <div class="retro-terminal-profile-role">
+        Staff Software Engineer — frontend infrastructure &amp; developer
+        tooling
+      </div>
+      <div class="retro-terminal-profile-stack">
+        TypeScript · React Native · React · GraphQL · CI/CD
+      </div>
+      <div class="retro-terminal-profile-current">
+        Currently @ <a
+          href="https://shortcut.com"
+          target="_blank"
+          rel="noopener noreferrer">Shortcut</a
+        > — <a href="https://korey.ai" target="_blank" rel="noopener noreferrer"
+          >Korey.ai</a
+        > · open source enthusiast
+      </div>
+      <div class="retro-terminal-profile-links">
+        <a
+          href="https://github.com/charpeni"
+          target="_blank"
+          rel="noopener noreferrer">github.com/charpeni</a
+        > · <a
+          href="https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/"
+          target="_blank"
+          rel="noopener noreferrer">linkedin.com/in/nicolas-charpentier-8a2b8a104</a
+        > · <a
+          href="https://x.com/charpeni_"
+          target="_blank"
+          rel="noopener noreferrer">x.com/charpeni_</a
+        > · <a
+          href="https://bsky.app/profile/charpeni.bsky.social"
+          target="_blank"
+          rel="noopener noreferrer">bsky.app/charpeni.bsky.social</a
+        > · <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer"
+          >rss</a
+        > · <a href="https://prs.charpeni.com" data-open-prs>latest PRs</a>
+      </div>
+    </aside>
+
+    <footer class="retro-terminal-footer retro-only">
+      <div class="retro-terminal-footer-links">
+        <a href="/disclaimer" data-open-legal="disclaimer">Disclaimer</a>
+        <span aria-hidden="true">|</span>
+        <a href="/privacy-policy" data-open-legal="privacy-policy"
+          >Privacy Policy</a
+        >
+        <span aria-hidden="true">|</span>
+        <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer"
+          >RSS Feed</a
+        >
+      </div>
+      <div>© 2021-present Nicolas Charpentier. All Rights Reserved.</div>
+    </footer>
+
+    <div class="retro-only" data-window-host>
+      <Window
+        id="term"
+        title={windowTitle('term', posts)}
+        active={focused === 'term'}
+        role="region"
+      >
+        <TermLog posts={posts} cursor={cursor} />
+        <div class="retro-terminal-status" slot="status">
+          <span class="retro-terminal-status-desktop"
+            ><b>{posts.length}</b> commits · branch <b data-status-branch
+              >{branchOf(posts[cursor] ?? { tags: [] }) ?? 'main'}</b
+            > · cursor <b data-cursor-display
+              >{String(cursor + 1).padStart(2, '0')}</b
+            >/{posts.length}</span
+          >
+          <span class="retro-terminal-status-phone"
+            ><b>{posts.length}</b> posts · <b data-status-selected
+              >{cursor + 1}</b
+            > selected</span
+          >
+          <span class="retro-terminal-status-hint"
+            >↑/↓ move · enter show · dbl-click open · F6 switch · drag ◢ to
+            resize</span
+          >
+        </div>
+      </Window>
+    </div>
+
+    {
+      focused === 'show' && post && (
+        <Window id={`show:${post.slug}`} title={windowTitle(`show:${post.slug}`, posts)} active>
+          <div class="retro-terminal-show-scroll">
+            <div class="retro-terminal-show-header retro-only">
+              <div class="retro-terminal-show-meta">
+                {showMetaBefore}
+                <a href="mailto:blog@nicolascharpentier.com">
+                  blog@nicolascharpentier.com
+                </a>
+                {showMetaAfter}
+              </div>
+              <button
+                type="button"
+                class="retro-terminal-copy-mobile"
+                data-copy-markdown={post.slug}
+              >
+                Copy
+              </button>
+            </div>
+            <slot name="article" />
+            <slot name="comments" />
+          </div>
+          <div class="retro-terminal-status" slot="status">
+            <span>
+              branch{' '}
+              <b>{showBranch ? `refs/heads/${showBranch}` : 'main'}</b>
+            </span>
+            <span
+              class="retro-terminal-status-hint"
+              data-show-status-hint
+              aria-live="polite"
+            >
+              c copy markdown · esc close
+            </span>
+          </div>
+        </Window>
+      )
+    }
+
+    {
+      legalVariant && (
+        <Window
+          id={`legal:${legalVariant}`}
+          title={windowTitle(`legal:${legalVariant}`, posts)}
+          active
+        >
+          <div class="retro-terminal-legal-window">
+            <div class="retro-terminal-legal-title retro-only">
+              {legalVariant === 'disclaimer' ? 'DISCLAIMER' : 'PRIVACY POLICY'}
+            </div>
+            <div class="retro-terminal-legal-content">
+              <LegalContent variant={legalVariant} />
+            </div>
+          </div>
+          <div class="retro-terminal-status" slot="status">
+            <span>
+              <b>{legalVariant}</b>
+            </span>
+            <span class="retro-terminal-status-hint">
+              esc close · drag ◢ to resize
+            </span>
+          </div>
+        </Window>
+      )
+    }
+
+    {
+      focused === 'not-found' && (
+        <Window id="not-found" title={windowTitle('not-found', posts)} active>
+          <div class="retro-terminal-legal-window">
+            <div class="retro-terminal-legal-title">404 / PATH NOT FOUND</div>
+            <div class="retro-terminal-legal-content">
+              <p
+                class="retro-terminal-not-found-command"
+                data-not-found-command
+              >
+                $ archive-agent resolve {notFoundPath}
+              </p>
+              <p>
+                <strong>fatal:</strong> pathspec '{notFoundPath}' did not match
+                any file known to the archive.
+              </p>
+              <p>The object may have moved, or it never existed.</p>
+              <a href="/" class="retro-terminal-not-found-link">
+                cd / <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+          <div class="retro-terminal-status" slot="status">
+            <span>process exited with code 404</span>
+            <span class="retro-terminal-status-hint">
+              esc close · drag ◢ to resize
+            </span>
+          </div>
+        </Window>
+      )
+    }
+
+    <button
+      class="retro-toggle retro-toggle--retro retro-terminal-exit retro-only"
+      aria-label="Switch to reader mode"
+      data-reader-mode
+    >
+      <span class="retro-toggle-dot"></span>READER MODE
+    </button>
+
+  </div>
+
+  {/*
+    Typed posts index for the window manager — replaces the lossy scrape of
+    the term-log rows (which only recovered the branch tag). `<` is escaped so
+    a title can't break out of the script element.
+  */}
+  <script
+    type="application/json"
+    data-posts-index
+    set:html={JSON.stringify(posts).replace(/</g, '\\u003c')}
+  />
+
+  <script>
+    import '@/scripts/desktopManager';
+  </script>
+</div>
+
+<style>
+  /* Pre-hydration geometry: viewport-relative approximations of the exact
+     utils/retro.ts formulas the island applies as px on hydration. */
+  :global(html:not([data-reader])) .retro-terminal-window--ssr {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(80vw, calc(100vw - 40px));
+    height: min(80vh, 620px);
+  }
+  :global(html:not([data-reader]))
+    .retro-terminal-window--ssr[data-retro-window-id^='show:'] {
+    width: min(914px, calc(100vw - 48px));
+    height: min(80vh, calc(100vh - 40px));
+  }
+  :global(html:not([data-reader]))
+    .retro-terminal-window--ssr[data-retro-window-id^='legal:'] {
+    width: min(740px, calc(100vw - 48px));
+    height: min(620px, 78vh);
+  }
+  :global(html:not([data-reader]))
+    .retro-terminal-window--ssr[data-retro-window-id='not-found'] {
+    width: min(620px, calc(100vw - 40px));
+    height: min(330px, calc(100vh - 48px));
+  }
+  /* Spawn-animation delay parity: retro.css keys the term delay off a
+     data attribute selector, which still matches here. */
+</style>

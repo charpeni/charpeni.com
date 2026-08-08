@@ -1,0 +1,75 @@
+---
+/**
+ * Reader-mode header — port of components/Header.tsx. Rendered on every page
+ * but hidden in terminal mode (`reader-only`). The retro trigger writes the
+ * cookie back to terminal and reloads (mode switches are full reloads).
+ */
+---
+
+<nav
+  class="reader-only flex justify-between items-center max-w-4xl w-full py-8 my-0 md:my-8 mx-auto px-8 lg:px-0 bg-white dark:bg-black"
+>
+  <button
+    aria-label="Toggle Dark Mode"
+    type="button"
+    id="theme-toggle"
+    class="cursor-pointer bg-gray-200 dark:bg-gray-800 rounded p-2.5 h-10 w-10 flex items-center justify-center"
+  >
+    <svg
+      class="hidden dark:block h-5 w-5 text-gray-800 dark:text-gray-200"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="4"></circle>
+      <path
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+      ></path>
+    </svg>
+    <svg
+      class="block dark:hidden h-5 w-5 text-gray-800 dark:text-gray-200"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+    </svg>
+  </button>
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      class="retro-mode-trigger retro-mode-trigger--normal"
+      id="enter-terminal"
+      aria-label="ssh blog@charpeni.com"
+      title="ssh blog@charpeni.com"
+    >
+      <span aria-hidden="true">&gt;_</span>
+    </button>
+    <a href="/" class="p-2 sm:p-4 text-gray-900 dark:text-gray-100">Home</a>
+  </div>
+</nav>
+
+<script>
+  document.getElementById('enter-terminal')?.addEventListener('click', () => {
+    document.cookie = 'retro-os=1; path=/; max-age=31536000; samesite=lax';
+    location.reload();
+  });
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    const next = root.classList.contains('dark') ? 'light' : 'dark';
+    root.classList.toggle('dark', next === 'dark');
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      /* private mode */
+    }
+  });
+</script>

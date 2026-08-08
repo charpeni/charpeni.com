@@ -5,7 +5,6 @@
     "typescript",
     "unicorn",
     "react",
-    "nextjs",
     "import",
     "jsx-a11y",
     "oxc"
@@ -21,14 +20,18 @@
     "node": true
   },
   "ignorePatterns": [
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    "dist/**",
+    ".astro/**",
+    ".vercel/**",
     "public/**",
-    "next.config.js",
-    "next-sitemap.config.js",
-    "postcss.config.js"
+    "prototype/**",
+    "pages/**",
+    "components/**",
+    "utils/**",
+    "scripts/generateBlogMdx.mts",
+    "scripts/generateLlmsTxt.mts",
+    "scripts/generateRssFeed.mts",
+    "tailwind.config.js"
   ],
   "options": {
     "reportUnusedDisableDirectives": "error"
@@ -60,23 +63,16 @@
       }
     ],
     "react/no-array-index-key": "off",
-    "react/react-compiler": "error",
     "react/react-in-jsx-scope": "off",
     "typescript/consistent-type-imports": "error",
-    "unicorn/no-document-cookie": "error",
-    "unicorn/filename-case": [
-      "error",
-      {
-        "case": "camelCase"
-      }
-    ]
+    "unicorn/no-document-cookie": "off",
+    "unicorn/filename-case": "off"
   },
   "overrides": [
     {
       "files": ["**/*.{jsx,tsx}"],
       "rules": {
         "no-console": "error",
-        "unicorn/filename-case": "off",
         "unicorn/no-null": "off",
         "unicorn/no-nested-ternary": "off"
       }

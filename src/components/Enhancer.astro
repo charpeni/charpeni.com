@@ -1,0 +1,169 @@
+---
+/**
+ * Page-level content enhancer — the single place that upgrades post content
+ * with client behavior, so it works identically on a server-rendered post
+ * page (deep link / refresh) AND inside a client-opened terminal window whose
+ * content is adopted from a fetched partial. Adopted DOM never runs its own
+ * scripts and astro islands don't auto-hydrate there, so everything is driven
+ * from here, on load and on the `os:window-opened` event the window manager
+ * fires after adopting content. Every step is idempotent (guarded by a
+ * data-*-init flag or an existing wrapper) so re-running is safe.
+ *
+ * - Copy-to-clipboard buttons on code blocks (DOM contract from the old
+ *   components/CodeBlock.tsx: .code-block wrapper + .copy-code-button,
+ *   .twoslash-copy-source fast path, .twoslash-meta-line stripping).
+ * - External MDX links open in a new tab (old CustomLink behavior).
+ * - Giscus comments (framework-agnostic embed; config from the old
+ *   components/Comments.tsx; theme follows terminal/reader + dark class).
+ * - Sandpack: mounts SandpackReact into [data-sandpack] containers via a
+ *   dynamically-imported React root.
+ */
+---
+
+<script>
+  const COPY_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+  const CHECK_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  function enhanceCopy(root: ParentNode) {
+    for (const pre of root.querySelectorAll<HTMLElement>(
+      '.prose pre:not(.code-block pre)',
+    )) {
+      if (pre.closest('.sp-wrapper') || pre.closest('.sandpackContainer')) {
+        continue;
+      }
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.parentNode?.insertBefore(wrapper, pre);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Copy code to clipboard');
+      button.title = 'Copy code to clipboard';
+      button.className = 'copy-code-button';
+      button.innerHTML = COPY_ICON;
+      wrapper.appendChild(button);
+      wrapper.appendChild(pre);
+    }
+
+    for (const anchor of root.querySelectorAll<HTMLAnchorElement>(
+      '.prose a[href^="http"]',
+    )) {
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+    }
+  }
+
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>(
+      '.copy-code-button',
+    );
+    if (!button) return;
+    const pre = button.closest('.code-block')?.querySelector('pre');
+    if (!pre) return;
+    let text = pre.querySelector('.twoslash-copy-source')?.textContent;
+    if (text === undefined || text === null) {
+      const code = pre.querySelector('code');
+      if (!code) return;
+      const copy = code.cloneNode(true) as HTMLElement;
+      for (const line of copy.querySelectorAll('.twoslash-meta-line')) {
+        line.replaceWith('\n');
+      }
+      text = copy.textContent ?? '';
+    }
+    void copyText(text).then((ok) => {
+      if (!ok) return;
+      button.innerHTML = CHECK_ICON;
+      setTimeout(() => {
+        button.innerHTML = COPY_ICON;
+      }, 2000);
+    });
+  });
+
+  // Copy with a graceful fallback: navigator.clipboard only exists in secure
+  // contexts (HTTPS / localhost), so on plain-HTTP dev origins (custom
+  // hostnames aren't secure contexts) it's undefined — fall back to a
+  // hidden-textarea execCommand('copy'). Production is HTTPS and takes the
+  // first path.
+  async function copyText(text: string): Promise<boolean> {
+    try {
+      if (window.isSecureContext && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      /* fall through to the legacy path */
+    }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
+  // --- Giscus ---
+  function giscusTheme(): string {
+    const el = document.documentElement;
+    return el.dataset.reader === 'true' && el.classList.contains('dark')
+      ? 'dark'
+      : 'light';
+  }
+
+  function injectGiscus(root: ParentNode) {
+    for (const host of root.querySelectorAll<HTMLElement>(
+      '.giscus-host:not([data-giscus-init])',
+    )) {
+      host.dataset.giscusInit = '1';
+      const script = document.createElement('script');
+      script.src = 'https://giscus.app/client.js';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-repo', 'charpeni/charpeni.com');
+      script.setAttribute('data-repo-id', 'MDEwOlJlcG9zaXRvcnkzNjk2Nzk2MDA=');
+      script.setAttribute('data-category', 'Comments');
+      script.setAttribute('data-category-id', 'DIC_kwDOFgjc8M4Cg1r7');
+      script.setAttribute('data-mapping', 'specific');
+      script.setAttribute('data-term', host.dataset.giscusTerm ?? '');
+      script.setAttribute('data-reactions-enabled', '1');
+      script.setAttribute('data-emit-metadata', '0');
+      script.setAttribute('data-input-position', 'top');
+      script.setAttribute('data-theme', giscusTheme());
+      script.setAttribute('data-lang', 'en');
+      script.setAttribute('data-loading', 'lazy');
+      host.appendChild(script);
+    }
+  }
+
+  // Re-theme the giscus iframe when the reader dark toggle flips.
+  new MutationObserver(() => {
+    document
+      .querySelector<HTMLIFrameElement>('iframe.giscus-frame')
+      ?.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: giscusTheme() } } },
+        'https://giscus.app',
+      );
+  }).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+
+  function enhanceAll(root: ParentNode) {
+    enhanceCopy(root);
+    injectGiscus(root);
+  }
+
+  enhanceAll(document);
+  document.addEventListener('os:window-opened', (event) => {
+    const root = (event as CustomEvent<{ root?: ParentNode }>).detail?.root;
+    enhanceAll(root ?? document);
+  });
+</script>

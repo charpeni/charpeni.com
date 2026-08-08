@@ -1,0 +1,321 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import BlogPostCard from '@/components/reader/BlogPostCard.astro';
+import CompanyName from '@/components/reader/CompanyName.astro';
+import Footer from '@/components/reader/Footer.astro';
+import Header from '@/components/reader/Header.astro';
+import Socials from '@/components/reader/Socials.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { BRANCH_TAGS, computeGraph } from '@/utils/graph';
+import {
+  getReadingStats,
+  getResponsiveImage,
+  sortByPublishedAt,
+} from '@/utils/postMeta';
+
+import type { TermPost } from '@/utils/retro';
+
+const all = sortByPublishedAt(await getCollection('posts'));
+
+const termPosts: TermPost[] = all.map((p) => ({
+  slug: p.id,
+  title: p.data.title,
+  publishedAt: p.data.publishedAt,
+  tags: p.data.tags,
+  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
+  image: p.data.image,
+}));
+
+// Reader-mode homepage cards, paginated below at the classic site's 8/page.
+const cards = termPosts.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  summary: all.find((a) => a.id === p.slug)!.data.summary,
+  publishedAt: p.publishedAt,
+  tags: p.tags,
+  readingTimeText: p.readingTimeText,
+}));
+
+// 8 posts per page (classic charpeni.com). Each page's graph is computed from
+// its slice against the FULL archive, so branch lanes exit the top/bottom
+// edges when a branch continues onto another page — pagination is client-side
+// (?page=N shallow routing), so all pages are server-rendered and toggled.
+const POSTS_PER_PAGE = 8;
+const totalPages = Math.max(1, Math.ceil(cards.length / POSTS_PER_PAGE));
+const pages = Array.from({ length: totalPages }, (_, i) => {
+  const slice = cards.slice(i * POSTS_PER_PAGE, (i + 1) * POSTS_PER_PAGE);
+  return { page: i + 1, slice, graph: computeGraph(slice, cards) };
+});
+---
+
+<BaseLayout
+  title="Nicolas Charpentier — Frontend Infrastructure & Developer Tooling"
+  description="Software Engineer focused on frontend infrastructure and developer tooling. I write about TypeScript, React, React Native, GraphQL, Apollo Client, CI/CD, and shipping reliable code."
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="term" />
+
+  <main
+    id="skip"
+    class="reader-only flex flex-col justify-center items-start max-w-4xl w-full mx-auto mb-16 px-8"
+  >
+    <section class="w-full mb-8">
+      <div
+        class="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between"
+      >
+        <div
+          class="flex-1 md:mt-4 lg:mt-0 lg:pr-8 w-full text-center lg:text-left"
+        >
+          <h1
+            class="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight mb-8 text-black dark:text-white lg:whitespace-nowrap"
+          >
+            👋 Hi, I'm Nicolas Charpentier
+          </h1>
+          <div class="lg:flex lg:items-start lg:gap-8">
+            <div class="flex-1">
+              <p
+                class="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7"
+              >
+                I'm a Software Engineer doing the "backend" work of the
+                frontend: architecture, tooling, and infrastructure. I
+                specialize in{' '}
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >TypeScript</span
+                >,{' '}
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >React Native</span
+                >,{' '}
+                <span class="text-cyan-600 dark:text-cyan-400 font-medium"
+                  >React</span
+                >,{' '}
+                <span class="text-pink-600 dark:text-pink-400 font-medium"
+                  >GraphQL</span
+                >, and{' '}
+                <span class="text-purple-600 dark:text-purple-400 font-medium"
+                  >CI/CD</span
+                >.
+              </p>
+              <p
+                class="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0"
+              >
+                I'm an <span class="font-semibold glow-yellow-text"
+                  >open source enthusiast</span
+                > who loves removing friction from the developer experience,
+                hunting down performance issues, and sharing what I find along
+                the way.
+              </p>
+              <p
+                class="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0"
+              >
+                Currently working at{' '}
+                <CompanyName
+                  name="Shortcut"
+                  href="https://shortcut.com"
+                  className="text-shortcut decoration-shortcut"
+                />, on{' '}
+                <CompanyName
+                  name="Korey.ai"
+                  href="https://korey.ai"
+                  className="text-korey decoration-korey"
+                />.
+              </p>
+              <div
+                class="mt-4 md:mt-8 flex flex-wrap md:flex-nowrap items-center justify-center lg:justify-start gap-2"
+              >
+                <Socials />
+                <span
+                  class="hidden md:inline text-sm text-gray-500 dark:text-gray-400"
+                  >|</span
+                >
+                <a
+                  href="https://prs.charpeni.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors whitespace-nowrap ml-1"
+                  >Check out my latest open source contributions</a
+                >
+              </div>
+            </div>
+            <div
+              class="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_40px_rgba(147,51,234,0.2),0_0_60px_rgba(236,72,153,0.15)]"
+            >
+              <div class="absolute -inset-[6px] gradientRotate"></div>
+              <div
+                class="absolute inset-[3px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden"
+              >
+                <img
+                  src="/static/images/nicolas_charpentier.jpeg"
+                  srcset={getResponsiveImage(
+                    '/static/images/nicolas_charpentier.jpeg',
+                  )?.srcset}
+                  sizes="200px"
+                  alt="Nicolas Charpentier"
+                  class="object-cover rounded-full w-full h-full"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full">
+      <div
+        id="blog-posts"
+        class="mb-10 border-b border-gray-200 dark:border-gray-800 pb-4"
+      >
+        <h2
+          class="font-bold text-3xl md:text-4xl tracking-tight text-black dark:text-white"
+        >
+          Blog Posts
+        </h2>
+      </div>
+
+      <div
+        class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-gray-500 dark:text-gray-500"
+        aria-label="Branches"
+      >
+        <span class="text-gray-400 dark:text-gray-600">branches:</span>
+        {
+          BRANCH_TAGS.map((branch) => (
+            <a
+              href={`/tags/${branch}`}
+              class="inline-flex items-center gap-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+            >
+              <span
+                aria-hidden="true"
+                class="inline-block w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"
+              />
+              {branch}
+            </a>
+          ))
+        }
+      </div>
+
+      {
+        pages.map(({ page, slice, graph }) => (
+          <div class="flex flex-col" data-page={page} hidden={page !== 1}>
+            {slice.map((card, i) => (
+              <BlogPostCard
+                {...card}
+                graph={graph.rows[i]}
+                isHead={page === 1 && i === 0}
+                activeBranches={graph.activeBranches}
+              />
+            ))}
+          </div>
+        ))
+      }
+
+      {
+        totalPages > 1 && (
+          <nav
+            class="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 font-mono text-sm"
+            aria-label="Pagination"
+            data-pagination
+          >
+            <button
+              type="button"
+              data-page-prev
+              disabled
+              class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
+            >
+              <span aria-hidden="true">←</span>
+              <span>newer</span>
+            </button>
+            <span
+              class="text-gray-500 dark:text-gray-500 tabular-nums"
+              data-page-indicator
+              aria-live="polite"
+            >
+              page 1 / {totalPages}
+            </span>
+            <button
+              type="button"
+              data-page-next
+              class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
+            >
+              <span>older</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </nav>
+        )
+      }
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  // Client-side pagination (8/page) matching the classic site: ?page=N shallow
+  // routing (page 1 has no param), disabled bounds, scroll to the header on
+  // change. All pages are server-rendered; we toggle their `hidden` state.
+  const groups = [
+    ...document.querySelectorAll<HTMLElement>('[data-page]'),
+  ];
+  if (groups.length > 1) {
+    const total = groups.length;
+    const nav = document.querySelector('[data-pagination]');
+    const prev = nav?.querySelector<HTMLButtonElement>('[data-page-prev]');
+    const next = nav?.querySelector<HTMLButtonElement>('[data-page-next]');
+    const indicator = nav?.querySelector('[data-page-indicator]');
+    const header = document.getElementById('blog-posts');
+    const clamp = (n: number) => Math.max(1, Math.min(n, total));
+    const current = () =>
+      clamp(Number(new URLSearchParams(location.search).get('page')) || 1);
+
+    const show = (page: number, scroll: boolean) => {
+      const p = clamp(page);
+      for (const g of groups) g.hidden = Number(g.dataset.page) !== p;
+      if (indicator) indicator.textContent = `page ${p} / ${total}`;
+      if (prev) prev.disabled = p <= 1;
+      if (next) next.disabled = p >= total;
+      // Paginated views are duplicate-ish of page 1 — keep them out of the
+      // index (the old site set noIndex for currentPage > 1). Canonical
+      // already strips the query string.
+      document
+        .querySelector('meta[name="robots"]')
+        ?.setAttribute('content', p > 1 ? 'noindex, follow' : 'index, follow');
+      if (scroll) header?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const go = (page: number) => {
+      const p = clamp(page);
+      const url = new URL(location.href);
+      if (p === 1) url.searchParams.delete('page');
+      else url.searchParams.set('page', String(p));
+      history.pushState({}, '', url);
+      show(p, true);
+    };
+
+    prev?.addEventListener('click', () => go(current() - 1));
+    next?.addEventListener('click', () => go(current() + 1));
+    window.addEventListener('popstate', () => show(current(), false));
+    show(current(), false);
+  }
+
+  // Hover lane-highlight: hovering a post lights up its whole branch thread
+  // (every rail segment/orb on the same lanes) across all rows — a port of
+  // the classic homepage's lifted highlight state, done in vanilla JS.
+  const MAIN_LANE = '__main__';
+  for (const card of document.querySelectorAll<HTMLElement>(
+    '[data-post-card]',
+  )) {
+    const lanes = (card.dataset.ownedLanes ?? '').split(' ').filter(Boolean);
+    const highlight = (on: boolean) => {
+      for (const lane of lanes) {
+        const sel =
+          lane === MAIN_LANE
+            ? '[data-lane="__main__"]'
+            : `[data-lane="${CSS.escape(lane)}"]`;
+        for (const seg of document.querySelectorAll(sel)) {
+          seg.classList.toggle('rail-hl', on);
+        }
+      }
+    };
+    card.addEventListener('mouseenter', () => highlight(true));
+    card.addEventListener('mouseleave', () => highlight(false));
+  }
+</script>

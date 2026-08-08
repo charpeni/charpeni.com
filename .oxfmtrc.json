@@ -4,26 +4,26 @@
   "printWidth": 80,
   "sortPackageJson": false,
   "sortImports": {
-    "customGroups": [
-      {
-        "groupName": "react-and-next",
-        "elementNamePattern": ["react", "next", "next/**"]
-      },
-      {
-        "groupName": "internal-aliases",
-        "elementNamePattern": ["@/**"]
-      }
-    ],
     "groups": [
-      "react-and-next",
       "value-builtin",
       "value-external",
-      "internal-aliases",
       "value-internal",
       ["value-parent", "value-sibling", "value-index"],
       "type-import",
       "unknown"
     ]
   },
-  "ignorePatterns": [".next", ".vercel", "next-env.d.ts", "pnpm-lock.yaml"]
+  "ignorePatterns": [
+    "dist",
+    ".astro",
+    ".vercel",
+    "prototype",
+    "pages",
+    "components",
+    "utils",
+    "scripts",
+    "styles",
+    "next-env.d.ts",
+    "pnpm-lock.yaml"
+  ]
 }

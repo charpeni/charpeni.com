@@ -1,0 +1,44 @@
+# Cloudflare header rules (port of vercel.json). Applies to static assets;
+# the /api/latestPrs Worker route sets its own headers in code.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' api.pirsch.io giscus.app https://*.codesandbox.io; child-src *.google.com *.codesandbox.io; style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app https://*.codesandbox.io; img-src * blob: data:; media-src 'none'; connect-src *; font-src 'self' https://*.codesandbox.io; frame-src https://giscus.app/ https://*.codesandbox.io;
+  Referrer-Policy: origin-when-cross-origin
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-DNS-Prefetch-Control: on
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+
+# Hashed, immutable build assets. Vercel added the /_astro/* rule implicitly;
+# Cloudflare serves assets with must-revalidate unless told otherwise.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Generated image variants (/_opt/...@<w>.webp). Not content-hashed — a
+# changed source image keeps the same variant path — so cacheable but not
+# immutable.
+/_opt/*
+  Cache-Control: public, max-age=86400
+
+# Markdown alternates. /api/blog/* is safe as a splat (that prefix contains
+# only .md files). VERIFY the :slug.md placeholder rule on the first preview
+# deploy — _headers has no regex, and if the placeholder doesn't match a
+# dotted suffix, Cloudflare still serves .md with a text/markdown guess
+# (only the explicit charset is at stake).
+/blog/:slug.md
+  Content-Type: text/markdown; charset=utf-8
+
+/api/blog/*
+  Content-Type: text/markdown; charset=utf-8
+
+# Window-content partials are headless fragments (no <head>, no robots meta) —
+# this header is their only noindex signal. robots.txt disallows them too.
+/partials/*
+  X-Robots-Tag: noindex
+
+/blog/:slug/content
+  X-Robots-Tag: noindex

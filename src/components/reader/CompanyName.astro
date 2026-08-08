@@ -1,0 +1,21 @@
+---
+/** Port of components/CompanyName.tsx — bold underlined company link. */
+type Props = { name: string; className?: string; href?: string };
+const { name, className = '', href } = Astro.props;
+const classes = `font-bold text-black dark:text-white underline decoration-3 ${className}`;
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      class={`not-prose ${classes}`}
+    >
+      {name}
+    </a>
+  ) : (
+    <span class={classes}>{name}</span>
+  )
+}

@@ -20,7 +20,16 @@
 import { mkdir, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import matter from 'gray-matter';
+/**
+ * Minimal frontmatter reader for the two fields this script needs —
+ * gray-matter left the dependency tree with the Next.js build pipeline.
+ */
+function matter(source: string): { data: { title?: string; image?: string } } {
+  const block = source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  const field = (name: string) =>
+    block.match(new RegExp(`^${name}:\\s*['"]?([^'"\n]+?)['"]?$`, 'm'))?.[1];
+  return { data: { title: field('title'), image: field('image') } };
+}
 import sharp from 'sharp';
 
 const WIDTH = 1200;

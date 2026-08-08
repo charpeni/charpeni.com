@@ -1,0 +1,23 @@
+{
+  // Cloudflare Workers deploy config. The @astrojs/cloudflare adapter
+  // supplies the worker entry + static assets wiring at build time and
+  // emits the final deployable config into dist/ — this file only sets
+  // project identity and runtime compatibility. Build with `pnpm build`,
+  // deploy with `wrangler deploy` (or the Workers Builds git integration).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "charpeni-com",
+  "compatibility_date": "2026-08-01",
+  // nodejs_compat provides node:stream & friends for small CJS deps
+  // (e.g. reading-time) in the Worker/prerender runtime.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    // Keep the site's historical no-trailing-slash URLs: directory-format
+    // output (blog/foo/index.html) is served at /blog/foo, and /blog/foo/
+    // redirects down. The workerd default (auto-trailing-slash) would make
+    // the trailing-slash form canonical instead.
+    "html_handling": "drop-trailing-slash",
+  },
+  "observability": {
+    "enabled": true,
+  },
+}

@@ -1,0 +1,357 @@
+---
+import '@shikijs/twoslash/style-rich.css';
+import 'rehype-callouts/theme/obsidian';
+
+import Enhancer from '@/components/Enhancer.astro';
+import { SITE_URL } from '@/utils/postMeta';
+import { personLd, websiteLd } from '@/utils/structuredData';
+import '@/styles/app.css';
+
+const DEFAULT_OG_IMAGE = `${SITE_URL}/static/images/og-default.png`;
+
+type Props = {
+  title?: string;
+  description?: string;
+  /** Absolute URL for OG/Twitter image. Falls back to the sitewide default. */
+  image?: string;
+  type?: 'website' | 'article';
+  /** ISO date for `article:published_time`. */
+  date?: string;
+  /** ISO date for `article:modified_time`. */
+  updatedAt?: string;
+  tags?: string[];
+  noIndex?: boolean;
+  /** Page-specific JSON-LD, appended after the sitewide WebSite + Person. */
+  structuredData?: Record<string, unknown>[];
+  /** URL of the Markdown representation, for LLM crawlers and tools. */
+  markdownUrl?: string;
+};
+
+const {
+  title = 'Nicolas Charpentier – Website',
+  description = 'My personal website and blog.',
+  image = DEFAULT_OG_IMAGE,
+  type = 'website',
+  date,
+  updatedAt,
+  tags = [],
+  noIndex = false,
+  structuredData = [],
+  markdownUrl,
+} = Astro.props;
+
+// Strip query/hash and the on-disk `.html` (build.format 'file') so
+// canonicals match the clean URLs Vercel serves.
+const pathname = Astro.url.pathname
+  .replace(/\.html$/, '')
+  .replace(/^\/index$/, '/');
+const canonicalUrl = new URL(pathname, SITE_URL).href;
+
+const allLd = [websiteLd(), personLd(), ...structuredData];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    {/*
+      Pre-paint mode gate. The terminal desktop is the server-rendered
+      default; the `retro-os` cookie's `0` value opts into reader mode.
+      Legacy `?retro=1` deep links re-enter terminal mode and strip the
+      param (RetroModeContext.tsx parity). Reader dark mode follows the old
+      next-themes `theme` localStorage key ('class' strategy).
+    */}
+    <script is:inline>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var retroParam = params.get('retro');
+        if (retroParam === '1' || retroParam === 'true') {
+          document.cookie =
+            'retro-os=1; path=/; max-age=31536000; samesite=lax';
+          params.delete('retro');
+          var search = params.toString();
+          history.replaceState(
+            history.state,
+            '',
+            location.pathname + (search ? '?' + search : '') + location.hash,
+          );
+        }
+        var match = document.cookie.match(/(?:^|; )retro-os=([^;]*)/);
+        if (match && match[1] === '0') {
+          document.documentElement.dataset.reader = 'true';
+          var theme = null;
+          try {
+            theme = localStorage.getItem('theme');
+          } catch (e) {}
+          var dark =
+            theme === 'dark' ||
+            ((theme === null || theme === 'system') &&
+              matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', dark);
+          // Live-follow OS theme changes while no explicit choice is stored
+          // (next-themes parity — it kept a matchMedia listener attached).
+          matchMedia('(prefers-color-scheme: dark)').addEventListener(
+            'change',
+            function (event) {
+              var stored = null;
+              try {
+                stored = localStorage.getItem('theme');
+              } catch (e) {}
+              if (stored === null || stored === 'system') {
+                document.documentElement.classList.toggle(
+                  'dark',
+                  event.matches,
+                );
+              }
+            },
+          );
+        }
+      })();
+    </script>
+
+    <title>{title}</title>
+    <meta
+      name="robots"
+      content={noIndex ? 'noindex, follow' : 'index, follow'}
+    />
+    <meta name="description" content={description} />
+    <meta name="author" content="Nicolas Charpentier" />
+    <meta property="og:url" content={canonicalUrl} />
+    <link rel="canonical" href={canonicalUrl} />
+    {
+      markdownUrl ? (
+        <link
+          rel="alternate"
+          type="text/markdown"
+          href={markdownUrl}
+          title="Markdown source"
+        />
+      ) : null
+    }
+
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Nicolas Charpentier" />
+    <meta property="og:description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@charpeni_" />
+    <meta name="twitter:creator" content="@charpeni_" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <meta name="twitter:image:alt" content={title} />
+
+    {date ? <meta property="article:published_time" content={date} /> : null}
+    {
+      updatedAt ? (
+        <meta property="article:modified_time" content={updatedAt} />
+      ) : null
+    }
+    {tags.map((tag) => <meta property="article:tag" content={tag} />)}
+
+    {
+      allLd.map((ld) => (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(ld)}
+        />
+      ))
+    }
+
+    <link
+      rel="preload"
+      href="/fonts/FixelText-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/FixelText-SemiBold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/FixelText-ExtraBold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/FixelText-Black.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link href="/static/favicons/favicon.ico" rel="shortcut icon" />
+    <link href="/static/favicons/site.webmanifest" rel="manifest" />
+    <link
+      href="/static/favicons/apple-touch-icon.png"
+      rel="apple-touch-icon"
+      sizes="180x180"
+    />
+    <link
+      href="/static/favicons/favicon-32x32.png"
+      rel="icon"
+      sizes="32x32"
+      type="image/png"
+    />
+    <link
+      href="/static/favicons/favicon-16x16.png"
+      rel="icon"
+      sizes="16x16"
+      type="image/png"
+    />
+    <link
+      color="#4a9885"
+      href="/static/favicons/safari-pinned-tab.svg"
+      rel="mask-icon"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="white"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="black"
+    />
+    <meta content="#ffffff" name="msapplication-TileColor" />
+    <meta
+      content="/static/favicons/browserconfig.xml"
+      name="msapplication-config"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Nicolas Charpentier's Blog"
+      href="/blog/rss.xml"
+    />
+
+    <script
+      is:inline
+      defer
+      src="https://api.pirsch.io/pa.js"
+      id="pianjs"
+      data-code="Tr41JTaYVYMIseTMTDKggSAsFsM85hnC"></script>
+
+    {/*
+      Progressive-enhancement fallback. The terminal desktop is a JS
+      augmentation: the window manager sizes, positions, and scrolls the
+      windows. With JS disabled there is no manager, and the desktop's own
+      CSS (fixed .retro-terminal-shell + overflow:hidden + absolute,
+      overlapping windows) traps everything in the first viewport. This
+      un-fixes those layers so the server-rendered content — already complete
+      in the DOM for crawlers — flows as a normal, scrollable document.
+      Only applies in terminal mode; no-JS visitors are always in terminal
+      mode (data-reader is set by script). `is:inline` keeps it verbatim, and
+      `!important` beats the desktop's geometry rules.
+    */}
+    <noscript>
+      <style is:inline>
+        html:not([data-reader]),
+        html:not([data-reader]) body {
+          overflow: auto !important;
+          height: auto !important;
+        }
+        html:not([data-reader]) .retro-terminal-shell {
+          position: static !important;
+          overflow: visible !important;
+          user-select: auto !important;
+        }
+        html:not([data-reader]) .retro-terminal-desktop {
+          position: static !important;
+          height: auto !important;
+          padding: 1rem 0 !important;
+        }
+        html:not([data-reader]) .retro-terminal-crt,
+        html:not([data-reader]) .retro-terminal-launcher {
+          display: none !important;
+        }
+        html:not([data-reader]) .retro-terminal-window,
+        html:not([data-reader]) .retro-terminal-window--ssr {
+          position: static !important;
+          transform: none !important;
+          width: auto !important;
+          max-width: 62rem !important;
+          min-width: 0 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          margin: 1rem auto !important;
+        }
+        /* The window body is `flex: 1` so the manager can size it; with a
+           content-height window that resolves to 0 and collapses. Let it size
+           to its content instead. */
+        html:not([data-reader]) .retro-terminal-content,
+        html:not([data-reader]) .retro-terminal-show-scroll,
+        html:not([data-reader]) .retro-terminal-legal-window {
+          flex: 0 0 auto !important;
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+        }
+        /* The profile card is absolutely placed onto the desktop; flow it. */
+        html:not([data-reader]) .retro-terminal-profile {
+          position: static !important;
+          transform: none !important;
+          max-width: none !important;
+        }
+        /* Entrance animations (window spawn, profile enter, git-log reveal)
+           start at opacity:0 / scaled and are meant to settle as the manager
+           mounts. Without JS there is no mount, so kill them and force the
+           resting visible state — otherwise whole windows stay invisible. */
+        html:not([data-reader]) .retro-terminal-shell * {
+          animation: none !important;
+        }
+        html:not([data-reader]) .retro-terminal-window,
+        html:not([data-reader]) .retro-terminal-profile,
+        html:not([data-reader]) .retro-terminal-content,
+        html:not([data-reader]) .retro-terminal-log,
+        html:not([data-reader]) .retro-terminal-row {
+          opacity: 1 !important;
+        }
+        /* On a post page the article is the primary content; in DOM order it
+           sits below the profile card and the full git-log archive. Float it
+           to the top for no-JS readers. Scoped to pages that actually have a
+           `show:` window via :has() (posts only); unsupported browsers simply
+           keep DOM order, which is still fully readable. */
+        html:not([data-reader])
+          .retro-terminal-desktop:has([data-retro-window-id^='show:']) {
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        /* article first, git-log archive second, profile/rest after. The show
+           window and the git-log's [data-window-host] are both direct flex
+           children of the desktop, so order them directly. */
+        html:not([data-reader])
+          .retro-terminal-desktop:has([data-retro-window-id^='show:'])
+          [data-retro-window-id^='show:'] {
+          order: -2 !important;
+        }
+        html:not([data-reader])
+          .retro-terminal-desktop:has([data-retro-window-id^='show:'])
+          [data-window-host] {
+          order: -1 !important;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body class="bg-white dark:bg-black">
+    <slot />
+    <Enhancer />
+  </body>
+</html>
