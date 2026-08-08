@@ -228,6 +228,14 @@ export default defineConfig({
     // verbatim from the Next.js utils/mdx.ts) — disable the built-in and
     // run the full custom rehype chain instead.
     syntaxHighlight: false,
+    // The Next.js pipeline (utils/mdx.ts) ran no remark plugins, so GFM
+    // extensions (bare-URL autolinking, tables, strikethrough) and SmartyPants
+    // curly-quote/dash substitution were both OFF. Astro enables both by
+    // default; leaving them on silently rewrites every already-published
+    // post's rendered output (straight → curly quotes, etc.). Pin them off to
+    // keep 1:1 parity with the old rendered HTML.
+    gfm: false,
+    smartypants: false,
     remarkPlugins: [remarkPreserveCodeMeta],
     rehypePlugins,
   },

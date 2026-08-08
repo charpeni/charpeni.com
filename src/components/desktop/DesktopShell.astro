@@ -283,8 +283,9 @@ const legalVariant = focused.startsWith('legal:')
                 $ archive-agent resolve {notFoundPath}
               </p>
               <p>
-                <strong>fatal:</strong> pathspec '{notFoundPath}' did not match
-                any file known to the archive.
+                <strong>fatal:</strong> pathspec '<span
+                  data-not-found-path>{notFoundPath}</span>' did not match any
+                file known to the archive.
               </p>
               <p>The object may have moved, or it never existed.</p>
               <a href="/" class="retro-terminal-not-found-link">

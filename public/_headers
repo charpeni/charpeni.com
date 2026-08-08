@@ -24,6 +24,16 @@
 /_opt/*
   Cache-Control: public, max-age=86400
 
+# Post banners, OG cards, and favicons live at stable per-slug/static paths.
+# They aren't content-hashed (so not immutable), but they effectively never
+# change — cache 30 days instead of Cloudflare's revalidate-every-request
+# default so repeat views skip the round-trip.
+/static/images/*
+  Cache-Control: public, max-age=2592000
+
+/static/favicons/*
+  Cache-Control: public, max-age=2592000
+
 # Markdown alternates. /api/blog/* is safe as a splat (that prefix contains
 # only .md files). VERIFY the :slug.md placeholder rule on the first preview
 # deploy — _headers has no regex, and if the placeholder doesn't match a

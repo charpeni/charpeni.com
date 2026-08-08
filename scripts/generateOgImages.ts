@@ -26,8 +26,17 @@ import path from 'node:path';
  */
 function matter(source: string): { data: { title?: string; image?: string } } {
   const block = source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
-  const field = (name: string) =>
-    block.match(new RegExp(`^${name}:\\s*['"]?([^'"\n]+?)['"]?$`, 'm'))?.[1];
+  const field = (name: string) => {
+    const raw = block.match(
+      new RegExp(`^${name}:[ \\t]*(.+?)[ \\t]*$`, 'm'),
+    )?.[1];
+    if (raw === undefined) return undefined;
+    // Strip a matching pair of surrounding quotes. The previous character
+    // class (`[^'"]+`) truncated YAML double-quoted titles at their first
+    // inner apostrophe ("...Don't Know...") and silently dropped the post.
+    const quoted = raw.match(/^(['"])([\s\S]*)\1$/);
+    return quoted ? quoted[2] : raw;
+  };
   return { data: { title: field('title'), image: field('image') } };
 }
 import sharp from 'sharp';

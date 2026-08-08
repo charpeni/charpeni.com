@@ -57,8 +57,13 @@ const termPosts: TermPost[] = all.map((p) => ({
 </BaseLayout>
 
 <script>
-  // The 404 window shows the actual requested path.
+  // The 404 window is prerendered with a placeholder path (Cloudflare serves
+  // one static 404 for every unmatched URL); fill in the real requested path
+  // on the client so BOTH the command line and the pathspec line agree.
   const path = location.pathname;
   const command = document.querySelector('[data-not-found-command]');
   if (command) command.textContent = `$ archive-agent resolve ${path}`;
+  for (const el of document.querySelectorAll('[data-not-found-path]')) {
+    el.textContent = path;
+  }
 </script>
