@@ -11,11 +11,13 @@
  * Run manually after adding or renaming a post:
  *   node scripts/generateOgImages.ts
  *
- * Then commit the regenerated PNG(s). Like `og-default.png`, these are
- * committed to the repo so the build pipeline never has to rasterize text —
- * this avoids font-rendering differences between local macOS and the Linux
- * build environment.
+ * Then commit the regenerated PNG(s). Titles are drawn as outlined glyph
+ * paths from the site's bundled Fixel font (see `textToPaths`), never SVG
+ * `<text>`, so the output is byte-identical on any machine or CI runner and
+ * never depends on system fonts / fontconfig being installed.
  */
+
+import { create as createFont } from 'fontkit';
 
 import { mkdir, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -48,6 +50,21 @@ const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, 'posts');
 const IMAGES_DIR = path.join(ROOT, 'public', 'static', 'images');
 const AVATAR_PATH = path.join(IMAGES_DIR, 'nicolas_charpentier.jpeg');
+const FONTS_DIR = path.join(ROOT, 'public', 'fonts');
+
+/**
+ * The site's display font (Fixel Text), loaded once. Titles render as outlined
+ * glyph paths (see `textToPaths`) instead of SVG `<text>` because librsvg only
+ * resolves `<text>` through system fontconfig — absent in many CI runners and
+ * not reproducible across machines. Outlining the glyphs ourselves makes every
+ * card byte-identical anywhere and matches the site's own typography.
+ */
+async function loadFont(file) {
+  return createFont(await readFile(path.join(FONTS_DIR, file)));
+}
+const fontExtraBold = await loadFont('FixelText-ExtraBold.woff2');
+const fontSemiBold = await loadFont('FixelText-SemiBold.woff2');
+const fontRegular = await loadFont('FixelText-Regular.woff2');
 
 // Colors are taken from the homepage gradient (`GradientAnimation.module.css`):
 //   blue-500   #3b82f6
@@ -57,16 +74,27 @@ const AVATAR_PATH = path.join(IMAGES_DIR, 'nicolas_charpentier.jpeg');
 // the sitewide fallback.
 
 /**
- * Escape characters that have meaning in XML so titles with quotes, ampersands,
- * or angle brackets don't break the SVG.
+ * Render one line of text as filled glyph outlines. fontkit shapes the run
+ * (kerning/ligatures); each glyph path comes back in font units with a y-up
+ * baseline, so we translate it into place and flip Y (SVG points down) with a
+ * negative scale. Returns the advance width too, for callers that center.
  */
-function escapeXml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;');
+function textToPaths(font, text, { x, y, fontSize, fill, letterSpacing = 0 }) {
+  const scale = fontSize / font.unitsPerEm;
+  const run = font.layout(text);
+  let penX = 0;
+  const glyphs = [];
+  run.glyphs.forEach((glyph, index) => {
+    const d = glyph.path.toSVG();
+    if (d) {
+      const gx = (x + penX).toFixed(2);
+      glyphs.push(
+        `<path transform="translate(${gx} ${y.toFixed(2)}) scale(${scale.toFixed(5)} ${(-scale).toFixed(5)})" d="${d}" fill="${fill}" />`,
+      );
+    }
+    penX += run.positions[index].xAdvance * scale + letterSpacing;
+  });
+  return { svg: glyphs.join(''), width: penX };
 }
 
 /**
@@ -125,12 +153,40 @@ async function buildSvg(title: string): Promise<string> {
   const titleBlockHeight = lines.length * lineHeight;
   const titleTop = 180 + (300 - titleBlockHeight) / 2;
 
-  const titleTspans = lines
+  const titlePaths = lines
     .map(
       (line, index) =>
-        `<tspan x="80" y="${titleTop + (index + 1) * lineHeight}">${escapeXml(line)}</tspan>`,
+        textToPaths(fontExtraBold, line, {
+          x: 80,
+          y: titleTop + (index + 1) * lineHeight,
+          fontSize,
+          fill: '#0a0a0a',
+        }).svg,
     )
     .join('');
+
+  const eyebrow = textToPaths(fontSemiBold, 'charpeni.com', {
+    x: 80,
+    y: 100,
+    fontSize: 28,
+    fill: '#6b7280',
+    letterSpacing: 2,
+  }).svg;
+
+  const bylineX = avatarCx + avatarR + 20;
+  const byline =
+    textToPaths(fontSemiBold, 'Nicolas Charpentier', {
+      x: bylineX,
+      y: avatarCy - 4,
+      fontSize: 26,
+      fill: '#0a0a0a',
+    }).svg +
+    textToPaths(fontRegular, 'Software Engineer', {
+      x: bylineX,
+      y: avatarCy + 26,
+      fontSize: 22,
+      fill: '#6b7280',
+    }).svg;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
@@ -167,25 +223,10 @@ async function buildSvg(title: string): Promise<string> {
   <!-- Accent bar -->
   <rect x="80" y="120" width="80" height="6" rx="3" fill="url(#accent)" />
 
-  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-    <!-- Eyebrow -->
-    <text x="80" y="100" font-size="28" font-weight="600" fill="#6b7280" letter-spacing="2">
-      charpeni.com
-    </text>
-
-    <!-- Title -->
-    <text font-size="${fontSize}" font-weight="800" fill="#0a0a0a">
-      ${titleTspans}
-    </text>
-
-    <!-- Byline -->
-    <text x="${avatarCx + avatarR + 20}" y="${avatarCy - 4}" font-size="26" font-weight="600" fill="#0a0a0a">
-      Nicolas Charpentier
-    </text>
-    <text x="${avatarCx + avatarR + 20}" y="${avatarCy + 26}" font-size="22" font-weight="500" fill="#6b7280">
-      Software Engineer
-    </text>
-  </g>
+  <!-- Eyebrow, title, and byline as outlined glyph paths (see textToPaths) -->
+  ${eyebrow}
+  ${titlePaths}
+  ${byline}
 
   <!-- Avatar: gradient ring + clipped photo -->
   <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR + ringWidth}" fill="url(#accent)" />
