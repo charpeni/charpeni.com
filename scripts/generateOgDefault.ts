@@ -8,10 +8,12 @@
  *
  * Then commit the regenerated PNG.
  *
- * The PNG is committed to the repo so the build pipeline never has to
- * rasterize text — this avoids font-rendering differences between local
- * macOS and the Linux build environment.
+ * Text is drawn as outlined glyph paths from the site's bundled Fixel font
+ * (see `textToPaths`), never SVG `<text>`, so the output is byte-identical on
+ * any machine or CI runner and never depends on system fonts / fontconfig.
  */
+
+import { create as createFont } from 'fontkit';
 
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -36,6 +38,45 @@ const AVATAR_PATH = path.join(
   'images',
   'nicolas_charpentier.jpeg',
 );
+const FONTS_DIR = path.join(ROOT, 'public', 'fonts');
+
+/**
+ * The site's display font (Fixel Text), loaded once. Text renders as outlined
+ * glyph paths (see `textToPaths`) instead of SVG `<text>` because librsvg only
+ * resolves `<text>` through system fontconfig — absent in many CI runners and
+ * not reproducible across machines. Outlining the glyphs ourselves makes the
+ * card byte-identical anywhere and matches the site's own typography.
+ */
+async function loadFont(file) {
+  return createFont(await readFile(path.join(FONTS_DIR, file)));
+}
+const fontExtraBold = await loadFont('FixelText-ExtraBold.woff2');
+const fontSemiBold = await loadFont('FixelText-SemiBold.woff2');
+const fontRegular = await loadFont('FixelText-Regular.woff2');
+
+/**
+ * Render one line of text as filled glyph outlines. fontkit shapes the run
+ * (kerning/ligatures); each glyph path comes back in font units with a y-up
+ * baseline, so we translate it into place and flip Y (SVG points down) with a
+ * negative scale.
+ */
+function textToPaths(font, text, { x, y, fontSize, fill, letterSpacing = 0 }) {
+  const scale = fontSize / font.unitsPerEm;
+  const run = font.layout(text);
+  let penX = 0;
+  const glyphs = [];
+  run.glyphs.forEach((glyph, index) => {
+    const d = glyph.path.toSVG();
+    if (d) {
+      const gx = (x + penX).toFixed(2);
+      glyphs.push(
+        `<path transform="translate(${gx} ${y.toFixed(2)}) scale(${scale.toFixed(5)} ${(-scale).toFixed(5)})" d="${d}" fill="${fill}" />`,
+      );
+    }
+    penX += run.positions[index].xAdvance * scale + letterSpacing;
+  });
+  return glyphs.join('');
+}
 
 // Colors are taken from the homepage gradient (`GradientAnimation.module.css`):
 //   blue-500   #3b82f6
@@ -55,6 +96,33 @@ async function buildSvg(): Promise<string> {
   const avatarCy = HEIGHT / 2;
   const avatarR = avatarSize / 2;
   const ringWidth = 8;
+
+  const textBlock =
+    textToPaths(fontSemiBold, 'charpeni.com', {
+      x: 80,
+      y: 220,
+      fontSize: 38,
+      fill: '#6b7280',
+      letterSpacing: 2,
+    }) +
+    textToPaths(fontExtraBold, 'Nicolas Charpentier', {
+      x: 80,
+      y: 330,
+      fontSize: 72,
+      fill: '#0a0a0a',
+    }) +
+    textToPaths(fontRegular, 'Software Engineer', {
+      x: 80,
+      y: 400,
+      fontSize: 32,
+      fill: '#374151',
+    }) +
+    textToPaths(fontRegular, 'Frontend infrastructure & tooling', {
+      x: 120,
+      y: 445,
+      fontSize: 28,
+      fill: '#6b7280',
+    });
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
@@ -88,21 +156,8 @@ async function buildSvg(): Promise<string> {
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowBlue)" />
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowPink)" />
 
-  <!-- Text -->
-  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-    <text x="80" y="220" font-size="38" font-weight="600" fill="#6b7280" letter-spacing="2">
-      charpeni.com
-    </text>
-    <text x="80" y="330" font-size="72" font-weight="800" fill="#0a0a0a">
-      Nicolas Charpentier
-    </text>
-    <text x="80" y="400" font-size="32" font-weight="500" fill="#374151">
-      Software Engineer
-    </text>
-    <text x="120" y="445" font-size="28" font-weight="500" fill="#6b7280">
-      Frontend infrastructure &amp; tooling
-    </text>
-  </g>
+  <!-- Name, role, and tagline as outlined glyph paths (see textToPaths) -->
+  ${textBlock}
 
   <!-- Avatar: gradient ring + clipped photo -->
   <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR + ringWidth}" fill="url(#accent)" />
