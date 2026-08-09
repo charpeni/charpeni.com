@@ -1,71 +1,72 @@
-import {
-  SandpackCodeEditor,
-  SandpackLayout,
-  SandpackPreview,
-  SandpackProvider,
-} from '@codesandbox/sandpack-react';
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
-import type { ComponentPropsWithoutRef } from 'react';
+import type { SandpackEditorProps } from '@/components/mdx/SandpackEditor';
 
-const readerDark = () =>
-  typeof document !== 'undefined' &&
-  document.documentElement.dataset.reader === 'true' &&
-  document.documentElement.classList.contains('dark');
-
-type Props = Pick<
-  ComponentPropsWithoutRef<typeof SandpackProvider>,
-  'files' | 'template' | 'options' | 'customSetup'
-> & {
-  showPreview?: boolean;
-  showLineNumbers?: boolean;
-  height?: number | string;
-};
+const SandpackEditor = lazy(
+  () => import('@/components/mdx/SandpackEditor'),
+);
 
 /**
- * Port of components/Sandpack.tsx. Theme: next-themes is gone — reader dark
- * mode is the `dark` class on <html> (terminal mode is always cream/light).
+ * Viewport-gated wrapper around SandpackEditor.
+ *
+ * `client:only` hydrates as soon as the island script runs, so importing
+ * @codesandbox/sandpack-react at module scope pulled ~270KB of React +
+ * CodeMirror into the critical path and pushed FCP out by ~1.2s on the one
+ * post that uses it. Keeping the heavy editor behind `lazy()` — and only
+ * resolving it once the embed is near the viewport — leaves the island
+ * itself tiny while the article text paints.
+ *
+ * The placeholder mirrors the server-rendered `fallback` slot in
+ * Sandpack.astro (same classes, same reserved height) so swapping between
+ * them is invisible and reserves layout up front.
  */
-export default function SandpackReact({
-  files,
-  template = 'vanilla-ts',
-  showPreview = true,
-  showLineNumbers = true,
-  height = 400,
-  options,
-  customSetup,
-}: Props) {
-  const [isDark, setIsDark] = useState(readerDark);
+export default function SandpackReact(props: SandpackEditorProps) {
+  const { height = 400 } = props;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
   useEffect(() => {
-    // Re-theme live when the reader dark-mode toggle flips the `dark` class
-    // (parity with the old next-themes-driven re-render).
-    const observer = new MutationObserver(() => setIsDark(readerDark()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class', 'data-reader'],
-    });
+    const node = containerRef.current;
+    if (!node) return;
+    // No IntersectionObserver (or a stale engine): load rather than never
+    // render the editor at all.
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      // Start fetching slightly before the embed scrolls into view so the
+      // editor is usually ready by the time it is.
+      { rootMargin: '300px' },
+    );
+    observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
+  const placeholder = (
+    <div
+      className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center"
+      style={{ minHeight: height }}
+    >
+      Loading code editor...
+    </div>
+  );
+
   return (
-    <div className="sandpackContainer">
-      <SandpackProvider
-        template={template}
-        files={files}
-        customSetup={customSetup}
-        theme={isDark ? 'dark' : 'light'}
-        options={options}
-      >
-        <SandpackLayout>
-          <SandpackCodeEditor
-            style={{ flex: 2, height }}
-            initMode="immediate"
-            showLineNumbers={showLineNumbers}
-            showInlineErrors
-          />
-          {showPreview ? <SandpackPreview style={{ height }} /> : null}
-        </SandpackLayout>
-      </SandpackProvider>
+    <div className="sandpackContainer" ref={containerRef}>
+      {shouldLoad ? (
+        <Suspense fallback={placeholder}>
+          <SandpackEditor {...props} />
+        </Suspense>
+      ) : (
+        placeholder
+      )}
     </div>
   );
 }
