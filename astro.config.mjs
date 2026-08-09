@@ -162,6 +162,111 @@ async function buildImageMeta() {
   fs.writeFileSync(outFile, `${JSON.stringify(meta, null, 2)}\n`);
 }
 
+/**
+ * Codepoints the Latin subset keeps: Basic Latin, Latin-1 Supplement, and the
+ * typographic punctuation/symbols the pages actually reach for. Deliberately
+ * wider than today's content (144 distinct codepoints across every page) so
+ * ordinary new prose — accents, dashes, curly quotes, currency — can't fall
+ * out of the subset. `ƒ` is the one glyph in use outside the two base blocks.
+ */
+const LATIN_SUBSET = (() => {
+  let chars = '';
+  for (let cp = 0x20; cp <= 0x7e; cp++) chars += String.fromCodePoint(cp);
+  for (let cp = 0xa0; cp <= 0xff; cp++) chars += String.fromCodePoint(cp);
+  return `${chars}ƒ‐‑‒–—‘’‚“”„†‡•…‰‹›⁄€™←↑→↓−×`;
+})();
+
+/**
+ * Fixel is a Ukrainian typeface: each weight ships 302 Cyrillic codepoints of
+ * the 954 it covers, and this site is English-only. Subsetting the build
+ * output to Latin cuts the family from ~326KB to ~103KB — by a wide margin the
+ * largest payload on any page.
+ *
+ * Runs on the build output rather than public/ so the licensed originals stay
+ * intact in the repo, and the /fonts/* URLs (and their immutable cache header)
+ * never move. Fails the build if a page renders a glyph that Fixel covers but
+ * the subset drops, so new content can't silently lose its typeface.
+ */
+function subsetFixelFonts() {
+  return {
+    name: 'subset-fixel-fonts',
+    hooks: {
+      'astro:build:done': async ({ dir, logger }) => {
+        const subsetFont = (await import('subset-font')).default;
+        const fontkit = await import('fontkit');
+        const fontsDir = fileURLToPath(new URL('fonts/', dir));
+        if (!fs.existsSync(fontsDir)) {
+          throw new Error(`subset-fixel-fonts: ${fontsDir} does not exist`);
+        }
+        const files = fs
+          .readdirSync(fontsDir)
+          .filter((f) => f.startsWith('FixelText') && f.endsWith('.woff2'));
+        if (files.length === 0) {
+          throw new Error('subset-fixel-fonts: no FixelText weights in output');
+        }
+
+        // Every codepoint the built pages render, minus markup and entities.
+        const rendered = new Set();
+        const walk = (d) => {
+          for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+            const p = path.join(d, entry.name);
+            if (entry.isDirectory()) walk(p);
+            else if (entry.name.endsWith('.html')) {
+              const text = fs
+                .readFileSync(p, 'utf8')
+                .replaceAll(/<script[\s\S]*?<\/script>/g, ' ')
+                .replaceAll(/<style[\s\S]*?<\/style>/g, ' ')
+                .replaceAll(/<[^>]+>/g, ' ')
+                .replaceAll(/&[a-z]+;|&#\d+;/gi, ' ');
+              for (const ch of text) rendered.add(ch.codePointAt(0));
+            }
+          }
+        };
+        walk(fileURLToPath(dir));
+
+        const kept = new Set([...LATIN_SUBSET].map((ch) => ch.codePointAt(0)));
+        const covered = new Set(
+          fontkit.openSync(path.join(fontsDir, files[0])).characterSet,
+        );
+        // Glyphs Fixel has today and the pages use, but the subset would drop.
+        // Anything Fixel never covered (box drawing, emoji) already falls back
+        // to a system font, so it isn't a regression.
+        const dropped = [...rendered].filter(
+          (cp) => cp > 0x20 && covered.has(cp) && !kept.has(cp),
+        );
+        if (dropped.length > 0) {
+          const list = dropped
+            .map(
+              (cp) =>
+                `U+${cp.toString(16).toUpperCase().padStart(4, '0')} ${String.fromCodePoint(cp)}`,
+            )
+            .join(', ');
+          throw new Error(
+            `subset-fixel-fonts: content renders ${dropped.length} glyph(s) Fixel covers but the subset drops — ${list}. Add them to LATIN_SUBSET in astro.config.mjs.`,
+          );
+        }
+
+        let before = 0;
+        let after = 0;
+        for (const file of files) {
+          const full = path.join(fontsDir, file);
+          const original = fs.readFileSync(full);
+          const subset = await subsetFont(original, LATIN_SUBSET, {
+            targetFormat: 'woff2',
+          });
+          fs.writeFileSync(full, subset);
+          before += original.length;
+          after += subset.length;
+        }
+        const pct = Math.round(100 - (after / before) * 100);
+        logger.info(
+          `Subset ${files.length} Fixel weights to Latin: ${(before / 1024).toFixed(1)}KB → ${(after / 1024).toFixed(1)}KB (-${pct}%)`,
+        );
+      },
+    },
+  };
+}
+
 await buildImageMeta();
 
 // https://astro.build/config
@@ -221,6 +326,7 @@ export default defineConfig({
     // React powers islands only: the terminal window manager and Sandpack.
     // Content never depends on it.
     react(),
+    subsetFixelFonts(),
   ],
   markdown: {
     // The site predates Astro's built-in highlighting and has a bespoke
