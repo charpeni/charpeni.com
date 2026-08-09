@@ -2,52 +2,25 @@
 import { getCollection } from 'astro:content';
 
 import DesktopShell from '@/components/desktop/DesktopShell.astro';
-import BlogPostCard from '@/components/reader/BlogPostCard.astro';
 import CompanyName from '@/components/reader/CompanyName.astro';
 import Footer from '@/components/reader/Footer.astro';
 import Header from '@/components/reader/Header.astro';
+import PostCardPage from '@/components/reader/PostCardPage.astro';
 import Socials from '@/components/reader/Socials.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { BRANCH_TAGS, computeGraph } from '@/utils/graph';
-import {
-  getReadingStats,
-  getResponsiveImage,
-  sortByPublishedAt,
-} from '@/utils/postMeta';
+import { BRANCH_TAGS } from '@/utils/graph';
+import { buildHomePages } from '@/utils/homePages';
+import { getResponsiveImage } from '@/utils/postMeta';
 
-import type { TermPost } from '@/utils/retro';
-
-const all = sortByPublishedAt(await getCollection('posts'));
-
-const termPosts: TermPost[] = all.map((p) => ({
-  slug: p.id,
-  title: p.data.title,
-  publishedAt: p.data.publishedAt,
-  tags: p.data.tags,
-  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
-  image: p.data.image,
-}));
-
-// Reader-mode homepage cards, paginated below at the classic site's 8/page.
-const cards = termPosts.map((p) => ({
-  slug: p.slug,
-  title: p.title,
-  summary: all.find((a) => a.id === p.slug)!.data.summary,
-  publishedAt: p.publishedAt,
-  tags: p.tags,
-  readingTimeText: p.readingTimeText,
-}));
-
-// 8 posts per page (classic charpeni.com). Each page's graph is computed from
-// its slice against the FULL archive, so branch lanes exit the top/bottom
-// edges when a branch continues onto another page — pagination is client-side
-// (?page=N shallow routing), so all pages are server-rendered and toggled.
-const POSTS_PER_PAGE = 8;
-const totalPages = Math.max(1, Math.ceil(cards.length / POSTS_PER_PAGE));
-const pages = Array.from({ length: totalPages }, (_, i) => {
-  const slice = cards.slice(i * POSTS_PER_PAGE, (i + 1) * POSTS_PER_PAGE);
-  return { page: i + 1, slice, graph: computeGraph(slice, cards) };
-});
+// 8 posts per page (classic charpeni.com), ?page=N shallow routing. Only
+// page 1 is server-rendered here: the other pages live at
+// /partials/home-posts/[page] and are fetched when first shown. Inlining all
+// of them (hidden) put 61% of the homepage DOM behind display:none and cost
+// ~750ms of FCP under mobile throttling.
+const { termPosts, pages, totalPages } = buildHomePages(
+  await getCollection('posts'),
+);
+const firstPage = pages[0];
 ---
 
 <BaseLayout
@@ -195,24 +168,18 @@ const pages = Array.from({ length: totalPages }, (_, i) => {
         }
       </div>
 
-      {
-        pages.map(({ page, slice, graph }) => (
-          <div class="flex flex-col" data-page={page} hidden={page !== 1}>
-            {slice.map((card, i) => (
-              <BlogPostCard
-                {...card}
-                graph={graph.rows[i]}
-                isHead={page === 1 && i === 0}
-                activeBranches={graph.activeBranches}
-              />
-            ))}
-          </div>
-        ))
-      }
+      <div data-page-groups>
+        <PostCardPage
+          page={firstPage.page}
+          slice={firstPage.slice}
+          graph={firstPage.graph}
+        />
+      </div>
 
       {
         totalPages > 1 && (
           <nav
+            data-total={totalPages}
             class="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 font-mono text-sm"
             aria-label="Pagination"
             data-pagination
@@ -250,26 +217,85 @@ const pages = Array.from({ length: totalPages }, (_, i) => {
 </BaseLayout>
 
 <script>
+  // Hover lane-highlight: hovering a post lights up its whole branch thread
+  // (every rail segment/orb on the same lanes) across all rows — a port of
+  // the classic homepage's lifted highlight state, done in vanilla JS.
+  // Extracted so pagination groups fetched later get wired the same way.
+  const MAIN_LANE = '__main__';
+  function wireCards(root: ParentNode) {
+    for (const card of root.querySelectorAll<HTMLElement>('[data-post-card]')) {
+      const lanes = (card.dataset.ownedLanes ?? '').split(' ').filter(Boolean);
+      const highlight = (on: boolean) => {
+        for (const lane of lanes) {
+          const sel =
+            lane === MAIN_LANE
+              ? '[data-lane="__main__"]'
+              : `[data-lane="${CSS.escape(lane)}"]`;
+          for (const seg of document.querySelectorAll(sel)) {
+            seg.classList.toggle('rail-hl', on);
+          }
+        }
+      };
+      card.addEventListener('mouseenter', () => highlight(true));
+      card.addEventListener('mouseleave', () => highlight(false));
+    }
+  }
+  wireCards(document);
+
   // Client-side pagination (8/page) matching the classic site: ?page=N shallow
   // routing (page 1 has no param), disabled bounds, scroll to the header on
-  // change. All pages are server-rendered; we toggle their `hidden` state.
-  const groups = [
-    ...document.querySelectorAll<HTMLElement>('[data-page]'),
-  ];
-  if (groups.length > 1) {
-    const total = groups.length;
-    const nav = document.querySelector('[data-pagination]');
-    const prev = nav?.querySelector<HTMLButtonElement>('[data-page-prev]');
-    const next = nav?.querySelector<HTMLButtonElement>('[data-page-next]');
-    const indicator = nav?.querySelector('[data-page-indicator]');
+  // change. Only page 1 is server-rendered; other groups are fetched from
+  // /partials/home-posts/[page] the first time they're shown and adopted into
+  // [data-page-groups]. Fetches dedupe via the pending map, so a double-click
+  // or fast back/forward can't insert a group twice.
+  const nav = document.querySelector<HTMLElement>('[data-pagination]');
+  const groupHost = document.querySelector<HTMLElement>('[data-page-groups]');
+  const total = Number(nav?.dataset.total ?? 1);
+  if (nav && groupHost && total > 1) {
+    const prev = nav.querySelector<HTMLButtonElement>('[data-page-prev]');
+    const next = nav.querySelector<HTMLButtonElement>('[data-page-next]');
+    const indicator = nav.querySelector('[data-page-indicator]');
     const header = document.getElementById('blog-posts');
     const clamp = (n: number) => Math.max(1, Math.min(n, total));
     const current = () =>
       clamp(Number(new URLSearchParams(location.search).get('page')) || 1);
+    const groupFor = (p: number) =>
+      groupHost.querySelector<HTMLElement>(`[data-page="${p}"]`);
 
-    const show = (page: number, scroll: boolean) => {
+    const pending = new Map<number, Promise<void>>();
+    const ensureGroup = (p: number): Promise<void> => {
+      if (groupFor(p)) return Promise.resolve();
+      let inFlight = pending.get(p);
+      if (!inFlight) {
+        inFlight = fetch(`/partials/home-posts/${p}`)
+          .then((response) => {
+            if (!response.ok) throw new Error(String(response.status));
+            return response.text();
+          })
+          .then((html) => {
+            if (groupFor(p)) return;
+            groupHost.insertAdjacentHTML('beforeend', html);
+            const group = groupFor(p);
+            if (group) wireCards(group);
+          })
+          .finally(() => pending.delete(p));
+        pending.set(p, inFlight);
+      }
+      return inFlight;
+    };
+
+    const show = async (page: number, scroll: boolean) => {
       const p = clamp(page);
-      for (const g of groups) g.hidden = Number(g.dataset.page) !== p;
+      try {
+        await ensureGroup(p);
+      } catch {
+        // Fetch failed (offline, deploy in flight) — keep the current page
+        // rather than blanking the list.
+        return;
+      }
+      for (const g of groupHost.querySelectorAll<HTMLElement>('[data-page]')) {
+        g.hidden = Number(g.dataset.page) !== p;
+      }
       if (indicator) indicator.textContent = `page ${p} / ${total}`;
       if (prev) prev.disabled = p <= 1;
       if (next) next.disabled = p >= total;
@@ -287,35 +313,18 @@ const pages = Array.from({ length: totalPages }, (_, i) => {
       if (p === 1) url.searchParams.delete('page');
       else url.searchParams.set('page', String(p));
       history.pushState({}, '', url);
-      show(p, true);
+      void show(p, true);
     };
 
     prev?.addEventListener('click', () => go(current() - 1));
     next?.addEventListener('click', () => go(current() + 1));
-    window.addEventListener('popstate', () => show(current(), false));
-    show(current(), false);
-  }
-
-  // Hover lane-highlight: hovering a post lights up its whole branch thread
-  // (every rail segment/orb on the same lanes) across all rows — a port of
-  // the classic homepage's lifted highlight state, done in vanilla JS.
-  const MAIN_LANE = '__main__';
-  for (const card of document.querySelectorAll<HTMLElement>(
-    '[data-post-card]',
-  )) {
-    const lanes = (card.dataset.ownedLanes ?? '').split(' ').filter(Boolean);
-    const highlight = (on: boolean) => {
-      for (const lane of lanes) {
-        const sel =
-          lane === MAIN_LANE
-            ? '[data-lane="__main__"]'
-            : `[data-lane="${CSS.escape(lane)}"]`;
-        for (const seg of document.querySelectorAll(sel)) {
-          seg.classList.toggle('rail-hl', on);
-        }
-      }
-    };
-    card.addEventListener('mouseenter', () => highlight(true));
-    card.addEventListener('mouseleave', () => highlight(false));
+    window.addEventListener('popstate', () => void show(current(), false));
+    void show(current(), false);
+    // Warm the next page once the browser is idle so the first "older" click
+    // doesn't wait on the network. One page only — prefetching all of them
+    // would re-create the cost this split removed, just off the main path.
+    const warm = () => void ensureGroup(clamp(current() + 1)).catch(() => {});
+    if ('requestIdleCallback' in window) requestIdleCallback(warm);
+    else setTimeout(warm, 2000);
   }
 </script>

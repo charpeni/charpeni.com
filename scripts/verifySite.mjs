@@ -52,6 +52,16 @@ check(
     ) &&
     raw.includes('type="text/markdown"'),
 );
+const rawHome = await (await page.request.get(`${BASE}/`)).text();
+check(
+  // Regression guard for the FCP fix: only page 1's card group may ship in
+  // the homepage document; the rest are /partials/home-posts fragments.
+  // \d-valued only: the inline pagination script contains the selector
+  // template `[data-page="${p}"]`, which a bare prefix match would count.
+  'raw homepage HTML: exactly one pagination group inlined',
+  (rawHome.match(/data-page="\d+"/g) ?? []).length === 1 &&
+    rawHome.includes('data-page-groups'),
+);
 
 // --- Desktop home: term window, adoption, keyboard ---
 await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
@@ -288,8 +298,8 @@ await sp.goto(`${BASE}/blog/dont-blindly-use-usetransition-everywhere`, {
  * is `position:fixed; overflow:hidden`, so the article scrolls inside
  * `.retro-terminal-show-scroll`, not the window.
  */
-const scrollThrough = (page) =>
-  page.evaluate(async () => {
+const scrollThrough = (tab) =>
+  tab.evaluate(async () => {
     const box = document.querySelector('.retro-terminal-show-scroll');
     const target = box ?? document.scrollingElement;
     const height = box ? box.scrollHeight : document.body.scrollHeight;
@@ -373,7 +383,11 @@ await reader.screenshot({ path: 'docs/reader-post.png' });
 // Reader homepage: the classic hero + git-graph post list (not the terminal).
 await reader.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 check(
-  'reader homepage: hero + branches legend + git-graph post cards',
+  // 8 VISIBLE cards, not a total-count assertion: the served document inlines
+  // only page 1 (raw-HTML check above), but by networkidle the idle prefetch
+  // may have adopted page 2's hidden group already. Full-archive discovery is
+  // the term log's job (checked above), plus sitemap/RSS/llms.txt.
+  'reader homepage: hero + branches legend + 8 visible page-1 cards',
   await reader.evaluate(() => {
     const hero = [...document.querySelectorAll('h1')].some((h) =>
       h.textContent?.includes("Hi, I'm Nicolas Charpentier"),
@@ -381,8 +395,10 @@ check(
     const branches = document.querySelectorAll(
       '[aria-label="Branches"] a',
     ).length;
-    const cards = document.querySelectorAll('[data-post-card]').length;
-    return hero && branches === 6 && cards === 36;
+    const visibleCards = document.querySelectorAll(
+      '[data-page]:not([hidden]) [data-post-card]',
+    ).length;
+    return hero && branches === 6 && visibleCards === 8;
   }),
 );
 await reader.hover('[data-post-card]');
@@ -407,8 +423,18 @@ check(
   }),
 );
 await reader.click('[data-page-next]');
+// Page 2 is fetched from /partials/home-posts/2 on first show — wait for the
+// adopted group rather than asserting synchronously after the click.
+await reader.waitForFunction(
+  () =>
+    [...document.querySelectorAll('[data-page]')].some(
+      (g) => Number(g.dataset.page) === 2 && !g.hidden,
+    ),
+  undefined,
+  { timeout: 15_000 },
+);
 check(
-  'reader homepage: "older" navigates to ?page=2 (shallow routing)',
+  'reader homepage: "older" fetches page 2 and navigates (?page=2)',
   await reader.evaluate(() => {
     const visible = [...document.querySelectorAll('[data-page]')].filter(
       (g) => !g.hidden,
@@ -417,11 +443,53 @@ check(
       new URL(location.href).searchParams.get('page') === '2' &&
       visible.length === 1 &&
       Number(visible[0].dataset.page) === 2 &&
+      visible[0].querySelectorAll('[data-post-card]').length === 8 &&
       document.querySelector('[data-page-prev]').disabled === false
     );
   }),
 );
+check(
+  'reader homepage: fetched page-2 cards get the hover lane-highlight too',
+  await reader.evaluate(() => {
+    document.querySelectorAll('.rail-hl').forEach((s) =>
+      s.classList.remove('rail-hl'),
+    );
+    const card = [
+      ...document.querySelectorAll('[data-page="2"] [data-post-card]'),
+    ][0];
+    card.dispatchEvent(new MouseEvent('mouseenter'));
+    return document.querySelectorAll('.rail-hl').length > 0;
+  }),
+);
 await reader.close();
+
+// Deep link straight to a non-inlined page: the script must fetch the group
+// before anything is usable.
+const deepReader = await readerContext.newPage();
+deepReader.setDefaultTimeout(90_000);
+await deepReader.goto(`${BASE}/?page=3`, { waitUntil: 'networkidle' });
+await deepReader.waitForFunction(
+  () =>
+    [...document.querySelectorAll('[data-page]')].some(
+      (g) => Number(g.dataset.page) === 3 && !g.hidden,
+    ),
+  undefined,
+  { timeout: 15_000 },
+);
+check(
+  'reader homepage: deep link ?page=3 fetches and shows that page',
+  await deepReader.evaluate(() => {
+    const visible = [...document.querySelectorAll('[data-page]')].filter(
+      (g) => !g.hidden,
+    );
+    return (
+      visible.length === 1 &&
+      Number(visible[0].dataset.page) === 3 &&
+      visible[0].querySelectorAll('[data-post-card]').length === 8
+    );
+  }),
+);
+await deepReader.close();
 
 // --- Legacy ?retro=1 clears reader cookie ---
 const legacyContext = await browser.newContext();

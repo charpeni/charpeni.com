@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+
+import PostCardPage from '@/components/reader/PostCardPage.astro';
+import { buildHomePages } from '@/utils/homePages';
+
+/**
+ * Reader-homepage pagination fragments: /partials/home-posts/2..N serve the
+ * card groups the homepage no longer inlines (page 1 ships in the document;
+ * everything else cost FCP without ever being visible). The pagination
+ * script fetches a group the first time its page is shown and adopts it into
+ * [data-page-groups].
+ *
+ * Headless fragment (no <head>): /partials/* carries X-Robots-Tag: noindex
+ * via public/_headers, robots.txt disallows it, and the sitemap filters it.
+ */
+export const partial = true;
+
+export async function getStaticPaths() {
+  const { pages } = buildHomePages(await getCollection('posts'));
+  return pages
+    .filter(({ page }) => page > 1)
+    .map(({ page, slice, graph }) => ({
+      params: { page: String(page) },
+      props: { page, slice, graph },
+    }));
+}
+
+const { page, slice, graph } = Astro.props;
+---
+
+<PostCardPage page={page} slice={slice} graph={graph} hidden />
