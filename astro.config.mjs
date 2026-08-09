@@ -267,6 +267,80 @@ function subsetFixelFonts() {
   };
 }
 
+/**
+ * EXPERIMENT (do not merge): strip every `reader-only` subtree from the built
+ * HTML to measure, on the real edge, what removing reader mode entirely would
+ * buy. Mirrors the local A/B that motivated the paginated homepage. Reader
+ * mode is knowingly broken on this branch; terminal mode is unaffected (the
+ * harness's terminal checks don't touch reader-only nodes).
+ */
+function stripReaderOnly() {
+  const VOID = new Set([
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link',
+    'meta', 'source', 'track', 'wbr',
+  ]);
+  const stripHtml = (html) => {
+    const tokens = [...html.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9-]*)[^>]*>/g)];
+    const spans = [];
+    let depth = 0;
+    let removing = false;
+    let startIdx = 0;
+    let targetDepth = 0;
+    for (const token of tokens) {
+      const [text, name] = token;
+      const isClose = text.startsWith('</');
+      const isSelfClosing =
+        text.endsWith('/>') || VOID.has(name.toLowerCase());
+      if (!isClose && !isSelfClosing) {
+        if (!removing && /class="[^"]*\breader-only\b/.test(text)) {
+          removing = true;
+          startIdx = token.index;
+          targetDepth = depth;
+        }
+        depth += 1;
+      } else if (isClose) {
+        depth -= 1;
+        if (removing && depth === targetDepth) {
+          spans.push([startIdx, token.index + text.length]);
+          removing = false;
+        }
+      }
+    }
+    let out = html;
+    for (const [a, b] of spans.toReversed()) out = out.slice(0, a) + out.slice(b);
+    return out;
+  };
+  return {
+    name: 'strip-reader-only',
+    hooks: {
+      'astro:build:done': ({ dir, logger }) => {
+        const root = fileURLToPath(dir);
+        let files = 0;
+        let saved = 0;
+        const walk = (d) => {
+          for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+            const p = path.join(d, entry.name);
+            if (entry.isDirectory()) walk(p);
+            else if (entry.name.endsWith('.html')) {
+              const before = fs.readFileSync(p, 'utf8');
+              const after = stripHtml(before);
+              if (after.length !== before.length) {
+                fs.writeFileSync(p, after);
+                files += 1;
+                saved += before.length - after.length;
+              }
+            }
+          }
+        };
+        walk(root);
+        logger.info(
+          `EXPERIMENT stripped reader-only from ${files} pages (-${(saved / 1024).toFixed(0)}KB raw)`,
+        );
+      },
+    },
+  };
+}
+
 await buildImageMeta();
 
 // https://astro.build/config
@@ -327,6 +401,7 @@ export default defineConfig({
     // Content never depends on it.
     react(),
     subsetFixelFonts(),
+    stripReaderOnly(),
   ],
   markdown: {
     // The site predates Astro's built-in highlighting and has a bespoke
