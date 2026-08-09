@@ -3,6 +3,7 @@ import TermLog from '@/components/desktop/TermLog.astro';
 import Window from '@/components/desktop/Window.astro';
 import LegalContent from '@/components/reader/LegalContent.astro';
 import { shortHash } from '@/utils/graph';
+import { getResponsiveImage } from '@/utils/postMeta';
 import {
   branchOf,
   formatLongDate,
@@ -59,6 +60,13 @@ const showMetaAfter = post
 const legalVariant = focused.startsWith('legal:')
   ? (focused.slice(6) as 'disclaimer' | 'privacy-policy')
   : undefined;
+
+// The profile icons render at 36/58 CSS px, so they reuse the same WebP
+// variant the reader-mode avatar already requests rather than the 664px
+// source (~88KB) — without a srcset the browser has only the original to
+// pick from, and it downloads it on every page.
+const AVATAR = '/static/images/nicolas_charpentier.jpeg';
+const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
 ---
 
 <div class="retro-terminal-shell" data-desktop-shell>
@@ -75,7 +83,9 @@ const legalVariant = focused.startsWith('legal:')
       <span class="retro-terminal-profile-toggle-glyph" aria-hidden="true">
         <img
           class="retro-terminal-profile-icon-img"
-          src="/static/images/nicolas_charpentier.jpeg"
+          src={AVATAR}
+          srcset={avatarSrcset}
+          sizes="36px"
           alt=""
           width="36"
           height="36"
@@ -98,7 +108,9 @@ const legalVariant = focused.startsWith('legal:')
       <div class="retro-terminal-profile-icon-glyph" aria-hidden="true">
         <img
           class="retro-terminal-profile-icon-img"
-          src="/static/images/nicolas_charpentier.jpeg"
+          src={AVATAR}
+          srcset={avatarSrcset}
+          sizes="58px"
           alt=""
           width="58"
           height="58"

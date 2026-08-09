@@ -124,6 +124,10 @@ const structuredData = [
               <img
                 class="object-cover rounded-full w-full h-full"
                 src="/static/images/nicolas_charpentier.jpeg"
+                srcset={getResponsiveImage(
+                  '/static/images/nicolas_charpentier.jpeg',
+                )?.srcset}
+                sizes="48px"
                 alt="Nicolas Charpentier"
               />
             </div>
