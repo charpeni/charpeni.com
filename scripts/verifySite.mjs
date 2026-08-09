@@ -283,13 +283,37 @@ sp.setDefaultTimeout(90_000);
 await sp.goto(`${BASE}/blog/dont-blindly-use-usetransition-everywhere`, {
   waitUntil: 'networkidle',
 });
+/**
+ * Scroll whichever container actually scrolls. In terminal mode the desktop
+ * is `position:fixed; overflow:hidden`, so the article scrolls inside
+ * `.retro-terminal-show-scroll`, not the window.
+ */
+const scrollThrough = (page) =>
+  page.evaluate(async () => {
+    const box = document.querySelector('.retro-terminal-show-scroll');
+    const target = box ?? document.scrollingElement;
+    const height = box ? box.scrollHeight : document.body.scrollHeight;
+    for (let y = 0; y <= height; y += 400) {
+      target.scrollTo(0, y);
+      await new Promise((resolve) => setTimeout(resolve, 80));
+    }
+  });
+
+// The editors are lazy by design: SandpackReact gates the ~270KB CodeMirror
+// import on an IntersectionObserver so it stays out of the critical path.
+// All four sit below the fold, so none should have mounted on arrival.
+check(
+  'deep link: Sandpack defers the below-fold editors',
+  (await sp.locator('.sp-wrapper').count()) === 0,
+);
+await scrollThrough(sp);
 await sp.waitForFunction(
-  () => document.querySelectorAll('.sp-wrapper').length > 0,
+  () => document.querySelectorAll('.sp-wrapper').length >= 4,
   undefined,
-  { timeout: 30_000 },
+  { timeout: 60_000 },
 );
 check(
-  'deep link: Sandpack editors mount (React root)',
+  'deep link: every Sandpack editor mounts once scrolled to (React root)',
   (await sp.locator('.sp-wrapper').count()) >= 4,
 );
 await sp.goto(`${BASE}/`, { waitUntil: 'networkidle' });
@@ -300,7 +324,10 @@ await sp.evaluate(() => {
   );
   row.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 });
-// All 4 embeds hydrate progressively — wait for the full set, not the first.
+// Same lazy contract inside a terminal-opened window, where the scroll
+// container is the window body rather than the document.
+await sp.waitForSelector('[data-retro-window-id^="show:"] .sandpackContainer');
+await scrollThrough(sp);
 await sp.waitForFunction(
   () =>
     document.querySelectorAll('[data-retro-window-id^="show:"] .sp-wrapper')
@@ -309,7 +336,7 @@ await sp.waitForFunction(
   { timeout: 60_000 },
 );
 check(
-  'terminal-opened window: Sandpack editors mount too',
+  'terminal-opened window: Sandpack editors mount on scroll too',
   (await sp
     .locator('[data-retro-window-id^="show:"] .sp-wrapper')
     .count()) >= 4,
