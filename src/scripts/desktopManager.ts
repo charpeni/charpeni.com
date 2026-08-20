@@ -47,6 +47,9 @@ type Win = {
   z: number;
   userResized: boolean;
   minimized: boolean;
+  /** Geometry to restore after leaving the maximized state. */
+  restoreGeom: WinGeom | null;
+  geometryAnimation: Animation | null;
   /** Element focused when this window opened, to restore focus on close. */
   opener: HTMLElement | null;
 };
@@ -90,6 +93,12 @@ const shell = document.querySelector<HTMLElement>('.retro-terminal-shell');
 const vw = () => window.innerWidth;
 const vh = () => window.innerHeight;
 const isPhone = () => vw() < 640 || vh() <= 500;
+
+const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
+
+function maximizedGeom(): WinGeom {
+  return { x: 0, y: 0, w: vw(), h: vh() };
+}
 
 function kindOf(id: string): Kind {
   if (id === 'term') return 'term';
@@ -248,28 +257,133 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     win.el.style.height = `${win.geom.h}px`;
   }
 
+  function animateGeometryChange(win: Win, from: DOMRect) {
+    const to = win.el.getBoundingClientRect();
+    const reduceMotion = matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    const animation = reduceMotion
+      ? win.el.animate([{ opacity: 0.85 }, { opacity: 1 }], {
+          duration: 160,
+          easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+        })
+      : win.el.animate(
+          [
+            {
+              transformOrigin: 'top left',
+              transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`,
+            },
+            { transformOrigin: 'top left', transform: 'none' },
+          ],
+          {
+            duration: 240,
+            easing: 'cubic-bezier(0.77, 0, 0.175, 1)',
+          },
+        );
+    animation.id = WINDOW_GEOMETRY_ANIMATION_ID;
+    win.geometryAnimation = animation;
+    const clearAnimation = () => {
+      if (win.geometryAnimation === animation) win.geometryAnimation = null;
+    };
+    animation.addEventListener('finish', clearAnimation, { once: true });
+    animation.addEventListener('cancel', clearAnimation, { once: true });
+  }
+
   /** The single reconcile point: state → DOM. Idempotent. */
   function render() {
+    const phone = isPhone();
+    const coveringZ = phone
+      ? null
+      : (state.windows
+          .filter((win) => !win.minimized && win.restoreGeom !== null)
+          .reduce<number | null>(
+            (highest, win) => Math.max(highest ?? win.z, win.z),
+            null,
+          ) ?? null);
+    const coveringWindow =
+      coveringZ === null
+        ? null
+        : (state.windows.find((win) => win.z === coveringZ) ?? null);
+    const activeWindow =
+      document.activeElement instanceof Element
+        ? windowFromEvent(document.activeElement)
+        : null;
+    if (
+      coveringWindow &&
+      (!activeWindow || activeWindow.z < coveringWindow.z)
+    ) {
+      coveringWindow.el.focus({ preventScroll: true });
+    }
     for (const win of state.windows) {
+      const maximized = !phone && win.restoreGeom !== null;
       win.el.classList.remove('retro-terminal-window--ssr');
       win.el.classList.toggle(
         'retro-terminal-window--minimized',
         win.minimized,
       );
+      win.el.classList.toggle(
+        'retro-terminal-window--maximized',
+        maximized,
+      );
       win.el.setAttribute('aria-hidden', win.minimized ? 'true' : 'false');
+      win.el.setAttribute(
+        'aria-roledescription',
+        maximized ? 'Maximized window' : 'Window',
+      );
+      win.el.toggleAttribute(
+        'inert',
+        coveringZ !== null && win.z < coveringZ,
+      );
+      if (phone) win.el.removeAttribute('aria-keyshortcuts');
+      else win.el.setAttribute('aria-keyshortcuts', 'Alt+Enter');
       applyGeom(win);
       const active = win.id === state.focusedId && !win.minimized;
       win.el.classList.toggle('retro-terminal-window--active', active);
-      win.el
-        .querySelector('.retro-terminal-titlebar')
-        ?.classList.toggle('retro-terminal-titlebar--active', active);
+      const titlebar = win.el.querySelector('.retro-terminal-titlebar');
+      titlebar?.classList.toggle('retro-terminal-titlebar--active', active);
+      if (phone) titlebar?.removeAttribute('title');
+      else {
+        titlebar?.setAttribute(
+          'title',
+          `Double-click to ${maximized ? 'restore' : 'maximize'} (Alt+Enter)`,
+        );
+      }
     }
     desktopEl.classList.toggle(
       'retro-terminal-desktop--empty',
       !state.windows.some((w) => !w.minimized),
     );
+    const hasMaximizedWindow = coveringZ !== null;
+    desktopEl.classList.toggle(
+      'retro-terminal-desktop--window-maximized',
+      hasMaximizedWindow,
+    );
     ensureLauncher();
+    for (const el of desktopEl.querySelectorAll<HTMLElement>(
+      '.retro-terminal-profile, .retro-terminal-profile-toggle, .retro-terminal-profile-icon, .retro-terminal-footer, .retro-terminal-launcher, [data-reader-mode]',
+    )) {
+      el.toggleAttribute('inert', hasMaximizedWindow);
+    }
     syncTitle();
+  }
+
+  function toggleMaximize(win: Win, options?: { animate?: boolean }) {
+    if (isPhone() || win.minimized) return;
+
+    // Capture the current visual bounds before cancelling an interrupted
+    // animation so a rapid toggle continues from where the window is now.
+    const from =
+      options?.animate === false ? null : win.el.getBoundingClientRect();
+    win.geometryAnimation?.cancel();
+    if (win.restoreGeom) {
+      win.geom = win.restoreGeom;
+      win.restoreGeom = null;
+    } else {
+      win.restoreGeom = { ...win.geom };
+      win.geom = maximizedGeom();
+    }
+    render();
+    if (from) animateGeometryChange(win, from);
   }
 
   /** Tab title tracks the focused window (RetroTerminal.tsx parity). */
@@ -349,11 +463,18 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     render();
     // Restore focus to whatever opened this window (e.g. the term-log row),
     // falling back to the new top window — important for keyboard users.
-    if (win.opener?.isConnected && win.opener.offsetParent !== null) {
+    let restoredOpenerFocus = false;
+    if (
+      win.opener?.isConnected &&
+      win.opener.offsetParent !== null &&
+      !win.opener.closest('[inert]')
+    ) {
       win.opener.focus({ preventScroll: true });
-    } else if (top) {
+      restoredOpenerFocus = document.activeElement === win.opener;
+    }
+    if (!restoredOpenerFocus && top) {
       top.el.focus({ preventScroll: true });
-    } else {
+    } else if (!restoredOpenerFocus) {
       focusFallback();
     }
     syncUrl('replace');
@@ -382,6 +503,8 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       z: nextZ(),
       userResized: false,
       minimized: false,
+      restoreGeom: null,
+      geometryAnimation: null,
       opener: null,
     };
     state.windows.push(win);
@@ -409,6 +532,8 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       z: nextZ(),
       userResized: false,
       minimized: false,
+      restoreGeom: null,
+      geometryAnimation: null,
       opener:
         document.activeElement instanceof HTMLElement
           ? document.activeElement
@@ -692,13 +817,23 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       return;
     }
 
-    if (target.closest('.retro-terminal-titlebar') && !isPhone()) {
+    if (
+      target.closest('.retro-terminal-titlebar') &&
+      !isPhone() &&
+      !win.restoreGeom
+    ) {
+      win.geometryAnimation?.finish();
       const origin = { ...win.geom };
       trackDrag(event, (dx, dy) => {
         Object.assign(win.geom, clampMove(origin, dx, dy, vw(), vh()));
         applyGeom(win);
       });
-    } else if (target.closest('.retro-terminal-resize') && !isPhone()) {
+    } else if (
+      target.closest('.retro-terminal-resize') &&
+      !isPhone() &&
+      !win.restoreGeom
+    ) {
+      win.geometryAnimation?.finish();
       const origin = { ...win.geom };
       event.preventDefault();
       trackDrag(event, (dx, dy) => {
@@ -783,13 +918,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       openShow(row.dataset.logSlug ?? '');
       return;
     }
-    if (target.closest('.retro-terminal-titlebar')) {
+    if (
+      target.closest('.retro-terminal-titlebar') &&
+      !target.closest('.retro-terminal-close')
+    ) {
       const win = windowFromEvent(target);
       if (win) {
         event.preventDefault();
-        win.geom = defaultGeom(win.id);
-        win.userResized = false;
-        applyGeom(win);
+        toggleMaximize(win);
       }
     }
   });
@@ -832,6 +968,18 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
   document.addEventListener('keydown', (event) => {
     const target = event.target as HTMLElement;
+
+    if (event.altKey && event.key === 'Enter') {
+      const targetWin =
+        target instanceof Element ? windowFromEvent(target) : null;
+      if (targetWin && !isPhone()) {
+        event.preventDefault();
+        if (state.focusedId !== targetWin.id) focus(targetWin);
+        toggleMaximize(targetWin, { animate: false });
+        return;
+      }
+    }
+
     if (
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
@@ -915,7 +1063,18 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     requestAnimationFrame(() => {
       resizePending = false;
       for (const win of state.windows) {
-        if (win.kind === 'term' && !win.userResized) {
+        win.geometryAnimation?.cancel();
+        if (win.restoreGeom) {
+          win.restoreGeom =
+            win.kind === 'term' && !win.userResized
+              ? termGeom(vw(), vh(), posts)
+              : clampWinToViewport(
+                  { id: win.id, z: win.z, ...win.restoreGeom },
+                  vw(),
+                  vh(),
+                );
+          win.geom = maximizedGeom();
+        } else if (win.kind === 'term' && !win.userResized) {
           win.geom = termGeom(vw(), vh(), posts);
         } else {
           win.geom = clampWinToViewport(

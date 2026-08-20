@@ -177,6 +177,23 @@ html:not([data-reader]) {
     2px 3px 0 rgba(122, 113, 96, 0.22),
     inset 3px 0 0 0 #b45309;
 }
+.retro-terminal-window--maximized,
+.retro-terminal-window--maximized.retro-terminal-window--active {
+  border: 0;
+  box-shadow: none;
+}
+.retro-terminal-window--maximized .retro-terminal-titlebar {
+  cursor: default;
+}
+.retro-terminal-window--maximized .retro-terminal-resize {
+  display: none;
+}
+.retro-terminal-window--maximized[data-retro-window-id^='show:']
+  .retro-terminal-show-scroll
+  > * {
+  max-width: 840px;
+  margin-inline: auto;
+}
 
 .retro-terminal-not-found-command {
   overflow-wrap: anywhere;
@@ -1362,6 +1379,10 @@ html:not([data-reader]) {
   z-index: 99999;
   height: 32px;
 }
+.retro-terminal-desktop--window-maximized .retro-terminal-exit {
+  visibility: hidden;
+  pointer-events: none;
+}
 
 /* Final responsive overrides must stay last so they win over component sections above. */
 @media (max-width: 900px) {
@@ -1812,4 +1833,3 @@ html:not([data-reader]) {
     text-shadow: none;
   }
 }
-
