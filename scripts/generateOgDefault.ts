@@ -1,130 +1,92 @@
 /**
- * Generates `/public/static/images/og-default.png` (1200x630), the fallback
- * Open Graph / Twitter card image used on every page that doesn't override
- * the `image` prop on `<Container>` (homepage, /disclaimer, /privacy-policy).
+ * Generates the sitewide fallback Open Graph card
+ * (`public/static/images/og-default.png`, 1200x630) used by every page that
+ * has no better image of its own — the homepage, tag pages, and legal pages.
  *
- * Run manually after editing the SVG below:
+ * It mirrors the terminal desktop a visitor actually lands on: the
+ * `profile.txt` icon at the left, and the focused term window
+ * (`ssh blog@charpeni.com 'archive agent'`) beside it. Copy comes from the
+ * profile aside in src/components/desktop/DesktopShell.astro.
+ *
+ * Run manually after changing the card, then commit the PNG:
  *   node scripts/generateOgDefault.ts
- *
- * Then commit the regenerated PNG.
- *
- * The PNG is committed to the repo so the build pipeline never has to
- * rasterize text — this avoids font-rendering differences between local
- * macOS and the Linux build environment.
  */
-
-import { mkdir, readFile } from 'node:fs/promises';
-import path from 'node:path';
 
 import sharp from 'sharp';
 
-const WIDTH = 1200;
-const HEIGHT = 630;
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+
+import {
+  buildCard,
+  charWidth,
+  COLORS,
+  mono,
+  textToPaths,
+} from './ogTerminalCard.ts';
 
 const ROOT = process.cwd();
-const OUT_PATH = path.join(
-  ROOT,
-  'public',
-  'static',
-  'images',
-  'og-default.png',
-);
-const AVATAR_PATH = path.join(
-  ROOT,
-  'public',
-  'static',
-  'images',
-  'nicolas_charpentier.jpeg',
-);
+const POSTS_DIR = path.join(ROOT, 'posts');
+const IMAGES_DIR = path.join(ROOT, 'public', 'static', 'images');
+const AVATAR_PATH = path.join(IMAGES_DIR, 'nicolas_charpentier.jpeg');
+const OUT_PATH = path.join(IMAGES_DIR, 'og-default.png');
 
-// Colors are taken from the homepage gradient (`GradientAnimation.module.css`):
-//   blue-500   #3b82f6
-//   purple-600 #9333ea
-//   pink-500   #ec4899
-// We render at full opacity here for crisper social previews; the live site
-// uses 0.7 alpha plus a blur for the rotating animated effect.
+// Desktop icon geometry, left of the window — the same arrangement the live
+// desktop uses (profile icon top-left, focused window to its right).
+const ICON = { cx: 150, cy: 250, size: 132 };
+const WIN = { x: 268, y: 76, w: 860, h: 478 };
 
-async function buildSvg(): Promise<string> {
-  // Embed the avatar as a base64 data URI so the SVG renders without needing
-  // to resolve external file paths through librsvg.
-  const avatarBytes = await readFile(AVATAR_PATH);
-  const avatarDataUri = `data:image/jpeg;base64,${avatarBytes.toString('base64')}`;
+/**
+ * The `profile.txt` desktop icon: framed avatar plus its label, matching
+ * `.retro-terminal-profile-icon` in retro.css.
+ */
+async function profileIcon(): Promise<string> {
+  const bytes = await readFile(AVATAR_PATH);
+  const dataUri = `data:image/jpeg;base64,${bytes.toString('base64')}`;
+  const half = ICON.size / 2;
+  const x = ICON.cx - half;
+  const y = ICON.cy - half;
+  const labelSize = 20;
+  const label = 'profile.txt';
+  const labelW = charWidth(mono, labelSize) * label.length;
+  const labelBoxW = labelW + 22;
+  const labelBoxX = ICON.cx - labelBoxW / 2;
+  const labelBoxY = y + ICON.size + 14;
 
-  const avatarSize = 260;
-  const avatarCx = 1000;
-  const avatarCy = HEIGHT / 2;
-  const avatarR = avatarSize / 2;
-  const ringWidth = 8;
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
-  <defs>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="50%" stop-color="#9333ea" />
-      <stop offset="100%" stop-color="#ec4899" />
-    </linearGradient>
-    <linearGradient id="accentSoft" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.08" />
-      <stop offset="50%" stop-color="#9333ea" stop-opacity="0.06" />
-      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.08" />
-    </linearGradient>
-    <radialGradient id="glowBlue" cx="0%" cy="0%" r="60%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18" />
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
-    </radialGradient>
-    <radialGradient id="glowPink" cx="100%" cy="100%" r="60%">
-      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.18" />
-      <stop offset="100%" stop-color="#ec4899" stop-opacity="0" />
-    </radialGradient>
-    <clipPath id="avatarClip">
-      <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR}" />
-    </clipPath>
-  </defs>
-
-  <!-- Background -->
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="#ffffff" />
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#accentSoft)" />
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowBlue)" />
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowPink)" />
-
-  <!-- Text -->
-  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-    <text x="80" y="220" font-size="38" font-weight="600" fill="#6b7280" letter-spacing="2">
-      charpeni.com
-    </text>
-    <text x="80" y="330" font-size="72" font-weight="800" fill="#0a0a0a">
-      Nicolas Charpentier
-    </text>
-    <text x="80" y="400" font-size="32" font-weight="500" fill="#374151">
-      Software Engineer
-    </text>
-    <text x="120" y="445" font-size="28" font-weight="500" fill="#6b7280">
-      Frontend infrastructure &amp; tooling
-    </text>
-  </g>
-
-  <!-- Avatar: gradient ring + clipped photo -->
-  <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR + ringWidth}" fill="url(#accent)" />
-  <circle cx="${avatarCx}" cy="${avatarCy}" r="${avatarR + 2}" fill="#ffffff" />
-  <image
-    href="${avatarDataUri}"
-    xlink:href="${avatarDataUri}"
-    x="${avatarCx - avatarR}"
-    y="${avatarCy - avatarR}"
-    width="${avatarSize}"
-    height="${avatarSize}"
-    preserveAspectRatio="xMidYMid slice"
-    clip-path="url(#avatarClip)"
-  />
-
-
-</svg>`;
+  return `
+  <rect x="${x - 6}" y="${y - 6}" width="${ICON.size + 12}" height="${ICON.size + 12}" fill="${COLORS.paper}" stroke="${COLORS.amber}" stroke-width="2" stroke-dasharray="5 3" />
+  <clipPath id="iconClip"><rect x="${x}" y="${y}" width="${ICON.size}" height="${ICON.size}" /></clipPath>
+  <image href="${dataUri}" xlink:href="${dataUri}" x="${x}" y="${y}" width="${ICON.size}" height="${ICON.size}" preserveAspectRatio="xMidYMid slice" clip-path="url(#iconClip)" />
+  <rect x="${labelBoxX}" y="${labelBoxY}" width="${labelBoxW}" height="30" fill="${COLORS.amber}" />
+  ${textToPaths(mono, label, {
+    x: labelBoxX + 11,
+    y: labelBoxY + 21,
+    fontSize: labelSize,
+    fill: COLORS.titlebarText,
+  })}`;
 }
 
-await mkdir(path.dirname(OUT_PATH), { recursive: true });
+const postCount = (await readdir(POSTS_DIR)).filter((f) =>
+  f.endsWith('.mdx'),
+).length;
 
-const svg = await buildSvg();
+const svg = buildCard({
+  win: WIN,
+  desktopExtras: await profileIcon(),
+  // windowTitle parity with utils/retro.ts `windowTitle(TERM_ID)`.
+  windowTitle: "ssh blog@charpeni.com 'archive agent'",
+  metaLines: [
+    { label: '$ ', value: 'whoami', accent: true },
+  ],
+  headline: 'Nicolas Charpentier',
+  footLines: [
+    { value: 'Staff Software Engineer' },
+    { value: 'frontend infrastructure & developer tooling' },
+    { value: 'TypeScript · React Native · React · GraphQL · CI/CD' },
+  ],
+  statusLeft: `${postCount} commits · branch main`,
+  statusRight: 'charpeni.com',
+});
+
 await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toFile(OUT_PATH);
-
-console.log(`Generated ${path.relative(ROOT, OUT_PATH)} (${WIDTH}x${HEIGHT})`);
+console.log(`Generated ${path.relative(ROOT, OUT_PATH)}`);

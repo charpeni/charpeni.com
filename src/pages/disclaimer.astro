@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import Footer from '@/components/reader/Footer.astro';
+import Header from '@/components/reader/Header.astro';
+import LegalContent from '@/components/reader/LegalContent.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getReadingStats, sortByPublishedAt } from '@/utils/postMeta';
+
+import type { TermPost } from '@/utils/retro';
+
+const all = sortByPublishedAt(await getCollection('posts'));
+const termPosts: TermPost[] = all.map((p) => ({
+  slug: p.id,
+  title: p.data.title,
+  publishedAt: p.data.publishedAt,
+  tags: p.data.tags,
+  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
+  image: p.data.image,
+}));
+---
+
+<BaseLayout
+  title="Disclaimer | Nicolas Charpentier"
+  description="Website disclaimer for charpeni.com."
+  noIndex
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="legal:disclaimer" />
+
+  <main
+    id="skip"
+    class="reader-only flex flex-col justify-center items-start max-w-2xl mx-auto mb-16 px-8"
+  >
+    <h1
+      class="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white"
+    >
+      DISCLAIMER
+    </h1>
+    <div class="max-w-prose text-gray-600 dark:text-gray-400">
+      <LegalContent variant="disclaimer" />
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

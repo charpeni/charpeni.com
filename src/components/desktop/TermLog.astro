@@ -1,0 +1,185 @@
+---
+import { computeGraph, shortHash } from '@/utils/graph';
+import {
+  BRANCH_COLORS,
+  FALLBACK_BRANCH_COLOR,
+  GRAPH_LANE_GAP,
+  GRAPH_MAIN_X,
+  GRAPH_ROW_H,
+  branchOf,
+  formatIsoDate,
+  graphWidth,
+} from '@/utils/retro';
+
+import type { TermPost } from '@/utils/retro';
+
+/**
+ * The git-log browser content of the term window, server-rendered in the
+ * finished ("done") agent state per the old GraphLog.tsx. Rows are real
+ * anchors so the archive is navigable without JavaScript; the island
+ * upgrades them to select/open windows.
+ */
+
+type Props = {
+  posts: TermPost[];
+  cursor: number;
+};
+
+const { posts, cursor } = Astro.props;
+
+const graph = computeGraph(posts, posts);
+const lanes = graph.activeBranches;
+const width = graphWidth(lanes.length);
+const mid = GRAPH_ROW_H / 2;
+const laneX = (i: number) => GRAPH_MAIN_X + GRAPH_LANE_GAP * (i + 1);
+const laneColor = (branch: string) =>
+  BRANCH_COLORS[branch] ?? FALLBACK_BRANCH_COLOR;
+---
+
+<div class="retro-terminal-agent">
+  <div class="retro-terminal-agent-user">
+    <span class="retro-terminal-agent-mark">›</span>
+    <span>List charpeni.com blog posts</span>
+  </div>
+  <div class="retro-terminal-agent-step">
+    <span class="retro-terminal-agent-orb" aria-hidden="true"></span>
+    <span>Archive mapped to commit log</span>
+  </div>
+  <div class="retro-terminal-agent-tool">
+    <div class="retro-terminal-agent-tool-name">
+      tool: archive.list_posts --format=git-log
+    </div>
+    <div class="retro-terminal-prompt-cmd">
+      $ git log --graph --oneline --all --date=short
+    </div>
+  </div>
+</div>
+<div class="retro-terminal-prompt-meta">
+  connected to charpeni.com · {posts.length} commits · 6 branches · HEAD at {
+    posts.length > 0 ? shortHash(posts[0].slug) : '—'
+  }
+</div>
+<div class="retro-terminal-content" tabindex="0">
+  <div class="retro-terminal-log">
+    {
+      posts.map((post, index) => {
+        const row = graph.rows[index];
+        const branch = branchOf(post);
+        return (
+          <a
+            href={`/blog/${post.slug}`}
+            class:list={[
+              'retro-terminal-row',
+              index === cursor && 'retro-terminal-row--selected',
+            ]}
+            aria-current={index === cursor ? 'true' : undefined}
+            data-log-index={index}
+            data-log-slug={post.slug}
+          >
+            <svg
+              class="retro-terminal-graph"
+              width={width}
+              height={GRAPH_ROW_H}
+              viewBox={`0 0 ${width} ${GRAPH_ROW_H}`}
+              aria-hidden="true"
+              focusable="false"
+            >
+              {row?.mainTopLine && (
+                <line
+                  class="retro-terminal-graph-line"
+                  x1={GRAPH_MAIN_X}
+                  y1="0"
+                  x2={GRAPH_MAIN_X}
+                  y2={mid}
+                  stroke="#7a7160"
+                />
+              )}
+              {row?.mainBottomLine && (
+                <line
+                  class="retro-terminal-graph-line"
+                  x1={GRAPH_MAIN_X}
+                  y1={mid}
+                  x2={GRAPH_MAIN_X}
+                  y2={GRAPH_ROW_H}
+                  stroke="#7a7160"
+                />
+              )}
+              {row?.mainOrb && (
+                <circle
+                  class="retro-terminal-graph-orb retro-terminal-graph-orb--main"
+                  cx={GRAPH_MAIN_X}
+                  cy={mid}
+                  r="4"
+                />
+              )}
+              {lanes.map((lane, laneIndex) => {
+                const cell = row?.lanes[laneIndex];
+                if (!cell) return null;
+                const x = laneX(laneIndex);
+                const color = laneColor(lane);
+                return (
+                  <g>
+                    {cell.topLine && (
+                      <line
+                        class="retro-terminal-graph-line"
+                        x1={x}
+                        y1="0"
+                        x2={x}
+                        y2={mid}
+                        stroke={color}
+                      />
+                    )}
+                    {cell.bottomLine && (
+                      <line
+                        class="retro-terminal-graph-line"
+                        x1={x}
+                        y1={mid}
+                        x2={x}
+                        y2={GRAPH_ROW_H}
+                        stroke={color}
+                      />
+                    )}
+                    {cell.topSprout && (
+                      <path
+                        class="retro-terminal-graph-line"
+                        d={`M ${GRAPH_MAIN_X} ${mid} C ${GRAPH_MAIN_X + 6} ${mid - 1}, ${x - 8} 1, ${x} 0`}
+                        stroke={color}
+                      />
+                    )}
+                    {cell.topMerge && (
+                      <path
+                        class="retro-terminal-graph-line"
+                        d={`M ${x} ${mid} C ${x - 8} ${mid - 1}, ${GRAPH_MAIN_X + 6} 1, ${GRAPH_MAIN_X} 0`}
+                        stroke={color}
+                      />
+                    )}
+                    {cell.laneOrb && (
+                      <circle
+                        class="retro-terminal-graph-orb"
+                        cx={x}
+                        cy={mid}
+                        r="4"
+                        fill={color}
+                      />
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+            <span class="retro-terminal-hash">{shortHash(post.slug)}</span>
+            <span class="retro-terminal-date">
+              {formatIsoDate(post.publishedAt)}
+            </span>
+            {branch && (
+              <span
+                class="retro-terminal-refs"
+                style={`color:${laneColor(branch)}`}
+              >{`(${branch})`}</span>
+            )}
+            <span class="retro-terminal-msg">{post.title}</span>
+          </a>
+        );
+      })
+    }
+  </div>
+</div>

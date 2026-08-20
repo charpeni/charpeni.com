@@ -1,0 +1,35 @@
+---
+import SandpackReact from '@/components/mdx/SandpackReact';
+
+/**
+ * MDX-facing Sandpack — a real Astro island (`client:only="react"`), which is
+ * the only way React hydrates reliably in both `astro dev` and the production
+ * build. The heavy CodeMirror chunk ships only on pages that use it (one
+ * post); the fallback reserves height to avoid CLS.
+ *
+ * `client:only` has no lazy timing of its own, so SandpackReact gates the
+ * editor import on an IntersectionObserver — otherwise the bundle downloads
+ * during first paint. Keep the fallback markup in sync with the placeholder
+ * there.
+ *
+ * Islands only hydrate on a server-rendered page, not inside DOM adopted from
+ * a fetched partial — so the window manager opens any post containing a
+ * Sandpack via a full navigation (data-interactive row → location.assign)
+ * rather than window-adoption. Deep links and that full-nav both land on this
+ * server-rendered page, where the island hydrates.
+ */
+const props = Astro.props;
+const height = typeof props.height === 'number' ? props.height : 400;
+---
+
+<div class="sandpackContainer" style={`min-height:${height + 40}px`}>
+  <SandpackReact client:only="react" {...props}>
+    <div
+      slot="fallback"
+      class="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center"
+      style={`min-height:${height}px`}
+    >
+      Loading code editor...
+    </div>
+  </SandpackReact>
+</div>

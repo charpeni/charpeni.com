@@ -1,0 +1,33 @@
+---
+import BlogPostCard from '@/components/reader/BlogPostCard.astro';
+
+import type { buildHomePages } from '@/utils/homePages';
+
+/**
+ * One reader-homepage pagination group: 8 post cards plus their git-graph
+ * rows. Rendered inline for page 1 and by /partials/home-posts/[page] for the
+ * rest — the same markup either way, so the pagination script can't tell (and
+ * doesn't care) where a group came from.
+ */
+type Props = {
+  page: number;
+  slice: ReturnType<typeof buildHomePages>['pages'][number]['slice'];
+  graph: ReturnType<typeof buildHomePages>['pages'][number]['graph'];
+  hidden?: boolean;
+};
+
+const { page, slice, graph, hidden = false } = Astro.props;
+---
+
+<div class="flex flex-col" data-page={page} hidden={hidden}>
+  {
+    slice.map((card, i) => (
+      <BlogPostCard
+        {...card}
+        graph={graph.rows[i]}
+        isHead={page === 1 && i === 0}
+        activeBranches={graph.activeBranches}
+      />
+    ))
+  }
+</div>

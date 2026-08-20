@@ -1,12 +1,10 @@
 *.log
 .DS_Store
-.next
 node_modules
 .env.local
-public/robots.txt
-public/sitemap*.xml
-public/blog/rss.xml
-public/blog-mdx
-public/llms.txt
-.vercel
+.astro
+.wrangler
+dist
+src/generated/
+public/_opt/
 tsconfig.tsbuildinfo

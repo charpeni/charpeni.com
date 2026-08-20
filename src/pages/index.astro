@@ -1,0 +1,330 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import CompanyName from '@/components/reader/CompanyName.astro';
+import Footer from '@/components/reader/Footer.astro';
+import Header from '@/components/reader/Header.astro';
+import PostCardPage from '@/components/reader/PostCardPage.astro';
+import Socials from '@/components/reader/Socials.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { BRANCH_TAGS } from '@/utils/graph';
+import { buildHomePages } from '@/utils/homePages';
+import { getResponsiveImage } from '@/utils/postMeta';
+
+// 8 posts per page (classic charpeni.com), ?page=N shallow routing. Only
+// page 1 is server-rendered here: the other pages live at
+// /partials/home-posts/[page] and are fetched when first shown. Inlining all
+// of them (hidden) put 61% of the homepage DOM behind display:none and cost
+// ~750ms of FCP under mobile throttling.
+const { termPosts, pages, totalPages } = buildHomePages(
+  await getCollection('posts'),
+);
+const firstPage = pages[0];
+---
+
+<BaseLayout
+  title="Nicolas Charpentier — Frontend Infrastructure & Developer Tooling"
+  description="Software Engineer focused on frontend infrastructure and developer tooling. I write about TypeScript, React, React Native, GraphQL, Apollo Client, CI/CD, and shipping reliable code."
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="term" />
+
+  <main
+    id="skip"
+    class="reader-only flex flex-col justify-center items-start max-w-4xl w-full mx-auto mb-16 px-8"
+  >
+    <section class="w-full mb-8">
+      <div
+        class="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between"
+      >
+        <div
+          class="flex-1 md:mt-4 lg:mt-0 lg:pr-8 w-full text-center lg:text-left"
+        >
+          <h1
+            class="font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight mb-8 text-black dark:text-white lg:whitespace-nowrap"
+          >
+            👋 Hi, I'm Nicolas Charpentier
+          </h1>
+          <div class="lg:flex lg:items-start lg:gap-8">
+            <div class="flex-1">
+              <p
+                class="prose text-base md:text-xl text-gray-600 dark:text-gray-400 mx-auto lg:mx-0 leading-7"
+              >
+                I'm a Software Engineer doing the "backend" work of the
+                frontend: architecture, tooling, and infrastructure. I
+                specialize in{' '}
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >TypeScript</span
+                >,{' '}
+                <span class="text-blue-600 dark:text-blue-400 font-medium"
+                  >React Native</span
+                >,{' '}
+                <span class="text-cyan-600 dark:text-cyan-400 font-medium"
+                  >React</span
+                >,{' '}
+                <span class="text-pink-600 dark:text-pink-400 font-medium"
+                  >GraphQL</span
+                >, and{' '}
+                <span class="text-purple-600 dark:text-purple-400 font-medium"
+                  >CI/CD</span
+                >.
+              </p>
+              <p
+                class="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0"
+              >
+                I'm an <span class="font-bold glow-yellow-text"
+                  >open source enthusiast</span
+                > who loves removing friction from the developer experience,
+                hunting down performance issues, and sharing what I find along
+                the way.
+              </p>
+              <p
+                class="prose text-base md:text-xl mt-4 text-gray-600 dark:text-gray-400 mx-auto lg:mx-0"
+              >
+                Currently working at{' '}
+                <CompanyName
+                  name="Shortcut"
+                  href="https://shortcut.com"
+                  className="text-shortcut decoration-shortcut"
+                />, on{' '}
+                <CompanyName
+                  name="Korey.ai"
+                  href="https://korey.ai"
+                  className="text-korey decoration-korey"
+                />.
+              </p>
+              <div
+                class="mt-4 md:mt-8 flex flex-wrap md:flex-nowrap items-center justify-center lg:justify-start gap-2"
+              >
+                <Socials />
+                <span
+                  class="hidden md:inline text-sm text-gray-500 dark:text-gray-400"
+                  >|</span
+                >
+                <a
+                  href="https://prs.charpeni.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors whitespace-nowrap ml-1"
+                  >Check out my latest open source contributions</a
+                >
+              </div>
+            </div>
+            <div
+              class="hidden lg:block aspect-square w-[200px] relative rounded-full overflow-hidden flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_40px_rgba(147,51,234,0.2),0_0_60px_rgba(236,72,153,0.15)]"
+            >
+              <div class="absolute -inset-[6px] gradientRotate"></div>
+              <div
+                class="absolute inset-[3px] bg-gray-50 dark:bg-gray-900 rounded-full overflow-hidden"
+              >
+                <img
+                  src="/static/images/nicolas_charpentier.jpeg"
+                  srcset={getResponsiveImage(
+                    '/static/images/nicolas_charpentier.jpeg',
+                  )?.srcset}
+                  sizes="200px"
+                  alt="Nicolas Charpentier"
+                  class="object-cover rounded-full w-full h-full"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full">
+      <div
+        id="blog-posts"
+        class="mb-10 border-b border-gray-200 dark:border-gray-800 pb-4"
+      >
+        <h2
+          class="font-bold text-3xl md:text-4xl tracking-tight text-black dark:text-white"
+        >
+          Blog Posts
+        </h2>
+      </div>
+
+      <div
+        class="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-gray-500 dark:text-gray-500"
+        aria-label="Branches"
+      >
+        <span class="text-gray-400 dark:text-gray-600">branches:</span>
+        {
+          BRANCH_TAGS.map((branch) => (
+            <a
+              href={`/tags/${branch}`}
+              class="inline-flex items-center gap-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+            >
+              <span
+                aria-hidden="true"
+                class="inline-block w-2 h-2 rounded-full border border-gray-400 dark:border-gray-500"
+              />
+              {branch}
+            </a>
+          ))
+        }
+      </div>
+
+      <div data-page-groups>
+        <PostCardPage
+          page={firstPage.page}
+          slice={firstPage.slice}
+          graph={firstPage.graph}
+        />
+      </div>
+
+      {
+        totalPages > 1 && (
+          <nav
+            data-total={totalPages}
+            class="mt-8 flex items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 font-mono text-sm"
+            aria-label="Pagination"
+            data-pagination
+          >
+            <button
+              type="button"
+              data-page-prev
+              disabled
+              class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
+            >
+              <span aria-hidden="true">←</span>
+              <span>newer</span>
+            </button>
+            <span
+              class="text-gray-500 dark:text-gray-500 tabular-nums"
+              data-page-indicator
+              aria-live="polite"
+            >
+              page 1 / {totalPages}
+            </span>
+            <button
+              type="button"
+              data-page-next
+              class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-600 dark:disabled:hover:text-gray-400 transition-colors"
+            >
+              <span>older</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </nav>
+        )
+      }
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  // Hover lane-highlight: hovering a post lights up its whole branch thread
+  // (every rail segment/orb on the same lanes) across all rows — a port of
+  // the classic homepage's lifted highlight state, done in vanilla JS.
+  // Extracted so pagination groups fetched later get wired the same way.
+  const MAIN_LANE = '__main__';
+  function wireCards(root: ParentNode) {
+    for (const card of root.querySelectorAll<HTMLElement>('[data-post-card]')) {
+      const lanes = (card.dataset.ownedLanes ?? '').split(' ').filter(Boolean);
+      const highlight = (on: boolean) => {
+        for (const lane of lanes) {
+          const sel =
+            lane === MAIN_LANE
+              ? '[data-lane="__main__"]'
+              : `[data-lane="${CSS.escape(lane)}"]`;
+          for (const seg of document.querySelectorAll(sel)) {
+            seg.classList.toggle('rail-hl', on);
+          }
+        }
+      };
+      card.addEventListener('mouseenter', () => highlight(true));
+      card.addEventListener('mouseleave', () => highlight(false));
+    }
+  }
+  wireCards(document);
+
+  // Client-side pagination (8/page) matching the classic site: ?page=N shallow
+  // routing (page 1 has no param), disabled bounds, scroll to the header on
+  // change. Only page 1 is server-rendered; other groups are fetched from
+  // /partials/home-posts/[page] the first time they're shown and adopted into
+  // [data-page-groups]. Fetches dedupe via the pending map, so a double-click
+  // or fast back/forward can't insert a group twice.
+  const nav = document.querySelector<HTMLElement>('[data-pagination]');
+  const groupHost = document.querySelector<HTMLElement>('[data-page-groups]');
+  const total = Number(nav?.dataset.total ?? 1);
+  if (nav && groupHost && total > 1) {
+    const prev = nav.querySelector<HTMLButtonElement>('[data-page-prev]');
+    const next = nav.querySelector<HTMLButtonElement>('[data-page-next]');
+    const indicator = nav.querySelector('[data-page-indicator]');
+    const header = document.getElementById('blog-posts');
+    const clamp = (n: number) => Math.max(1, Math.min(n, total));
+    const current = () =>
+      clamp(Number(new URLSearchParams(location.search).get('page')) || 1);
+    const groupFor = (p: number) =>
+      groupHost.querySelector<HTMLElement>(`[data-page="${p}"]`);
+
+    const pending = new Map<number, Promise<void>>();
+    const ensureGroup = (p: number): Promise<void> => {
+      if (groupFor(p)) return Promise.resolve();
+      let inFlight = pending.get(p);
+      if (!inFlight) {
+        inFlight = fetch(`/partials/home-posts/${p}`)
+          .then((response) => {
+            if (!response.ok) throw new Error(String(response.status));
+            return response.text();
+          })
+          .then((html) => {
+            if (groupFor(p)) return;
+            groupHost.insertAdjacentHTML('beforeend', html);
+            const group = groupFor(p);
+            if (group) wireCards(group);
+          })
+          .finally(() => pending.delete(p));
+        pending.set(p, inFlight);
+      }
+      return inFlight;
+    };
+
+    const show = async (page: number, scroll: boolean) => {
+      const p = clamp(page);
+      try {
+        await ensureGroup(p);
+      } catch {
+        // Fetch failed (offline, deploy in flight) — keep the current page
+        // rather than blanking the list.
+        return;
+      }
+      for (const g of groupHost.querySelectorAll<HTMLElement>('[data-page]')) {
+        g.hidden = Number(g.dataset.page) !== p;
+      }
+      if (indicator) indicator.textContent = `page ${p} / ${total}`;
+      if (prev) prev.disabled = p <= 1;
+      if (next) next.disabled = p >= total;
+      // Paginated views are duplicate-ish of page 1 — keep them out of the
+      // index (the old site set noIndex for currentPage > 1). Canonical
+      // already strips the query string.
+      document
+        .querySelector('meta[name="robots"]')
+        ?.setAttribute('content', p > 1 ? 'noindex, follow' : 'index, follow');
+      if (scroll) header?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const go = (page: number) => {
+      const p = clamp(page);
+      const url = new URL(location.href);
+      if (p === 1) url.searchParams.delete('page');
+      else url.searchParams.set('page', String(p));
+      history.pushState({}, '', url);
+      void show(p, true);
+    };
+
+    prev?.addEventListener('click', () => go(current() - 1));
+    next?.addEventListener('click', () => go(current() + 1));
+    window.addEventListener('popstate', () => void show(current(), false));
+    void show(current(), false);
+    // Warm the next page once the browser is idle so the first "older" click
+    // doesn't wait on the network. One page only — prefetching all of them
+    // would re-create the cost this split removed, just off the main path.
+    const warm = () => void ensureGroup(clamp(current() + 1)).catch(() => {});
+    if ('requestIdleCallback' in window) requestIdleCallback(warm);
+    else setTimeout(warm, 2000);
+  }
+</script>

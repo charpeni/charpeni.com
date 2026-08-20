@@ -1,0 +1,325 @@
+---
+import type { LaneCell, RowGraph } from '@/utils/graph';
+
+/**
+ * Reader-mode blog post card — port of components/BlogPostCard.tsx. Renders a
+ * git-graph rail (top-arc, node row, bottom-arc SVGs) beside the post title,
+ * date, summary and tags. Hover lane-highlighting (lighting the whole branch
+ * thread across rows) is layered on client-side by the enhancer in
+ * index.astro via the data-lane / data-owned-lanes attributes emitted here.
+ */
+
+export const MAIN_LANE = '__main__';
+
+const MAIN_X = 12;
+const LANE_GAP = 16;
+const NODE_R = 4;
+const TOP_HEIGHT = 40;
+
+const laneX = (i: number) => MAIN_X + LANE_GAP * (i + 1);
+const railWidth = (count: number) => MAIN_X + LANE_GAP * (count + 1);
+
+const DEFAULT_GRAPH: RowGraph = {
+  mainTopLine: false,
+  mainBottomLine: false,
+  mainOrb: true,
+  lanes: [],
+};
+
+const isLaneOwned = (cell: LaneCell) =>
+  cell.laneOrb || cell.topSprout || cell.topMerge;
+
+type Props = {
+  title: string;
+  summary: string;
+  slug: string;
+  publishedAt: string;
+  readingTimeText: string;
+  tags: string[];
+  graph?: RowGraph;
+  isHead?: boolean;
+  activeBranches?: readonly string[];
+};
+
+const {
+  title,
+  summary,
+  slug,
+  publishedAt,
+  readingTimeText,
+  tags,
+  graph = DEFAULT_GRAPH,
+  isHead = false,
+  activeBranches = [],
+} = Astro.props;
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+const formattedDate = dateFormatter.format(new Date(publishedAt));
+
+const { mainTopLine, mainBottomLine, mainOrb, lanes } = graph;
+const width = railWidth(lanes.length);
+const midY = TOP_HEIGHT / 2;
+
+// Lanes this row "owns" (for hover highlight), reported to the enhancer.
+const ownedLanes: string[] = [];
+if (mainOrb) ownedLanes.push(MAIN_LANE);
+lanes.forEach((cell, i) => {
+  if (isLaneOwned(cell) && activeBranches[i]) ownedLanes.push(activeBranches[i]);
+});
+
+const laneName = (i: number) => activeBranches[i] ?? '';
+---
+
+<article
+  class="group relative flex gap-x-5 sm:gap-x-6"
+  data-post-card
+  data-owned-lanes={ownedLanes.join(' ')}
+>
+  {/* Graph rail */}
+  <div class="relative flex-shrink-0" style={`width:${width}px`} aria-hidden="true">
+    <svg
+      width={width}
+      height={TOP_HEIGHT}
+      viewBox={`0 0 ${width} ${TOP_HEIGHT}`}
+      class="block text-gray-300 dark:text-gray-700"
+    >
+      {
+        mainTopLine && (
+          <line
+            x1={MAIN_X}
+            y1={0}
+            x2={MAIN_X}
+            y2={TOP_HEIGHT}
+            stroke="currentColor"
+            stroke-width={1}
+            vector-effect="non-scaling-stroke"
+            class="rail-seg"
+            data-lane={MAIN_LANE}
+          />
+        )
+      }
+      {
+        lanes.map((cell, i) =>
+          cell.topLine ? (
+            <line
+              x1={laneX(i)}
+              y1={0}
+              x2={laneX(i)}
+              y2={TOP_HEIGHT}
+              stroke="currentColor"
+              stroke-width={1}
+              vector-effect="non-scaling-stroke"
+              class="rail-seg"
+              data-lane={laneName(i)}
+            />
+          ) : null,
+        )
+      }
+      {
+        lanes.map((cell, i) =>
+          cell.topSprout ? (
+            <path
+              d={`M ${MAIN_X} ${TOP_HEIGHT} C ${MAIN_X} ${midY}, ${laneX(i)} ${midY}, ${laneX(i)} 0`}
+              stroke="currentColor"
+              stroke-width={1}
+              fill="none"
+              vector-effect="non-scaling-stroke"
+              class="rail-seg"
+              data-lane={laneName(i)}
+            />
+          ) : null,
+        )
+      }
+      {
+        lanes.map((cell, i) =>
+          cell.topMerge ? (
+            <path
+              d={`M ${laneX(i)} ${TOP_HEIGHT} C ${laneX(i)} ${midY}, ${MAIN_X} ${midY}, ${MAIN_X} 0`}
+              stroke="currentColor"
+              stroke-width={1}
+              fill="none"
+              vector-effect="non-scaling-stroke"
+              class="rail-seg"
+              data-lane={laneName(i)}
+            />
+          ) : null,
+        )
+      }
+    </svg>
+
+    <div
+      class="absolute left-0 right-0 z-10 text-gray-300 dark:text-gray-700"
+      style={`top:${TOP_HEIGHT - NODE_R}px;height:${NODE_R * 2}px`}
+    >
+      <svg
+        width={width}
+        height={NODE_R * 2}
+        viewBox={`0 0 ${width} ${NODE_R * 2}`}
+        class="block"
+      >
+        {
+          (mainTopLine || mainBottomLine || mainOrb) && (
+            <line
+              x1={MAIN_X}
+              y1={0}
+              x2={MAIN_X}
+              y2={NODE_R * 2}
+              stroke="currentColor"
+              stroke-width={1}
+              vector-effect="non-scaling-stroke"
+              class="rail-seg"
+              data-lane={MAIN_LANE}
+            />
+          )
+        }
+        {
+          lanes.map((cell, i) =>
+            cell.topLine || cell.bottomLine || cell.topMerge || cell.laneOrb ? (
+              <line
+                x1={laneX(i)}
+                y1={0}
+                x2={laneX(i)}
+                y2={NODE_R * 2}
+                stroke="currentColor"
+                stroke-width={1}
+                vector-effect="non-scaling-stroke"
+                class="rail-seg"
+                data-lane={laneName(i)}
+              />
+            ) : null,
+          )
+        }
+        {
+          mainOrb && (
+            <circle
+              cx={MAIN_X}
+              cy={NODE_R}
+              r={NODE_R - 1}
+              class="rail-orb fill-white dark:fill-gray-950 stroke-gray-400 dark:stroke-gray-500"
+              stroke-width={1.5}
+              vector-effect="non-scaling-stroke"
+              data-lane={MAIN_LANE}
+            />
+          )
+        }
+        {
+          lanes.map((cell, i) =>
+            cell.laneOrb ? (
+              <circle
+                cx={laneX(i)}
+                cy={NODE_R}
+                r={NODE_R - 1.5}
+                class="rail-orb fill-white dark:fill-gray-950 stroke-gray-400 dark:stroke-gray-500"
+                stroke-width={1.5}
+                vector-effect="non-scaling-stroke"
+                data-lane={laneName(i)}
+              />
+            ) : null,
+          )
+        }
+      </svg>
+    </div>
+
+    <div
+      class="absolute left-0 right-0 text-gray-300 dark:text-gray-700"
+      style={`top:${TOP_HEIGHT}px;bottom:0`}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        class="block"
+        viewBox={`0 0 ${width} 100`}
+        preserveAspectRatio="none"
+      >
+        {
+          mainBottomLine && (
+            <line
+              x1={MAIN_X}
+              y1={0}
+              x2={MAIN_X}
+              y2={100}
+              stroke="currentColor"
+              stroke-width={1}
+              vector-effect="non-scaling-stroke"
+              class="rail-seg"
+              data-lane={MAIN_LANE}
+            />
+          )
+        }
+        {
+          lanes.map((cell, i) =>
+            cell.bottomLine ? (
+              <line
+                x1={laneX(i)}
+                y1={0}
+                x2={laneX(i)}
+                y2={100}
+                stroke="currentColor"
+                stroke-width={1}
+                vector-effect="non-scaling-stroke"
+                class="rail-seg"
+                data-lane={laneName(i)}
+              />
+            ) : null,
+          )
+        }
+      </svg>
+    </div>
+  </div>
+
+  {/* Content */}
+  <div class="min-w-0 flex-1 pb-10 sm:pb-12">
+    <a
+      href={`/blog/${slug}`}
+      class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <h3
+          class="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+        >
+          {title}
+        </h3>
+        {
+          isHead && (
+            <span class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded px-1.5 py-0.5 leading-none">
+              <span aria-hidden="true">HEAD</span>
+              <span aria-hidden="true">→</span>
+              <span>main</span>
+            </span>
+          )
+        }
+      </div>
+      <div
+        class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-gray-500 dark:text-gray-400"
+      >
+        <time datetime={publishedAt}>{formattedDate}</time>
+        <span aria-hidden="true">·</span>
+        <span>{readingTimeText}</span>
+      </div>
+      <p class="mt-4 text-gray-600 dark:text-gray-400 leading-relaxed">
+        {summary}
+      </p>
+    </a>
+
+    {
+      tags.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+          {tags.map((tag) => (
+            <li>
+              <a
+                href={`/tags/${tag}`}
+                class="inline-block font-mono text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded px-2 py-0.5 hover:text-blue-600 dark:hover:text-blue-400 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+              >
+                #{tag}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</article>

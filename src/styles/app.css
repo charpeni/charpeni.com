@@ -1,0 +1,163 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+/* Configuration */
+@config "../../tailwind.config.cjs";
+
+/* Import other styles */
+@import './global.css';
+@import './shiki.css';
+@import './retro.css';
+@import './gradientAnimation.css';
+
+/* ---------------------------------------------------------------------------
+ * Mode gates (Astro rewrite): the terminal desktop is the server-rendered
+ * DEFAULT; reader mode (cookie retro-os=0 → html[data-reader], set
+ * pre-paint) un-applies the scoped retro.css and shows the reader
+ * scaffolding instead. Same DOM, two presentations.
+ * ------------------------------------------------------------------------- */
+html:not([data-reader]) .reader-only {
+  display: none !important;
+}
+html[data-reader] .retro-only {
+  display: none !important;
+}
+/* Reader-mode homepage git-graph: hover lane-highlight. Segments stroke with
+ * currentColor, so overriding `color` swells the whole highlighted thread
+ * (matches the classic BlogPostCard's emphasis). */
+html[data-reader] .rail-seg {
+  transition: color 200ms;
+}
+html[data-reader] .rail-seg.rail-hl {
+  color: #111827; /* gray-900 */
+}
+html[data-reader].dark .rail-seg.rail-hl {
+  color: #f3f4f6; /* gray-100 */
+}
+html[data-reader] .rail-orb {
+  transition:
+    fill 200ms,
+    stroke 200ms;
+}
+html[data-reader] .rail-orb.rail-hl {
+  fill: #111827 !important;
+  stroke: #111827 !important;
+}
+html[data-reader].dark .rail-orb.rail-hl {
+  fill: #f3f4f6 !important;
+  stroke: #f3f4f6 !important;
+}
+
+/* The fixed desktop owns scrolling in terminal mode. */
+html:not([data-reader]) body {
+  overflow: hidden;
+}
+
+/* Window content must scroll inside the frame: clip the frame and let the
+ * flex children shrink (min-height:auto would otherwise push content past
+ * the border). */
+html:not([data-reader]) .retro-terminal-window {
+  overflow: hidden;
+}
+
+/* Keyboard focus indicator for windows. retro.css sets
+ * `.retro-terminal-window:focus { outline: none }` (an a11y anti-pattern);
+ * restore a visible ring for keyboard focus only. */
+html:not([data-reader]) .retro-terminal-window:focus-visible,
+html:not([data-reader]) .retro-terminal-content:focus-visible,
+html:not([data-reader]) .retro-terminal-row:focus-visible {
+  outline: 2px solid #b45309;
+  outline-offset: -2px;
+}
+
+/* Minimized state — used by the term's soft-close (the launcher restores
+ * it without a reload). */
+html:not([data-reader]) .retro-terminal-window--minimized {
+  display: none;
+}
+
+/* Client-opened windows fetch a partial wrapped in <div data-window-content>.
+ * That wrapper must not become a real flex child, or the inner
+ * .retro-terminal-show-scroll (flex:1) sizes to full content instead of the
+ * window and can't scroll (it works after a refresh because the
+ * server-rendered show window has no wrapper). display:contents dissolves
+ * the wrapper so the scroll container is a direct flex child of the frame. */
+html:not([data-reader]) [data-window-content] {
+  display: contents;
+}
+html:not([data-reader]) .retro-terminal-show-scroll,
+html:not([data-reader]) .retro-terminal-legal-window,
+html:not([data-reader]) .retro-terminal-content {
+  min-height: 0;
+}
+
+/* The mobile copy button is server-rendered for all viewports; production
+ * only rendered it in compact layouts — replicate with CSS. */
+html:not([data-reader]) .retro-terminal-copy-mobile {
+  display: none;
+}
+@media (max-width: 639px), (max-height: 500px) and (pointer: coarse) {
+  html:not([data-reader]) .retro-terminal-copy-mobile {
+    display: inline-flex;
+  }
+}
+html[data-reader] body {
+  overflow: auto;
+}
+
+/* Sandpack reader-mode layout — port of components/Sandpack.module.css
+ * (the terminal-mode variant lives in retro.css). Breaks the editor out of
+ * the prose column on wide screens. */
+html[data-reader] .sandpackContainer {
+  margin-bottom: 32px;
+}
+@media (min-width: 1220px) {
+  html[data-reader] .sandpackContainer {
+    width: 1200px;
+    margin-inline: calc((100% - 1200px) / 2);
+  }
+}
+
+/* Terminal git-log on narrow viewports: production skipped the graph rail
+ * entirely below 900px (GraphLog isMobile) — replicate with CSS. */
+@media (max-width: 900px) {
+  html:not([data-reader]) .retro-terminal-graph {
+    display: none;
+  }
+}
+
+/* Phone-layout status line: production swapped the desktop commits/branch/
+ * cursor readout for a compact "N posts · N selected" — both are
+ * server-rendered and CSS-gated (same phone media as the mobile copy
+ * button). */
+html:not([data-reader]) .retro-terminal-status-phone {
+  display: none;
+}
+@media (max-width: 639px), (max-height: 500px) and (pointer: coarse) {
+  html:not([data-reader]) .retro-terminal-status-desktop {
+    display: none;
+  }
+  html:not([data-reader]) .retro-terminal-status-phone {
+    display: inline;
+  }
+}
+
+/* Reader-mode layout for the (now unstyled) show/legal window content: the
+ * retro-terminal-* classes are inert hooks once retro.css is scoped away,
+ * so they double as reader layout anchors. */
+html[data-reader] .retro-terminal-show-scroll,
+html[data-reader] .retro-terminal-legal-window {
+  display: block;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 0 2rem 4rem;
+}
+html[data-reader] .retro-terminal-comments {
+  margin-top: 2rem;
+}
+html[data-reader] .retro-terminal-banner {
+  display: block;
+}
+html[data-reader] .retro-terminal-legal-title {
+  display: none;
+}

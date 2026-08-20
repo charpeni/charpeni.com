@@ -1,0 +1,61 @@
+---
+/**
+ * Terminal window frame — the server-rendered counterpart of the old
+ * TermWindow.tsx frame. Class vocabulary comes verbatim from
+ * src/styles/retro.css. Geometry is CSS-approximated pre-hydration
+ * (`--ssr` class); the window-manager island applies exact px geometry
+ * (utils/retro.ts) on hydration and removes the class.
+ *
+ * The frame chrome (titlebar/resize) is `retro-only`; the content slot is
+ * NOT — in reader mode retro.css un-applies and slot content flows as the
+ * plain document.
+ */
+
+type Props = {
+  id: string;
+  title: string;
+  active?: boolean;
+  /** ARIA role — 'dialog' for transient windows, 'region' for the term
+   * (primary content landmark). */
+  role?: 'dialog' | 'region';
+};
+
+const { id, title, active = false, role = 'dialog' } = Astro.props;
+// Window ids contain ':' (show:slug, legal:variant); sanitise for the title
+// element id so it's a clean IDREF.
+const titleId = `wintitle-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+---
+
+<div
+  class:list={[
+    'retro-terminal-window',
+    'retro-terminal-window--ssr',
+    active && 'retro-terminal-window--active',
+  ]}
+  data-retro-window-id={id}
+  tabindex="0"
+  role={role}
+  aria-roledescription="Window"
+  aria-labelledby={titleId}
+>
+  <div
+    class:list={[
+      'retro-terminal-titlebar',
+      'retro-only',
+      active && 'retro-terminal-titlebar--active',
+    ]}
+  >
+    <span class="retro-terminal-dots" aria-hidden="true">
+      <span class="retro-terminal-dot"></span>
+      <span class="retro-terminal-dot"></span>
+      <span class="retro-terminal-dot"></span>
+    </span>
+    <span class="retro-terminal-title-text" id={titleId}>{title}</span>
+    <button class="retro-terminal-close" aria-label={`Close ${title}`}
+      >×</button
+    >
+  </div>
+  <slot />
+  <slot name="status" />
+  <div class="retro-terminal-resize retro-only" aria-hidden="true">◢</div>
+</div>

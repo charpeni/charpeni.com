@@ -1,0 +1,88 @@
+---
+type Props = {
+  slug: string;
+  /**
+   * Optional class to merge with the default pill styling. Useful when the
+   * button needs slightly different sizing in mobile vs desktop slots.
+   */
+  className?: string;
+};
+
+const { slug, className = '' } = Astro.props;
+
+/**
+ * Pill-styled button that fetches the post's raw Markdown source and writes
+ * it to the clipboard — vanilla port of components/CopyAsMarkdownButton.tsx
+ * (idle/copying/copied/error states, 2s auto-reset). Pairs with the
+ * `<link rel="alternate" type="text/markdown">` head tag on the same page:
+ * one is for crawlers/LLMs, the other for humans pasting the post into an
+ * LLM as context.
+ */
+---
+
+<button
+  type="button"
+  data-copy-markdown={`/blog/${slug}.md`}
+  aria-label="Copy post as Markdown to clipboard"
+  title="Copy the raw Markdown source of this post — useful for pasting into an LLM as context."
+  class:list={[
+    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 disabled:cursor-wait disabled:opacity-70 whitespace-nowrap min-w-19',
+    className,
+  ]}
+>
+  <span data-copy-markdown-icon class="inline-flex" aria-hidden="true">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+    </svg>
+  </span>
+  <span data-copy-markdown-label class="text-xs sm:text-sm"
+    >Copy<span class="hidden min-[450px]:inline"> as Markdown</span></span
+  >
+</button>
+
+<script>
+  const COPY_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>';
+  const CHECK_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  document.addEventListener('click', async (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>(
+      '[data-copy-markdown]',
+    );
+    if (!button || button.disabled) return;
+    const icon = button.querySelector('[data-copy-markdown-icon]');
+    const label = button.querySelector('[data-copy-markdown-label]');
+    if (!icon || !label) return;
+
+    button.disabled = true;
+    label.textContent = 'Copying…';
+    try {
+      const response = await fetch(button.dataset.copyMarkdown ?? '');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const markdown = await response.text();
+      await navigator.clipboard.writeText(markdown);
+      icon.innerHTML = CHECK_ICON;
+      label.textContent = 'Copied!';
+    } catch {
+      label.textContent = 'Failed to copy';
+    }
+    setTimeout(() => {
+      button.disabled = false;
+      icon.innerHTML = COPY_ICON;
+      label.innerHTML =
+        'Copy<span class="hidden min-[450px]:inline"> as Markdown</span>';
+    }, 2000);
+  });
+</script>

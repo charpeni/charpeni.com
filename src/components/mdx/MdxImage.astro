@@ -1,0 +1,62 @@
+---
+import { getResponsiveImage } from '@/utils/postMeta';
+
+/**
+ * Replaces next/image inside MDX bodies. Renders the original public/ asset
+ * as `src` (the canonical, published URL) with a WebP `srcset` generated at
+ * config load (astro.config.mjs buildImageMeta → /_opt) — restoring the
+ * responsive-variant behavior next/image provided. When both dimensions are
+ * known, the terminal mode wraps it in the retro image frame per the old
+ * TerminalImage. GIFs/unknown assets fall back to the plain original.
+ */
+type Props = {
+  src: string;
+  alt?: string;
+  width?: number | string;
+  height?: number | string;
+  [key: string]: unknown;
+};
+
+const { src, alt = '', width, height, ...rest } = Astro.props;
+const w = Number(width);
+const h = Number(height);
+const sized = Number.isFinite(w) && w > 0 && Number.isFinite(h) && h > 0;
+const responsive = getResponsiveImage(src);
+const srcset = responsive?.srcset;
+const sizes = srcset
+  ? sized
+    ? `(max-width: ${w}px) 100vw, ${w}px`
+    : '(max-width: 1200px) 100vw, 1200px'
+  : undefined;
+---
+
+{
+  sized ? (
+    <span
+      class="retro-terminal-image-frame"
+      style={`aspect-ratio:${w} / ${h}; width:min(100%, ${w}px)`}
+    >
+      <img
+        src={src}
+        srcset={srcset}
+        sizes={sizes}
+        alt={alt}
+        width={w}
+        height={h}
+        loading="lazy"
+        decoding="async"
+        {...rest}
+      />
+    </span>
+  ) : (
+    <img
+      src={src}
+      srcset={srcset}
+      sizes={sizes}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      {...rest}
+    />
+  )
+}
