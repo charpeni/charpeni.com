@@ -38,6 +38,11 @@ import type { TermPost, WinGeom } from '@/utils/retro';
 
 type Kind = 'term' | 'show' | 'legal' | 'prs' | 'not-found';
 
+type GeometryMotion = {
+  animations: Animation[];
+  finish: () => void;
+};
+
 type Win = {
   id: string;
   kind: Kind;
@@ -49,7 +54,7 @@ type Win = {
   minimized: boolean;
   /** Geometry to restore after leaving the maximized state. */
   restoreGeom: WinGeom | null;
-  geometryAnimation: Animation | null;
+  geometryMotion: GeometryMotion | null;
   /** Element focused when this window opened, to restore focus on close. */
   opener: HTMLElement | null;
 };
@@ -98,6 +103,15 @@ const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
 function maximizedGeom(): WinGeom {
   return { x: 0, y: 0, w: vw(), h: vh() };
+}
+
+function finishGeometryMotion(win: Win) {
+  const motion = win.geometryMotion;
+  if (!motion) return;
+  for (const animation of motion.animations) animation.finish();
+  // `finish` events are queued, so commit synchronous state before the next
+  // interaction decides whether it is maximizing or restoring.
+  motion.finish();
 }
 
 function kindOf(id: string): Kind {
@@ -257,36 +271,121 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     win.el.style.height = `${win.geom.h}px`;
   }
 
-  function animateGeometryChange(win: Win, from: DOMRect) {
-    const to = win.el.getBoundingClientRect();
-    const reduceMotion = matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-    const animation = reduceMotion
-      ? win.el.animate([{ opacity: 0.85 }, { opacity: 1 }], {
+  function startGeometryMotion(
+    win: Win,
+    animations: Animation[],
+    onFinish?: () => void,
+  ) {
+    const motion: GeometryMotion = {
+      animations,
+      finish: () => {
+        if (win.geometryMotion !== motion) return;
+        win.geometryMotion = null;
+        onFinish?.();
+      },
+    };
+    animations[0].id = WINDOW_GEOMETRY_ANIMATION_ID;
+    animations[0].addEventListener('finish', motion.finish, { once: true });
+    animations[0].addEventListener(
+      'cancel',
+      () => {
+        if (win.geometryMotion === motion) win.geometryMotion = null;
+      },
+      { once: true },
+    );
+    win.geometryMotion = motion;
+  }
+
+  function animateGeometryFade(win: Win) {
+    startGeometryMotion(
+      win,
+      [
+        win.el.animate([{ opacity: 0.85 }, { opacity: 1 }], {
           duration: 160,
           easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
-        })
-      : win.el.animate(
-          [
-            {
-              transformOrigin: 'top left',
-              transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`,
-            },
-            { transformOrigin: 'top left', transform: 'none' },
-          ],
-          {
-            duration: 240,
-            easing: 'cubic-bezier(0.77, 0, 0.175, 1)',
-          },
-        );
-    animation.id = WINDOW_GEOMETRY_ANIMATION_ID;
-    win.geometryAnimation = animation;
-    const clearAnimation = () => {
-      if (win.geometryAnimation === animation) win.geometryAnimation = null;
+        }),
+      ],
+    );
+  }
+
+  function animateGeometryChange(
+    win: Win,
+    from: DOMRect,
+    to: DOMRect,
+    expanding: boolean,
+    onFinish?: () => void,
+  ) {
+    const outer = expanding ? to : from;
+    const inner = expanding ? from : to;
+    const top = Math.max(0, inner.top - outer.top);
+    const right = Math.max(0, outer.right - inner.right);
+    const bottom = Math.max(0, outer.bottom - inner.bottom);
+    const left = Math.max(0, inner.left - outer.left);
+    const widthDelta = left + right;
+    const inset = `inset(${top}px ${right}px ${bottom}px ${left}px)`;
+    const frames = (collapsed: Keyframe, expanded: Keyframe) =>
+      expanding ? [collapsed, expanded] : [expanded, collapsed];
+    const options: KeyframeAnimationOptions = {
+      duration: 240,
+      easing: 'cubic-bezier(0.77, 0, 0.175, 1)',
     };
-    animation.addEventListener('finish', clearAnimation, { once: true });
-    animation.addEventListener('cancel', clearAnimation, { once: true });
+    const animations = [
+      win.el.animate(
+        frames({ clipPath: inset }, { clipPath: 'inset(0px)' }),
+        options,
+      ),
+    ];
+
+    const titlebar = win.el.querySelector('.retro-terminal-titlebar');
+    if (titlebar) {
+      animations.push(
+        titlebar.animate(
+          frames(
+            { transform: `translate(${left}px, ${top}px)` },
+            { transform: 'none' },
+          ),
+          options,
+        ),
+      );
+    }
+    const closeControl = win.el.querySelector('.retro-terminal-close');
+    if (closeControl) {
+      animations.push(
+        closeControl.animate(
+          frames(
+            { transform: `translateX(${-widthDelta}px)` },
+            { transform: 'none' },
+          ),
+          options,
+        ),
+      );
+    }
+    const status = win.el.querySelector('.retro-terminal-status');
+    if (status) {
+      animations.push(
+        status.animate(
+          frames(
+            { transform: `translate(${left}px, ${-bottom}px)` },
+            { transform: 'none' },
+          ),
+          options,
+        ),
+      );
+    }
+    const statusHint = win.el.querySelector('.retro-terminal-status-hint');
+    if (statusHint) {
+      animations.push(
+        statusHint.animate(
+          frames(
+            { transform: `translateX(${-widthDelta}px)` },
+            { transform: 'none' },
+          ),
+          options,
+        ),
+      );
+    }
+
+    startGeometryMotion(win, animations, onFinish);
   }
 
   /** The single reconcile point: state → DOM. Idempotent. */
@@ -370,20 +469,46 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   function toggleMaximize(win: Win, options?: { animate?: boolean }) {
     if (isPhone() || win.minimized) return;
 
-    // Capture the current visual bounds before cancelling an interrupted
-    // animation so a rapid toggle continues from where the window is now.
-    const from =
-      options?.animate === false ? null : win.el.getBoundingClientRect();
-    win.geometryAnimation?.cancel();
+    finishGeometryMotion(win);
+    const shouldAnimate = options?.animate !== false;
+    const reduceMotion = matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    if (!shouldAnimate || reduceMotion) {
+      if (win.restoreGeom) {
+        win.geom = win.restoreGeom;
+        win.restoreGeom = null;
+      } else {
+        win.restoreGeom = { ...win.geom };
+        win.geom = maximizedGeom();
+      }
+      render();
+      if (shouldAnimate) animateGeometryFade(win);
+      return;
+    }
+
     if (win.restoreGeom) {
-      win.geom = win.restoreGeom;
-      win.restoreGeom = null;
+      const target = { ...win.restoreGeom };
+      const from = win.el.getBoundingClientRect();
+      const to = new DOMRect(target.x, target.y, target.w, target.h);
+      animateGeometryChange(win, from, to, false, () => {
+        win.geom = target;
+        win.restoreGeom = null;
+        render();
+      });
     } else {
+      const from = win.el.getBoundingClientRect();
       win.restoreGeom = { ...win.geom };
       win.geom = maximizedGeom();
+      render();
+      animateGeometryChange(
+        win,
+        from,
+        win.el.getBoundingClientRect(),
+        true,
+      );
     }
-    render();
-    if (from) animateGeometryChange(win, from);
   }
 
   /** Tab title tracks the focused window (RetroTerminal.tsx parity). */
@@ -504,7 +629,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       userResized: false,
       minimized: false,
       restoreGeom: null,
-      geometryAnimation: null,
+      geometryMotion: null,
       opener: null,
     };
     state.windows.push(win);
@@ -533,7 +658,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       userResized: false,
       minimized: false,
       restoreGeom: null,
-      geometryAnimation: null,
+      geometryMotion: null,
       opener:
         document.activeElement instanceof HTMLElement
           ? document.activeElement
@@ -822,7 +947,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       !isPhone() &&
       !win.restoreGeom
     ) {
-      win.geometryAnimation?.finish();
+      finishGeometryMotion(win);
       const origin = { ...win.geom };
       trackDrag(event, (dx, dy) => {
         Object.assign(win.geom, clampMove(origin, dx, dy, vw(), vh()));
@@ -833,7 +958,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       !isPhone() &&
       !win.restoreGeom
     ) {
-      win.geometryAnimation?.finish();
+      finishGeometryMotion(win);
       const origin = { ...win.geom };
       event.preventDefault();
       trackDrag(event, (dx, dy) => {
@@ -1063,7 +1188,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     requestAnimationFrame(() => {
       resizePending = false;
       for (const win of state.windows) {
-        win.geometryAnimation?.cancel();
+        finishGeometryMotion(win);
         if (win.restoreGeom) {
           win.restoreGeom =
             win.kind === 'term' && !win.userResized
