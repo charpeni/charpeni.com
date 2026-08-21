@@ -1,8 +1,12 @@
 # Cloudflare header rules (port of vercel.json). Applies to static assets;
 # the /api/latestPrs Worker route sets its own headers in code.
+#
+# script-src lists static.cloudflareinsights.com because Cloudflare Web
+# Analytics injects its beacon into every HTML response at the edge — the
+# tag never appears in our source, but the CSP still has to allow it.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' pirsch.charpeni.com giscus.app https://*.codesandbox.io; child-src *.google.com *.codesandbox.io; style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app https://*.codesandbox.io; img-src * blob: data:; media-src 'none'; connect-src *; font-src 'self' https://*.codesandbox.io; frame-src https://giscus.app/ https://*.codesandbox.io;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' pirsch.charpeni.com static.cloudflareinsights.com giscus.app https://*.codesandbox.io; child-src *.google.com *.codesandbox.io; style-src 'self' 'unsafe-inline' *.googleapis.com giscus.app https://*.codesandbox.io; img-src * blob: data:; media-src 'none'; connect-src *; font-src 'self' https://*.codesandbox.io; frame-src https://giscus.app/ https://*.codesandbox.io;
   Referrer-Policy: origin-when-cross-origin
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
