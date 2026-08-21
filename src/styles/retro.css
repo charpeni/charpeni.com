@@ -1032,8 +1032,15 @@ html:not([data-reader]) {
 }
 .retro-terminal-prose .code-block {
   position: relative;
+  /* The wrapper owns the pre's block margin: .code-block is a size container
+   * (global.css), so a margin left on the pre wouldn't collapse out — it
+   * would sit inside the wrapper and shift the absolutely-positioned copy
+   * button (whose `top` is measured from the wrapper) up into the
+   * `$ cat source` header. */
+  margin: 1.35em 0;
 }
 .retro-terminal-prose .code-block pre {
+  margin-block: 0;
   padding-right: 1.5em;
 }
 .retro-terminal-prose .copy-code-button {
@@ -1110,6 +1117,9 @@ html:not([data-reader]) {
 .retro-terminal-prose .rehype-code-title::before {
   content: '$ cat ';
   color: #b45309;
+}
+.retro-terminal-prose .rehype-code-title + .code-block {
+  margin-top: 0;
 }
 .retro-terminal-prose .rehype-code-title + pre,
 .retro-terminal-prose .rehype-code-title + .code-block pre {
