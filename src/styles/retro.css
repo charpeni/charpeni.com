@@ -177,14 +177,6 @@ html:not([data-reader]) {
     2px 3px 0 rgba(122, 113, 96, 0.22),
     inset 3px 0 0 0 #b45309;
 }
-.retro-terminal-window--maximized,
-.retro-terminal-window--maximized.retro-terminal-window--active {
-  border: 0;
-  box-shadow: none;
-}
-.retro-terminal-window--maximized .retro-terminal-titlebar {
-  cursor: default;
-}
 .retro-terminal-window--maximized .retro-terminal-resize {
   display: none;
 }
