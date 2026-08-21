@@ -1825,3 +1825,108 @@ html:not([data-reader]) {
     text-shadow: none;
   }
 }
+
+/* Series stack (SeriesStack.astro): stamped paper note + stacked-PRs rail.
+ * Global (not component-scoped) so window-manager-injected post content is
+ * styled on any page — same reason the rest of the window skin lives here. */
+/* Retro OS mode: stamped paper note (mirrors the callout treatment in
+ * retro.css) with git-log-flavored rows. */
+html:not([data-reader]) .series-stack {
+  position: relative;
+  margin: 22px 0 1.85em;
+  padding: 22px 18px 12px;
+  border: 1px solid #7a7160;
+  border-left: 3px solid #7a7160;
+  background: #fbf6e9;
+  box-shadow: 3px 4px 0 rgba(122, 113, 96, 0.16);
+}
+html:not([data-reader]) .series-stack-stamp {
+  position: absolute;
+  top: -12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px 2px;
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: #fbf6e9;
+  color: #7a7160;
+  transform: rotate(-0.6deg);
+  box-shadow: 1px 2px 0 rgba(122, 113, 96, 0.12);
+}
+html:not([data-reader]) .series-stack-stamp::before {
+  content: '[';
+  margin-right: 3px;
+  opacity: 0.52;
+}
+html:not([data-reader]) .series-stack-stamp::after {
+  content: ']';
+  margin-left: 3px;
+  opacity: 0.52;
+}
+html:not([data-reader]) .series-stack-name {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3f3a32;
+}
+html:not([data-reader]) .series-stack-part {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 12px;
+  color: #7a7160;
+}
+html:not([data-reader]) .series-stack-list {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 13.5px;
+  color: #3f3a32;
+}
+html:not([data-reader]) .series-stack-item::before {
+  background: rgba(122, 113, 96, 0.38);
+}
+html:not([data-reader]) .series-stack-done::after {
+  background: #7a7160;
+  border-color: #7a7160;
+}
+html:not([data-reader]) .series-stack-current::after {
+  background: #3b6db8;
+  border-color: #3b6db8;
+  box-shadow: 0 0 0 3px rgba(59, 109, 184, 0.18);
+}
+html:not([data-reader]) .series-stack-upcoming::after {
+  background: #fbf6e9;
+  border-color: #7a7160;
+}
+html:not([data-reader]) .series-stack-num {
+  margin-right: 4px;
+  color: #7a7160;
+}
+html:not([data-reader]) .series-stack-base::after {
+  background: rgba(122, 113, 96, 0.55);
+  border-color: rgba(122, 113, 96, 0.55);
+}
+html:not([data-reader]) .series-stack-main {
+  color: #7a7160;
+}
+html:not([data-reader]) .series-stack-head {
+  margin-right: 4px;
+  font-weight: 700;
+  color: #3b6db8;
+}
+html:not([data-reader]) a.series-stack-title {
+  color: #3f3a32;
+  text-decoration: underline;
+  text-decoration-color: rgba(122, 113, 96, 0.55);
+  text-underline-offset: 2px;
+}
+html:not([data-reader]) a.series-stack-title:hover {
+  color: #1c1913;
+  text-decoration-color: currentColor;
+}
+html:not([data-reader]) .series-stack-current .series-stack-title {
+  font-weight: 700;
+}

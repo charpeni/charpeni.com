@@ -161,3 +161,172 @@ html[data-reader] .retro-terminal-banner {
 html[data-reader] .retro-terminal-legal-title {
   display: none;
 }
+
+/* ---------------------------------------------------------------------------
+ * Series stack (SeriesStack.astro). Styled globally — not in the component —
+ * because the markup also arrives via the window-manager partial
+ * (blog/[slug]/content), which ships no CSS of its own; the styles must
+ * already be loaded on whatever page injects it. Shared geometry plus the
+ * reader-mode skin; the retro skin lives in retro.css.
+ * ------------------------------------------------------------------------- */
+/* Shared geometry: a rail down the left, one dot per post. The dot is
+ * anchored to the first line so wrapped titles keep it aligned. */
+.series-stack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.series-stack-item {
+  position: relative;
+  padding: 4px 0 4px 24px;
+}
+.series-stack-item::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+.series-stack-item:first-child::before {
+  top: 14px;
+}
+.series-stack-item:last-child::before {
+  bottom: auto;
+  height: 14px;
+}
+.series-stack-item::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 9px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+}
+.series-stack-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.series-stack-part,
+.series-stack-here {
+  white-space: nowrap;
+}
+
+/* Reader mode: plain stacked card, light + dark. */
+html[data-reader] .series-stack {
+  margin: 0 0 2rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #f9fafb;
+}
+html[data-reader].dark .series-stack {
+  border-color: #1f2937;
+  background: rgba(17, 24, 39, 0.5);
+}
+html[data-reader] .series-stack-name {
+  font-weight: 600;
+  color: #111827;
+}
+html[data-reader].dark .series-stack-name {
+  color: #f3f4f6;
+}
+html[data-reader] .series-stack-part {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+html[data-reader].dark .series-stack-part {
+  color: #9ca3af;
+}
+html[data-reader] .series-stack-list {
+  font-size: 0.9375rem;
+}
+html[data-reader] .series-stack-item::before {
+  background: #e5e7eb;
+}
+html[data-reader].dark .series-stack-item::before {
+  background: #374151;
+}
+html[data-reader] .series-stack-done::after {
+  background: #9ca3af;
+  border-color: #9ca3af;
+}
+html[data-reader].dark .series-stack-done::after {
+  background: #6b7280;
+  border-color: #6b7280;
+}
+html[data-reader] .series-stack-current::after {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+html[data-reader].dark .series-stack-current::after {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+html[data-reader] .series-stack-upcoming::after {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+html[data-reader].dark .series-stack-upcoming::after {
+  background: #111827;
+  border-color: #6b7280;
+}
+html[data-reader] .series-stack-num {
+  margin-right: 4px;
+  color: #6b7280;
+}
+html[data-reader].dark .series-stack-num {
+  color: #9ca3af;
+}
+html[data-reader] .series-stack-base::after {
+  background: #d1d5db;
+  border-color: #d1d5db;
+}
+html[data-reader].dark .series-stack-base::after {
+  background: #4b5563;
+  border-color: #4b5563;
+}
+html[data-reader] .series-stack-main {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+html[data-reader].dark .series-stack-main {
+  color: #9ca3af;
+}
+html[data-reader] a.series-stack-title {
+  color: #374151;
+}
+html[data-reader] a.series-stack-title:hover {
+  color: #111827;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html[data-reader].dark a.series-stack-title {
+  color: #d1d5db;
+}
+html[data-reader].dark a.series-stack-title:hover {
+  color: #f9fafb;
+}
+html[data-reader] .series-stack-current .series-stack-title {
+  font-weight: 600;
+  color: #111827;
+}
+html[data-reader].dark .series-stack-current .series-stack-title {
+  color: #f3f4f6;
+}
+html[data-reader] .series-stack-here {
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+  color: #2563eb;
+}
+html[data-reader].dark .series-stack-here {
+  color: #60a5fa;
+}
