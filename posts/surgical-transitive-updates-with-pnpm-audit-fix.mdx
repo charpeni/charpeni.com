@@ -1,0 +1,93 @@
+---
+title: 'Surgical Transitive Updates with pnpm: audit --fix'
+publishedAt: '2026-08-06T12:00:00Z'
+summary: "pnpm's audit --fix can now update vulnerable transitives directly in the lockfile instead of reaching for overrides first, and it even plays nicely with minimumReleaseAge. Let's dig in."
+tags: ['dependencies', 'security', 'tooling', 'pnpm']
+---
+
+This is the third installment of what is apparently becoming a series about CVE hygiene. First, I wrote about [properly and safely resolving CVEs in your dependencies](/blog/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies): update the vulnerable package within its existing range, then update the parent that pulls it in, and only reach for `resolutions`/`overrides` as a last resort. Then I wrote about [the Bun CVE gap](/blog/the-bun-cve-gap-when-your-package-manager-cant-do-surgical-updates), where I discovered that Bun doesn't give you any of those options, and that pnpm and npm both handled my test scenario correctly.
+
+Today, pnpm gets its own post: it shipped a proper `pnpm audit --fix`, with a mode that does exactly the surgical update I've been advocating for, plus a really thoughtful interaction with [`minimumReleaseAge`](/blog/protecting-against-compromised-packages-with-minimum-release-age) that I haven't seen anywhere else.
+
+## The happy path: updating a transitive in place
+
+Let's recap the baseline. A CVE lands on a transitive dependency, the parent accepts a wide range, and a patched version exists inside that range. As demonstrated in the Bun post, pnpm handles this the way you'd expect:
+
+```bash
+pnpm update qs
+```
+
+The transitive gets re-resolved in place, the parent stays put, `package.json` is untouched, and the diff is contained to the lockfile. No accidentally promoted direct dependency, no regenerated tree. This is the primitive that Bun doesn't have, and it's the foundation everything else builds on.
+
+## `pnpm audit --fix`
+
+Manually tracing every advisory through your tree gets old fast, so let's talk about [`pnpm audit --fix`](https://pnpm.io/cli/audit#--fix).
+
+The command makes you pick a method, and the one the docs lead with is `--fix=override`, which adds **overrides** to `pnpm-workspace.yaml` to force non-vulnerable versions.
+
+I know, I know. Overrides? That sounds exactly like the last-resort tool I've been warning about since the original post. But there are two nuances worth looking at.
+
+### The overrides are well-scoped
+
+pnpm's overrides support range selectors, so instead of the blunt `"lodash": "^4.17.21"` that redirects every consumer in your tree, you get entries like:
+
+```yaml:pnpm-workspace.yaml
+overrides:
+  "lodash@<4.17.21": ">=4.17.21"
+```
+
+That's the version-keyed resolutions pattern from my original post, expressed the pnpm way. It's still an override, it's still sticky, and you should still plan to remove it once your tree naturally resolves past the vulnerable range. But it's scoped to the vulnerable versions, which beats the "every copy of this name becomes this version" behavior I complained about in the Bun post.
+
+> [!NOTE]
+> Since pnpm 11, overrides live in `pnpm-workspace.yaml` rather than `package.json`, which also means they're centralized for the whole workspace instead of scattered across manifests.
+
+### The actually surgical mode: `--fix=update`
+
+The other method, added in v11.0.0:
+
+```bash
+pnpm audit --fix=update
+```
+
+`--fix=update` is the surgical workflow, automated: re-resolve the vulnerable packages to patched versions, no overrides involved. For transitives, the diff stays in the lockfile. When a direct dependency is itself vulnerable, pnpm bumps its range in `package.json`, same as a regular `pnpm update`. Use it by default, and reserve `--fix=override` for the cases where updates within range genuinely can't fix it.
+
+> [!TIP]
+> Add `--interactive` (or `-i`, also since v11.0.0) to review the advisories one by one and pick which fixes to apply. Useful when you want to be deliberate about each change rather than applying everything at once:
+>
+> ```bash
+> pnpm audit --fix=update --interactive
+> ```
+
+## The `minimumReleaseAge` interaction
+
+Now for the detail that made me want to write this post in the first place.
+
+If you've set up [`minimumReleaseAge`](/blog/protecting-against-compromised-packages-with-minimum-release-age) (and you should, it's on by default since pnpm 11), you've told pnpm to refuse installing any version published more recently than your configured window. Great for dodging compromised releases. But there's an obvious tension: what happens when a security fix was published _within_ that window? Do you wait one to three days while a known CVE sits in your tree?
+
+pnpm's answer: when `minimumReleaseAge` is set, `pnpm audit --fix` also adds the **minimum patched version of each advisory** to [`minimumReleaseAgeExclude`](https://pnpm.io/settings/dependency-resolution#minimumreleaseageexclude) in `pnpm-workspace.yaml`:
+
+```yaml:pnpm-workspace.yaml
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - qs@6.15.2
+```
+
+The security fix installs immediately, while everything else still goes through the normal aging process.
+
+The design gets two things right:
+
+1. **It excludes the minimum patched version, not the latest one.** You pre-approve the version that resolves the advisory instead of trusting whatever the newest release happens to be.
+2. **It's explicit and auditable.** The exclusion lands in your config as a reviewable diff, tied to a specific version, not as a hidden bypass. Anyone reviewing the pull request can see exactly which version was fast-tracked and why.
+
+Your default posture stays conservative, and the escape hatch is applied narrowly, per-advisory, per-version. That resolves the "update fast vs. update safely" tension I complained about in the minimum release age post.
+
+## Wrapping up
+
+If you're on pnpm and a CVE lands in your tree, the workflow I'd reach for today looks like this:
+
+1. `pnpm audit --fix=update --interactive` to re-resolve vulnerable packages in the lockfile, reviewing each fix as you go.
+2. Let pnpm add the patched version to `minimumReleaseAgeExclude` when the fix is too fresh for your release age window.
+3. Only fall back to `--fix=override` for advisories that can't be resolved by an update within range, and scope them to the vulnerable versions.
+4. Re-run `pnpm audit` to confirm, and test your project before calling it done.
+
+After spending a whole post complaining about a package manager that can't do surgical updates, it's only fair to spend one on the package manager that's quietly becoming the best at it. Between in-place transitive updates, `--fix=update`, range-scoped overrides, and the `minimumReleaseAgeExclude` interplay, pnpm is essentially encoding the entire workflow from my original post into its tooling.
