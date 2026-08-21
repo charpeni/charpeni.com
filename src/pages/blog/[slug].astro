@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 
 import DesktopShell from '@/components/desktop/DesktopShell.astro';
 import { mdxComponents } from '@/components/mdx';
+import SeriesStack from '@/components/SeriesStack.astro';
 import Comments from '@/components/reader/Comments.astro';
 import CopyAsMarkdownButton from '@/components/reader/CopyAsMarkdownButton.astro';
 import Footer from '@/components/reader/Footer.astro';
@@ -154,6 +155,8 @@ const structuredData = [
           <CopyAsMarkdownButton slug={post.id} />
         </div>
       </div>
+
+      <SeriesStack post={post} />
 
       <div class="prose dark:prose-dark retro-terminal-prose max-w-none w-full">
         <Content components={mdxComponents} />

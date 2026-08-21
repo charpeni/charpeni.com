@@ -1,0 +1,353 @@
+---
+import { getCollection } from 'astro:content';
+
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+/**
+ * Series stack — a GitHub-stacked-PRs-style view of a blog post series,
+ * shown at the top of the post content: every post in the series on a
+ * vertical rail, newest on top, with `main` at the bottom as the target
+ * (the way a PR stack points at its base branch) and a marker on the post
+ * being read. Posts opt in with a `series` frontmatter field; order comes
+ * from publishedAt. Renders nothing unless the series has at least two
+ * posts.
+ *
+ * Same DOM, two presentations (see app.css mode gates): the retro skin
+ * dresses it as a stamped paper note with `(HEAD)` on the current post,
+ * reader mode as a plain stacked list with a "you are here" marker.
+ */
+const { post } = Astro.props;
+const series = post.data.series;
+
+const entries = series
+  ? (await getCollection('posts'))
+      .filter((p) => p.data.series === series)
+      .toSorted(
+        (a, b) =>
+          Number(new Date(a.data.publishedAt)) -
+          Number(new Date(b.data.publishedAt)),
+      )
+  : [];
+const currentIndex = entries.findIndex((p) => p.id === post.id);
+/** Stack order: part numbers descend, newest post on top. */
+const stack = entries.map((p, i) => ({ p, part: i + 1 })).toReversed();
+---
+
+{
+  entries.length > 1 && currentIndex !== -1 ? (
+    <nav class="series-stack" aria-label={`Series: ${series}`}>
+      <span class="series-stack-stamp retro-only" aria-hidden="true">
+        series
+      </span>
+      <div class="series-stack-header">
+        <span class="series-stack-name">{series}</span>
+        <span class="series-stack-part">
+          Part {currentIndex + 1} of {entries.length}
+        </span>
+      </div>
+      <ol class="series-stack-list">
+        {stack.map(({ p, part }) => (
+          <li
+            class:list={[
+              'series-stack-item',
+              part - 1 < currentIndex && 'series-stack-done',
+              part - 1 === currentIndex && 'series-stack-current',
+              part - 1 > currentIndex && 'series-stack-upcoming',
+            ]}
+            aria-current={part - 1 === currentIndex ? 'page' : undefined}
+          >
+            <span class="series-stack-num" aria-hidden="true">{part}.</span>
+            {part - 1 === currentIndex && (
+              <span class="series-stack-head retro-only" aria-hidden="true">
+                (HEAD)
+              </span>
+            )}
+            {part - 1 === currentIndex ? (
+              <span class="series-stack-title">{p.data.title}</span>
+            ) : (
+              <a class="series-stack-title" href={`/blog/${p.id}`}>
+                {p.data.title}
+              </a>
+            )}
+            {part - 1 === currentIndex && (
+              <span class="series-stack-here reader-only">← you are here</span>
+            )}
+          </li>
+        ))}
+        <li class="series-stack-item series-stack-base" aria-hidden="true">
+          <span class="series-stack-main">main</span>
+        </li>
+      </ol>
+    </nav>
+  ) : null
+}
+
+<style is:global>
+  /* Shared geometry: a rail down the left, one dot per post. The dot is
+   * anchored to the first line so wrapped titles keep it aligned. */
+  .series-stack-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .series-stack-item {
+    position: relative;
+    padding: 4px 0 4px 24px;
+  }
+  .series-stack-item::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+  }
+  .series-stack-item:first-child::before {
+    top: 14px;
+  }
+  .series-stack-item:last-child::before {
+    bottom: auto;
+    height: 14px;
+  }
+  .series-stack-item::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 9px;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+  }
+  .series-stack-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .series-stack-part,
+  .series-stack-here {
+    white-space: nowrap;
+  }
+
+  /* Retro OS mode: stamped paper note (mirrors the callout treatment in
+   * retro.css) with git-log-flavored rows. */
+  html:not([data-reader]) .series-stack {
+    position: relative;
+    margin: 22px 0 1.85em;
+    padding: 22px 18px 12px;
+    border: 1px solid #7a7160;
+    border-left: 3px solid #7a7160;
+    background: #fbf6e9;
+    box-shadow: 3px 4px 0 rgba(122, 113, 96, 0.16);
+  }
+  html:not([data-reader]) .series-stack-stamp {
+    position: absolute;
+    top: -12px;
+    left: 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px 2px;
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.45;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    background: #fbf6e9;
+    color: #7a7160;
+    transform: rotate(-0.6deg);
+    box-shadow: 1px 2px 0 rgba(122, 113, 96, 0.12);
+  }
+  html:not([data-reader]) .series-stack-stamp::before {
+    content: '[';
+    margin-right: 3px;
+    opacity: 0.52;
+  }
+  html:not([data-reader]) .series-stack-stamp::after {
+    content: ']';
+    margin-left: 3px;
+    opacity: 0.52;
+  }
+  html:not([data-reader]) .series-stack-name {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #3f3a32;
+  }
+  html:not([data-reader]) .series-stack-part {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #7a7160;
+  }
+  html:not([data-reader]) .series-stack-list {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 13.5px;
+    color: #3f3a32;
+  }
+  html:not([data-reader]) .series-stack-item::before {
+    background: rgba(122, 113, 96, 0.38);
+  }
+  html:not([data-reader]) .series-stack-done::after {
+    background: #7a7160;
+    border-color: #7a7160;
+  }
+  html:not([data-reader]) .series-stack-current::after {
+    background: #3b6db8;
+    border-color: #3b6db8;
+    box-shadow: 0 0 0 3px rgba(59, 109, 184, 0.18);
+  }
+  html:not([data-reader]) .series-stack-upcoming::after {
+    background: #fbf6e9;
+    border-color: #7a7160;
+  }
+  html:not([data-reader]) .series-stack-num {
+    margin-right: 4px;
+    color: #7a7160;
+  }
+  html:not([data-reader]) .series-stack-base::after {
+    background: rgba(122, 113, 96, 0.55);
+    border-color: rgba(122, 113, 96, 0.55);
+  }
+  html:not([data-reader]) .series-stack-main {
+    color: #7a7160;
+  }
+  html:not([data-reader]) .series-stack-head {
+    margin-right: 4px;
+    font-weight: 700;
+    color: #3b6db8;
+  }
+  html:not([data-reader]) a.series-stack-title {
+    color: #3f3a32;
+    text-decoration: underline;
+    text-decoration-color: rgba(122, 113, 96, 0.55);
+    text-underline-offset: 2px;
+  }
+  html:not([data-reader]) a.series-stack-title:hover {
+    color: #1c1913;
+    text-decoration-color: currentColor;
+  }
+  html:not([data-reader]) .series-stack-current .series-stack-title {
+    font-weight: 700;
+  }
+
+  /* Reader mode: plain stacked card, light + dark. */
+  html[data-reader] .series-stack {
+    margin: 0 0 2rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #f9fafb;
+  }
+  html[data-reader].dark .series-stack {
+    border-color: #1f2937;
+    background: rgba(17, 24, 39, 0.5);
+  }
+  html[data-reader] .series-stack-name {
+    font-weight: 600;
+    color: #111827;
+  }
+  html[data-reader].dark .series-stack-name {
+    color: #f3f4f6;
+  }
+  html[data-reader] .series-stack-part {
+    font-size: 0.8125rem;
+    color: #6b7280;
+  }
+  html[data-reader].dark .series-stack-part {
+    color: #9ca3af;
+  }
+  html[data-reader] .series-stack-list {
+    font-size: 0.9375rem;
+  }
+  html[data-reader] .series-stack-item::before {
+    background: #e5e7eb;
+  }
+  html[data-reader].dark .series-stack-item::before {
+    background: #374151;
+  }
+  html[data-reader] .series-stack-done::after {
+    background: #9ca3af;
+    border-color: #9ca3af;
+  }
+  html[data-reader].dark .series-stack-done::after {
+    background: #6b7280;
+    border-color: #6b7280;
+  }
+  html[data-reader] .series-stack-current::after {
+    background: #2563eb;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+  html[data-reader].dark .series-stack-current::after {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  }
+  html[data-reader] .series-stack-upcoming::after {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+  html[data-reader].dark .series-stack-upcoming::after {
+    background: #111827;
+    border-color: #6b7280;
+  }
+  html[data-reader] .series-stack-num {
+    margin-right: 4px;
+    color: #6b7280;
+  }
+  html[data-reader].dark .series-stack-num {
+    color: #9ca3af;
+  }
+  html[data-reader] .series-stack-base::after {
+    background: #d1d5db;
+    border-color: #d1d5db;
+  }
+  html[data-reader].dark .series-stack-base::after {
+    background: #4b5563;
+    border-color: #4b5563;
+  }
+  html[data-reader] .series-stack-main {
+    font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+    font-size: 0.8125rem;
+    color: #6b7280;
+  }
+  html[data-reader].dark .series-stack-main {
+    color: #9ca3af;
+  }
+  html[data-reader] a.series-stack-title {
+    color: #374151;
+  }
+  html[data-reader] a.series-stack-title:hover {
+    color: #111827;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  html[data-reader].dark a.series-stack-title {
+    color: #d1d5db;
+  }
+  html[data-reader].dark a.series-stack-title:hover {
+    color: #f9fafb;
+  }
+  html[data-reader] .series-stack-current .series-stack-title {
+    font-weight: 600;
+    color: #111827;
+  }
+  html[data-reader].dark .series-stack-current .series-stack-title {
+    color: #f3f4f6;
+  }
+  html[data-reader] .series-stack-here {
+    margin-left: 0.5rem;
+    font-size: 0.8125rem;
+    color: #2563eb;
+  }
+  html[data-reader].dark .series-stack-here {
+    color: #60a5fa;
+  }
+</style>
