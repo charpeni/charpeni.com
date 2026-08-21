@@ -43,6 +43,11 @@ type GeometryMotion = {
   finish: () => void;
 };
 
+type StoredDesktopState = {
+  cursor?: number;
+  maximized?: boolean;
+};
+
 type Win = {
   id: string;
   kind: Kind;
@@ -102,7 +107,15 @@ const isPhone = () => vw() < 640 || vh() <= 500;
 const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
 function maximizedGeom(): WinGeom {
-  return { x: 0, y: 0, w: vw(), h: vh() };
+  const inset = Math.round(
+    Math.min(16, Math.max(12, Math.min(vw(), vh()) * 0.018)),
+  );
+  return {
+    x: inset,
+    y: inset,
+    w: vw() - inset * 2,
+    h: vh() - inset * 2,
+  };
 }
 
 function finishGeometryMotion(win: Win) {
@@ -220,10 +233,20 @@ function setBody(el: HTMLElement, ...nodes: Array<Node | string>) {
 }
 
 function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
+  const storedState = (() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem(STORAGE_KEY) ?? '{}',
+      ) as StoredDesktopState;
+    } catch {
+      return {};
+    }
+  })();
   const state = {
     windows: [] as Win[],
     focusedId: null as string | null,
     cursor: 0,
+    maximized: storedState.maximized === true,
   };
   let zCounter = 0;
   const opening = new Set<string>();
@@ -235,6 +258,22 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
   const winById = (id: string) => state.windows.find((w) => w.id === id);
   const nextZ = () => ++zCounter;
+
+  function persistState() {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ cursor: state.cursor, maximized: state.maximized }),
+      );
+    } catch {
+      /* private mode */
+    }
+  }
+
+  function persistMaximized(maximized: boolean) {
+    state.maximized = maximized;
+    persistState();
+  }
 
   /** Top-most VISIBLE window (minimized windows are ignored for URL/focus). */
   function topWindow(): Win | null {
@@ -484,6 +523,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = maximizedGeom();
       }
       render();
+      persistMaximized(win.restoreGeom !== null);
       if (shouldAnimate) animateGeometryFade(win);
       return;
     }
@@ -496,12 +536,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = target;
         win.restoreGeom = null;
         render();
+        persistMaximized(false);
       });
     } else {
       const from = win.el.getBoundingClientRect();
       win.restoreGeom = { ...win.geom };
       win.geom = maximizedGeom();
       render();
+      persistMaximized(true);
       animateGeometryChange(
         win,
         from,
@@ -553,6 +595,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     state.focusedId = win.id;
     win.z = nextZ();
     render();
+    persistMaximized(win.restoreGeom !== null);
     win.el.focus({ preventScroll: true });
     if (changed && !options?.silentUrl) syncUrl('replace');
   }
@@ -562,6 +605,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     const wasFocused = state.focusedId === win.id;
     if (wasFocused) state.focusedId = topWindow()?.id ?? null;
     render();
+    persistMaximized(topWindow()?.restoreGeom !== null);
     if (wasFocused) {
       const top = state.focusedId ? winById(state.focusedId) : null;
       if (top) top.el.focus({ preventScroll: true });
@@ -586,6 +630,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       top.z = nextZ();
     }
     render();
+    persistMaximized(top?.restoreGeom !== null);
     // Restore focus to whatever opened this window (e.g. the term-log row),
     // falling back to the new top window — important for keyboard users.
     let restoredOpenerFocus = false;
@@ -619,16 +664,17 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
   function registerServerWindow(el: HTMLElement): Win {
     const id = el.dataset.retroWindowId ?? '';
+    const initialGeom = defaultGeom(id);
     const win: Win = {
       id,
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: defaultGeom(id),
+      geom: state.maximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: null,
+      restoreGeom: state.maximized ? initialGeom : null,
       geometryMotion: null,
       opener: null,
     };
@@ -638,6 +684,8 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
   // --- Client-opened window frames (twin of Window.astro) ---
   function buildFrame(id: string, title: string): Win {
+    const initialGeom = defaultGeom(id);
+    const inheritMaximized = topWindow()?.restoreGeom !== null;
     const el = document.createElement('div');
     el.className = 'retro-terminal-window';
     el.dataset.retroWindowId = id;
@@ -653,11 +701,11 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: defaultGeom(id),
+      geom: inheritMaximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: null,
+      restoreGeom: inheritMaximized ? initialGeom : null,
       geometryMotion: null,
       opener:
         document.activeElement instanceof HTMLElement
@@ -868,11 +916,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     if (selectedDisplay) {
       selectedDisplay.textContent = String(state.cursor + 1);
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ cursor: state.cursor }));
-    } catch {
-      /* private mode */
-    }
+    persistState();
   }
 
   // --- Adopt server-rendered windows ---
@@ -898,21 +942,13 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   {
     const match = location.pathname.match(/^\/blog\/([^/.]+)$/);
     let initial = match ? posts.findIndex((p) => p.slug === match[1]) : -1;
-    if (initial < 0) {
-      try {
-        const stored = JSON.parse(
-          localStorage.getItem(STORAGE_KEY) ?? '{}',
-        ) as { cursor?: number };
-        if (
-          typeof stored.cursor === 'number' &&
-          stored.cursor >= 0 &&
-          stored.cursor < posts.length
-        ) {
-          initial = stored.cursor;
-        }
-      } catch {
-        /* ignore */
-      }
+    if (
+      initial < 0 &&
+      typeof storedState.cursor === 'number' &&
+      storedState.cursor >= 0 &&
+      storedState.cursor < posts.length
+    ) {
+      initial = storedState.cursor;
     }
     setCursor(Math.max(0, initial), { scroll: false });
   }
