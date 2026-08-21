@@ -7,7 +7,7 @@ const { variant } = Astro.props;
 {
   variant === 'privacy-policy' ? (
     <>
-      <p>Last updated: August 8, 2026.</p>
+      <p>Last updated: August 20, 2026.</p>
       <p>
         This website (<a href="https://charpeni.com">https://charpeni.com</a>)
         is the personal website of Nicolas Charpentier. It is intended to
@@ -24,6 +24,16 @@ const { variant } = Astro.props;
       <p class="mt-4">
         The site uses Pirsch Analytics to understand aggregate usage. This
         service may process request, device, browser, and page information.
+      </p>
+      <p class="mt-4">
+        The site also uses Cloudflare Web Analytics, which loads a small
+        measurement script on each page. It reports page views along with
+        information such as the referring page, country, device type, browser,
+        and page performance timings. According to Cloudflare, this service
+        does not use cookies, local storage, or fingerprinting, and does not
+        track visitors across websites.
+      </p>
+      <p class="mt-4">
         The site does not use these tools to identify individual visitors.
       </p>
       <h2 class="prose mt-4 font-bold">Cookies and Local Storage</h2>
