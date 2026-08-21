@@ -1,0 +1,87 @@
+---
+import { getCollection } from 'astro:content';
+
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+/**
+ * Series stack — a GitHub-stacked-PRs-style view of a blog post series,
+ * shown at the top of the post content: every post in the series on a
+ * vertical rail, newest on top, with `main` at the bottom as the target
+ * (the way a PR stack points at its base branch) and a marker on the post
+ * being read. Posts opt in with a `series` frontmatter field; order comes
+ * from publishedAt. Renders nothing unless the series has at least two
+ * posts.
+ *
+ * Same DOM, two presentations (see app.css mode gates): the retro skin
+ * dresses it as a stamped paper note with `(HEAD)` on the current post,
+ * reader mode as a plain stacked list with a "you are here" marker.
+ */
+const { post } = Astro.props;
+const series = post.data.series;
+
+const entries = series
+  ? (await getCollection('posts'))
+      .filter((p) => p.data.series === series)
+      .toSorted(
+        (a, b) =>
+          Number(new Date(a.data.publishedAt)) -
+          Number(new Date(b.data.publishedAt)),
+      )
+  : [];
+const currentIndex = entries.findIndex((p) => p.id === post.id);
+/** Stack order: part numbers descend, newest post on top. */
+const stack = entries.map((p, i) => ({ p, part: i + 1 })).toReversed();
+---
+
+{
+  entries.length > 1 && currentIndex !== -1 ? (
+    <nav class="series-stack" aria-label={`Series: ${series}`}>
+      <span class="series-stack-stamp retro-only" aria-hidden="true">
+        series
+      </span>
+      <div class="series-stack-header">
+        <span class="series-stack-name">{series}</span>
+        <span class="series-stack-part">
+          Part {currentIndex + 1} of {entries.length}
+        </span>
+      </div>
+      <ol class="series-stack-list">
+        {stack.map(({ p, part }) => (
+          <li
+            class:list={[
+              'series-stack-item',
+              part - 1 < currentIndex && 'series-stack-done',
+              part - 1 === currentIndex && 'series-stack-current',
+              part - 1 > currentIndex && 'series-stack-upcoming',
+            ]}
+            aria-current={part - 1 === currentIndex ? 'page' : undefined}
+          >
+            <span class="series-stack-num" aria-hidden="true">{part}.</span>
+            {part - 1 === currentIndex && (
+              <span class="series-stack-head retro-only" aria-hidden="true">
+                (HEAD)
+              </span>
+            )}
+            {part - 1 === currentIndex ? (
+              <span class="series-stack-title">{p.data.title}</span>
+            ) : (
+              <a class="series-stack-title" href={`/blog/${p.id}`}>
+                {p.data.title}
+              </a>
+            )}
+            {part - 1 === currentIndex && (
+              <span class="series-stack-here reader-only">← you are here</span>
+            )}
+          </li>
+        ))}
+        <li class="series-stack-item series-stack-base" aria-hidden="true">
+          <span class="series-stack-main">main</span>
+        </li>
+      </ol>
+    </nav>
+  ) : null
+}

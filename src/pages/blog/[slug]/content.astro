@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 
 import { mdxComponents } from '@/components/mdx';
 import Comments from '@/components/reader/Comments.astro';
+import SeriesStack from '@/components/SeriesStack.astro';
 import { shortHash } from '@/utils/graph';
 import { getReadingStats, getResponsiveImage } from '@/utils/postMeta';
 import { branchOf, formatLongDate, isBranch } from '@/utils/retro';
@@ -63,6 +64,7 @@ const metaAfter =
         </div>
       ) : null
     }
+    <SeriesStack post={post} />
     <div class="prose retro-terminal-prose max-w-none w-full">
       <Content components={mdxComponents} />
     </div>

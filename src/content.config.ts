@@ -20,6 +20,9 @@ const posts = defineCollection({
     summary: z.string(),
     image: z.string().startsWith('/').optional(),
     tags: z.array(z.string()).default([]),
+    /** Display name of the series this post belongs to; posts sharing the
+     * same value are grouped and ordered by publishedAt (SeriesStack). */
+    series: z.string().optional(),
   }),
 });
 

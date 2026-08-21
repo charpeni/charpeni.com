@@ -3,6 +3,7 @@ title: 'Surgical Transitive Updates with pnpm: audit --fix'
 publishedAt: '2026-08-06T12:00:00Z'
 summary: "pnpm's audit --fix can now update vulnerable transitives directly in the lockfile instead of reaching for overrides first, and it even plays nicely with minimumReleaseAge. Let's dig in."
 tags: ['dependencies', 'security', 'tooling', 'pnpm']
+series: 'CVE Hygiene'
 ---
 
 This is the third installment of what is apparently becoming a series about CVE hygiene. First, I wrote about [properly and safely resolving CVEs in your dependencies](/blog/minimizing-risk-properly-and-safely-resolving-cves-in-your-dependencies): update the vulnerable package within its existing range, then update the parent that pulls it in, and only reach for `resolutions`/`overrides` as a last resort. Then I wrote about [the Bun CVE gap](/blog/the-bun-cve-gap-when-your-package-manager-cant-do-surgical-updates), where I discovered that Bun doesn't give you any of those options, and that pnpm and npm both handled my test scenario correctly.
