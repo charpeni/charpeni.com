@@ -124,14 +124,17 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
       class="retro-terminal-profile retro-only"
       aria-label="About Nicolas Charpentier"
     >
-      <div class="retro-terminal-profile-name">
+      {/* A real heading (not a div) so the default-visible terminal variant
+          has a heading hierarchy for crawlers; the class already pins
+          font-size/weight and retro.css zeroes the UA margin. */}
+      <h2 class="retro-terminal-profile-name">
         Nicolas Charpentier{' '}
         <a
           class="retro-terminal-profile-email"
           href="mailto:blog@nicolascharpentier.com"
           >&lt;blog@nicolascharpentier.com&gt;</a
         >
-      </div>
+      </h2>
       <div class="retro-terminal-profile-role">
         Staff Software Engineer — frontend infrastructure &amp; developer
         tooling
