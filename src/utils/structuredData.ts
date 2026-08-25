@@ -25,6 +25,13 @@ export function personLd() {
     url: SITE_URL,
     image: `${SITE_URL}/static/images/nicolas_charpentier.jpeg`,
     jobTitle: 'Software Engineer',
+    email: 'blog@nicolascharpentier.com',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'general inquiry',
+      email: 'blog@nicolascharpentier.com',
+      url: `${SITE_URL}/contact`,
+    },
     description:
       'Software Engineer focused on frontend infrastructure and developer tooling. Open source contributor writing about TypeScript, React, React Native, GraphQL, Apollo Client, and CI/CD.',
     knowsAbout: [
