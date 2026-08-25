@@ -1,6 +1,7 @@
 ---
 import TermLog from '@/components/desktop/TermLog.astro';
 import Window from '@/components/desktop/Window.astro';
+import ContactContent from '@/components/reader/ContactContent.astro';
 import LegalContent from '@/components/reader/LegalContent.astro';
 import { shortHash } from '@/utils/graph';
 import { getResponsiveImage } from '@/utils/postMeta';
@@ -11,7 +12,7 @@ import {
   windowTitle,
 } from '@/utils/retro';
 
-import type { TermPost } from '@/utils/retro';
+import type { LegalWindowVariant, TermPost } from '@/utils/retro';
 
 /**
  * The server-rendered terminal desktop — DEFAULT presentation of every page.
@@ -27,6 +28,7 @@ type Focused =
   | 'show'
   | 'legal:disclaimer'
   | 'legal:privacy-policy'
+  | 'legal:contact'
   | 'not-found';
 
 type Props = {
@@ -58,8 +60,13 @@ const showMetaAfter = post
     (showOtherTags.length > 0 ? `\ntopic:  ${showOtherTags.join(', ')}` : '')
   : '';
 const legalVariant = focused.startsWith('legal:')
-  ? (focused.slice(6) as 'disclaimer' | 'privacy-policy')
+  ? (focused.slice(6) as LegalWindowVariant)
   : undefined;
+const legalTitles: Record<LegalWindowVariant, string> = {
+  'disclaimer': 'DISCLAIMER',
+  'privacy-policy': 'PRIVACY POLICY',
+  'contact': 'CONTACT',
+};
 
 // The profile icons render at 36/58 CSS px, so they reuse the same WebP
 // variant the reader-mode avatar already requests rather than the 664px
@@ -176,6 +183,8 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
 
     <footer class="retro-terminal-footer retro-only">
       <div class="retro-terminal-footer-links">
+        <a href="/contact" data-open-legal="contact">Contact</a>
+        <span aria-hidden="true">|</span>
         <a href="/disclaimer" data-open-legal="disclaimer">Disclaimer</a>
         <span aria-hidden="true">|</span>
         <a href="/privacy-policy" data-open-legal="privacy-policy"
@@ -267,10 +276,16 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
         >
           <div class="retro-terminal-legal-window">
             <div class="retro-terminal-legal-title retro-only">
-              {legalVariant === 'disclaimer' ? 'DISCLAIMER' : 'PRIVACY POLICY'}
+              {legalTitles[legalVariant]}
             </div>
             <div class="retro-terminal-legal-content">
-              <LegalContent variant={legalVariant} />
+              {
+                legalVariant === 'contact' ? (
+                  <ContactContent />
+                ) : (
+                  <LegalContent variant={legalVariant} />
+                )
+              }
             </div>
           </div>
           <div class="retro-terminal-status" slot="status">
