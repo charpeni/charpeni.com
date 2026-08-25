@@ -46,6 +46,10 @@ const firstPage = pages[0];
           >
             👋 Hi, I'm Nicolas Charpentier
           </h1>
+          {/* Visually the bio reads straight off the H1; the hidden headings
+              give crawlers (and screen readers) the section structure the
+              design implies. */}
+          <h2 class="sr-only">About</h2>
           <div class="lg:flex lg:items-start lg:gap-8">
             <div class="flex-1">
               <p
@@ -94,6 +98,7 @@ const firstPage = pages[0];
                   className="text-korey decoration-korey"
                 />.
               </p>
+              <h3 class="sr-only">Elsewhere</h3>
               <div
                 class="mt-4 md:mt-8 flex flex-wrap md:flex-nowrap items-center justify-center lg:justify-start gap-2"
               >

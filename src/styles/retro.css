@@ -376,6 +376,9 @@ html:not([data-reader]) {
   font-weight: 700;
   font-size: 18px;
   line-height: 1.25;
+  /* The element is an h2 (crawler-visible hierarchy) — neutralize the UA
+     heading margin so it renders exactly like the div it used to be. */
+  margin: 0;
 }
 .retro-terminal-profile-email {
   font-weight: 400;
