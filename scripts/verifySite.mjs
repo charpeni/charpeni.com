@@ -7,9 +7,16 @@
  * On hosts without Chromium's system libraries/fonts, point
  * LD_LIBRARY_PATH / FONTCONFIG_FILE at locally extracted copies.
  */
+import { readdirSync } from 'node:fs';
+
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] ?? 'http://localhost:4321';
+// Derived, not hardcoded — every new post used to silently break the three
+// exact-count checks below.
+const POST_COUNT = readdirSync(new URL('../posts', import.meta.url)).filter(
+  (f) => f.endsWith('.mdx'),
+).length;
 const results = [];
 
 function check(name, condition, detail = '') {
@@ -81,10 +88,10 @@ check(
   }),
 );
 check(
-  'term log lists all 36 posts with graph svg + hashes',
-  (await page.locator('[data-log-index]').count()) === 36 &&
-    (await page.locator('.retro-terminal-graph').count()) === 36 &&
-    (await page.locator('.retro-terminal-hash').count()) === 36,
+  `term log lists all ${POST_COUNT} posts with graph svg + hashes`,
+  (await page.locator('[data-log-index]').count()) === POST_COUNT &&
+    (await page.locator('.retro-terminal-graph').count()) === POST_COUNT &&
+    (await page.locator('.retro-terminal-hash').count()) === POST_COUNT,
 );
 
 // Adoption probe: a JS property on the adopted node survives interactions.
@@ -528,13 +535,148 @@ const llms = await page.request.get(`${BASE}/llms.txt`);
 const llmsFull = await page.request.get(`${BASE}/llms-full.txt`);
 const rss = await page.request.get(`${BASE}/blog/rss.xml`);
 check(
-  'llms.txt (36 posts), llms-full.txt, and RSS served',
+  `llms.txt (${POST_COUNT} posts), llms-full.txt, and RSS served`,
   llms.status() === 200 &&
-    ((await llms.text()).match(/^### /gm) ?? []).length === 36 &&
+    ((await llms.text()).match(/^### /gm) ?? []).length === POST_COUNT &&
     llmsFull.status() === 200 &&
     rss.status() === 200 &&
     (await rss.text()).includes('<rss version="2.0"'),
 );
+check(
+  'llms.txt carries the For AI Agents section; /index.md lists every post',
+  (await llms.text()).includes('## For AI Agents') &&
+    await (async () => {
+      const indexMd = await page.request.get(`${BASE}/index.md`);
+      return (
+        indexMd.status() === 200 &&
+        ((await indexMd.text()).match(/^- \[/gm) ?? []).length >= POST_COUNT
+      );
+    })(),
+);
+const contact = await page.request.get(`${BASE}/contact`);
+check(
+  '/contact page served with ContactPage JSON-LD and 500+ chars',
+  contact.status() === 200 &&
+    (await contact.text()).includes('"ContactPage"') &&
+    (await contact.text()).includes('blog@nicolascharpentier.com') &&
+    (await contact.text()).length > 500,
+);
+
+// --- Accept: text/markdown content negotiation (src/worker.ts) ---
+// Only exercised when the Cloudflare worker fronts the request path
+// (`pnpm preview` or production); plain `astro dev` serves pages without
+// the custom entry, so probe first and SKIP instead of failing.
+const mdAccept = { accept: 'text/markdown' };
+const postUrl = `${BASE}/blog/graphql-enums-are-unsafe`;
+const probe = await page.request.get(`${BASE}/`, {
+  headers: mdAccept,
+  maxRedirects: 0,
+});
+if (!(probe.headers()['content-type'] ?? '').includes('text/markdown')) {
+  console.log(
+    'SKIP  markdown negotiation checks — worker entry not in the request path (run against `pnpm preview` or production)',
+  );
+} else {
+  check(
+    'homepage negotiates markdown: 200, Vary: Accept, markdown body',
+    probe.status() === 200 &&
+      (probe.headers()['vary'] ?? '').toLowerCase().includes('accept') &&
+      (await probe.text()).startsWith('# '),
+  );
+  const postNeg = await page.request.get(postUrl, {
+    headers: mdAccept,
+    maxRedirects: 0,
+  });
+  check(
+    'post negotiates markdown, bytes identical to the .md asset',
+    postNeg.status() === 200 &&
+      (postNeg.headers()['content-type'] ?? '').includes('text/markdown') &&
+      (await postNeg.text()) === (await md.text()),
+  );
+  const htmlNeg = await page.request.get(postUrl, {
+    headers: {
+      accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    },
+    maxRedirects: 0,
+  });
+  check(
+    'browser Accept still gets HTML, with Vary: Accept and CSP intact',
+    htmlNeg.status() === 200 &&
+      (htmlNeg.headers()['content-type'] ?? '').includes('text/html') &&
+      (htmlNeg.headers()['vary'] ?? '').toLowerCase().includes('accept') &&
+      (htmlNeg.headers()['content-security-policy'] ?? '').includes(
+        "default-src 'self'",
+      ),
+  );
+  const qMd = await page.request.get(postUrl, {
+    headers: { accept: 'text/html;q=0.2, text/markdown;q=0.9' },
+    maxRedirects: 0,
+  });
+  const qHtml = await page.request.get(postUrl, {
+    headers: { accept: 'text/markdown;q=0.1, text/html' },
+    maxRedirects: 0,
+  });
+  check(
+    'q-values honored in both directions',
+    (qMd.headers()['content-type'] ?? '').includes('text/markdown') &&
+      (qHtml.headers()['content-type'] ?? '').includes('text/html'),
+  );
+  const notAcceptable = await page.request.get(postUrl, {
+    headers: { accept: 'application/json' },
+    maxRedirects: 0,
+  });
+  check(
+    'unsupported Accept gets 406 with Vary: Accept',
+    notAcceptable.status() === 406 &&
+      (notAcceptable.headers()['vary'] ?? '').toLowerCase().includes('accept'),
+  );
+  const md404 = await page.request.get(`${BASE}/definitely-not-a-page`, {
+    headers: mdAccept,
+    maxRedirects: 0,
+  });
+  check(
+    'unknown path + markdown Accept gets a markdown 404 with recovery links',
+    md404.status() === 404 &&
+      (md404.headers()['content-type'] ?? '').includes('text/markdown') &&
+      (await md404.text()).includes('llms.txt'),
+  );
+  const mdDirect = await page.request.get(`${postUrl}.md`, {
+    headers: { accept: 'text/html' },
+    maxRedirects: 0,
+  });
+  check(
+    '.md URLs stay single-representation: no 406 for text/html',
+    mdDirect.status() === 200,
+  );
+  const trailing = await page.request.get(`${postUrl}/`, {
+    headers: mdAccept,
+    maxRedirects: 0,
+  });
+  check(
+    'trailing slash still redirects down before negotiating',
+    trailing.status() === 307 || trailing.status() === 308,
+  );
+  const headMd = await page.request.fetch(postUrl, {
+    method: 'HEAD',
+    headers: mdAccept,
+    maxRedirects: 0,
+  });
+  check(
+    'HEAD negotiates markdown headers with an empty body',
+    (headMd.headers()['content-type'] ?? '').includes('text/markdown') &&
+      (await headMd.text()) === '',
+  );
+  const prs = await page.request.get(`${BASE}/api/latestPrs`, {
+    headers: mdAccept,
+    maxRedirects: 0,
+  });
+  check(
+    '/api/latestPrs bypasses negotiation (no 406, not markdown)',
+    prs.status() !== 406 &&
+      !(prs.headers()['content-type'] ?? '').includes('text/markdown'),
+  );
+}
 
 // --- Archive-agent intro (fresh context: no seen key) ---
 const introContext = await browser.newContext({
@@ -553,11 +695,13 @@ check(
   'archive-agent intro plays in a fresh browser; Enter skips without opening',
   introPlaying &&
     (await intro.evaluate(
-      () =>
+      (expectedRows) =>
         !document.querySelector('.retro-terminal-content--loading') &&
         !document.querySelector('[data-retro-window-id^="show:"]') &&
-        document.querySelectorAll('.retro-terminal-row').length === 36 &&
+        document.querySelectorAll('.retro-terminal-row').length ===
+          expectedRows &&
         localStorage.getItem('retro-terminal-agent-intro-seen:v1') === '1',
+      POST_COUNT,
     )),
 );
 await introContext.close();
