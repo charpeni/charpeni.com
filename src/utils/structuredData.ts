@@ -102,6 +102,21 @@ export function blogPostingLd({
   };
 }
 
+export function contactPageLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: 'Contact Nicolas Charpentier',
+    url: `${SITE_URL}/contact`,
+    inLanguage: 'en',
+    about: {
+      '@type': 'Person',
+      name: 'Nicolas Charpentier',
+      url: SITE_URL,
+    },
+  };
+}
+
 export function breadcrumbLd({
   title,
   postUrl,

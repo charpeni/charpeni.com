@@ -1,0 +1,120 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import Footer from '@/components/reader/Footer.astro';
+import Header from '@/components/reader/Header.astro';
+import Socials from '@/components/reader/Socials.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getReadingStats, sortByPublishedAt } from '@/utils/postMeta';
+import { contactPageLd } from '@/utils/structuredData';
+
+import type { TermPost } from '@/utils/retro';
+
+const all = sortByPublishedAt(await getCollection('posts'));
+const termPosts: TermPost[] = all.map((p) => ({
+  slug: p.id,
+  title: p.data.title,
+  publishedAt: p.data.publishedAt,
+  tags: p.data.tags,
+  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
+  image: p.data.image,
+}));
+
+const linkClass =
+  'text-blue-600 transition-colors hover:text-black dark:text-blue-400 dark:hover:text-white';
+---
+
+<BaseLayout
+  title="Contact | Nicolas Charpentier"
+  description="How to reach Nicolas Charpentier — email, GitHub, LinkedIn, X, and Bluesky. Questions, corrections, and open source discussions welcome."
+  structuredData={[contactPageLd()]}
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="term" />
+
+  <main
+    id="skip"
+    class="reader-only flex flex-col justify-center items-start max-w-2xl mx-auto mb-16 px-8"
+  >
+    <h1
+      class="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white"
+    >
+      Contact
+    </h1>
+    <div
+      class="max-w-prose text-gray-600 dark:text-gray-400 flex flex-col gap-4"
+    >
+      <p>
+        The best way to reach me is email:{' '}
+        <a href="mailto:blog@nicolascharpentier.com" class={linkClass}
+          >blog@nicolascharpentier.com</a
+        >. I read everything that lands there, and I usually reply within a few
+        days — this is a personal blog, not a support desk, so please be patient
+        if it takes a little longer.
+      </p>
+
+      <h2
+        class="font-bold text-xl md:text-2xl tracking-tight mt-4 text-black dark:text-white"
+      >
+        What to reach out about
+      </h2>
+      <p>
+        Questions or corrections about a blog post are always welcome — if
+        something I wrote is wrong or outdated, I want to know. Same goes for
+        follow-up questions on TypeScript, React Native, GraphQL, or CI topics I
+        cover here. For issues with one of my open source libraries, the
+        fastest path is an issue on the relevant{' '}
+        <a
+          href="https://github.com/charpeni"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={linkClass}>GitHub repository</a
+        >, where the discussion helps other users too.
+      </p>
+
+      <h2
+        class="font-bold text-xl md:text-2xl tracking-tight mt-4 text-black dark:text-white"
+      >
+        Elsewhere
+      </h2>
+      <p>
+        I'm{' '}
+        <a
+          href="https://github.com/charpeni"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={linkClass}>@charpeni</a
+        > on GitHub,{' '}
+        <a
+          href="https://x.com/charpeni_"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={linkClass}>@charpeni_</a
+        > on X,{' '}
+        <a
+          href="https://bsky.app/profile/charpeni.bsky.social"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={linkClass}>@charpeni.bsky.social</a
+        > on Bluesky, and{' '}
+        <a
+          href="https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={linkClass}>Nicolas Charpentier</a
+        > on LinkedIn. New posts land in the{' '}
+        <a href="/blog/rss.xml" class={linkClass}>RSS feed</a>.
+      </p>
+      <p>
+        AI agents: <a href="/llms.txt" class={linkClass}>/llms.txt</a> indexes
+        every post with summaries and markdown URLs.
+      </p>
+
+      <div class="mt-2 flex justify-start">
+        <Socials />
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
