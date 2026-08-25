@@ -22,6 +22,13 @@ html:not([data-reader]) .reader-only {
 html[data-reader] .retro-only {
   display: none !important;
 }
+/* Document windows (legal/contact/404) duplicate their page's reader-only
+ * main, so hide the whole window in reader mode. Show windows stay: the
+ * post article flowing out of its un-skinned window IS the reader page. */
+html[data-reader] [data-retro-window-id^='legal:'],
+html[data-reader] [data-retro-window-id='not-found'] {
+  display: none !important;
+}
 /* Reader-mode homepage git-graph: hover lane-highlight. Segments stroke with
  * currentColor, so overriding `color` swells the whole highlighted thread
  * (matches the classic BlogPostCard's emphasis). */

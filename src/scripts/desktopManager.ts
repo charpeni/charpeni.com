@@ -34,7 +34,7 @@ import {
   windowTitle,
 } from '@/utils/retro';
 
-import type { TermPost, WinGeom } from '@/utils/retro';
+import type { LegalWindowVariant, TermPost, WinGeom } from '@/utils/retro';
 
 type Kind = 'term' | 'show' | 'legal' | 'prs' | 'not-found';
 
@@ -564,6 +564,8 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       title = 'Disclaimer | Nicolas Charpentier';
     } else if (top?.id === 'legal:privacy-policy') {
       title = 'Privacy Policy | Nicolas Charpentier';
+    } else if (top?.id === 'legal:contact') {
+      title = 'Contact | Nicolas Charpentier';
     } else if (top?.id.startsWith('show:')) {
       const post = posts.find((p) => p.slug === top.id.slice(5));
       if (post) title = `${post.title} | Nicolas Charpentier`;
@@ -793,7 +795,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     );
   }
 
-  function openLegal(variant: 'disclaimer' | 'privacy-policy') {
+  function openLegal(variant: LegalWindowVariant) {
     void openPartialWindow(
       `legal:${variant}`,
       `/partials/legal-${variant}`,
@@ -1018,7 +1020,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     const legalLink = target.closest<HTMLElement>('[data-open-legal]');
     if (legalLink) {
       event.preventDefault();
-      openLegal(legalLink.dataset.openLegal as 'disclaimer' | 'privacy-policy');
+      openLegal(legalLink.dataset.openLegal as LegalWindowVariant);
       return;
     }
 
@@ -1113,10 +1115,10 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       const href = anchor.getAttribute('href') ?? '';
       // Legal cross-links (e.g. the privacy body linking the disclaimer)
       // open the sibling window in place (LegalWindow.tsx parity).
-      const legal = href.match(/^\/(disclaimer|privacy-policy)$/);
+      const legal = href.match(/^\/(disclaimer|privacy-policy|contact)$/);
       if (legal) {
         event.preventDefault();
-        openLegal(legal[1] as 'disclaimer' | 'privacy-policy');
+        openLegal(legal[1] as LegalWindowVariant);
         return;
       }
       const match = href.match(/^\/blog\/([^/.]+)$/);
