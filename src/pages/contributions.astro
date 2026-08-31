@@ -1,0 +1,48 @@
+---
+import { getCollection } from 'astro:content';
+
+import DesktopShell from '@/components/desktop/DesktopShell.astro';
+import Footer from '@/components/reader/Footer.astro';
+import GithubTimelineReader from '@/components/reader/GithubTimelineReader.astro';
+import Header from '@/components/reader/Header.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { githubProfile } from '@/utils/githubProfile';
+import { getReadingStats, sortByPublishedAt } from '@/utils/postMeta';
+
+import type { TermPost } from '@/utils/retro';
+
+const all = sortByPublishedAt(await getCollection('posts'));
+const termPosts: TermPost[] = all.map((p) => ({
+  slug: p.id,
+  title: p.data.title,
+  publishedAt: p.data.publishedAt,
+  tags: p.data.tags,
+  readingTimeText: getReadingStats(p.body ?? '').readingTime.text,
+  image: p.data.image,
+}));
+
+const { totals } = githubProfile;
+---
+
+<BaseLayout
+  title="Contributions | Nicolas Charpentier"
+  description={`${totals.prs.toLocaleString('en-US')} pull requests across ${totals.repos} public repositories over ${totals.years} years of open source — a year-by-year timeline of Nicolas Charpentier's open source contributions on GitHub.`}
+>
+  <Header />
+  <DesktopShell posts={termPosts} focused="github" />
+
+  <main
+    id="skip"
+    class="reader-only flex flex-col justify-center items-start max-w-2xl mx-auto mb-16 px-8"
+  >
+    <h1
+      class="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white"
+    >
+      Contributions
+    </h1>
+    <div class="w-full text-gray-600 dark:text-gray-400">
+      <GithubTimelineReader />
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

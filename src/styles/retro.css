@@ -783,6 +783,176 @@ html:not([data-reader]) {
   white-space: nowrap;
 }
 
+/* GitHub contributions timeline window ("timeline × branches"): per-year
+ * sections on a rail, domain chips in the blog's branch-tag colors, repos
+ * ranked by stars. The "+n more" rows use native <details> so the adopted
+ * partial needs no script. */
+.retro-terminal-gh-window {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  background: #fbf6e9;
+}
+.retro-terminal-gh-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 14px 10px 6px;
+}
+.retro-terminal-gh-year {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+}
+.retro-terminal-gh-rail {
+  position: relative;
+}
+.retro-terminal-gh-rail::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #d8c7a6;
+}
+.retro-terminal-gh-year:first-child .retro-terminal-gh-rail::before {
+  top: 14px;
+}
+.retro-terminal-gh-orb {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.retro-terminal-gh-body {
+  min-width: 0;
+  padding: 6px 4px 16px;
+}
+.retro-terminal-gh-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+}
+.retro-terminal-gh-tag {
+  font-weight: 700;
+}
+.retro-terminal-gh-stat {
+  color: #2a2a2a;
+  font-weight: 600;
+}
+.retro-terminal-gh-months {
+  margin-left: auto;
+  color: #b45309;
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.retro-terminal-gh-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin: 4px 0 7px;
+}
+.retro-terminal-gh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #d8c7a6;
+  border-radius: 999px;
+  padding: 1px 9px;
+  color: var(--gh-c);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.retro-terminal-gh-chip i {
+  color: #7a7160;
+  font-style: normal;
+  font-weight: 400;
+}
+.retro-terminal-gh-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--gh-c);
+}
+.retro-terminal-gh-repo {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 10px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  color: #2a2a2a;
+  text-decoration: none;
+}
+.retro-terminal-gh-repo:hover {
+  background: #f7ead0;
+}
+.retro-terminal-gh-stars {
+  color: #b45309;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+.retro-terminal-gh-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.retro-terminal-gh-count {
+  color: #7a7160;
+  white-space: nowrap;
+}
+.retro-terminal-gh-more summary {
+  padding: 3px 6px 0 88px;
+  color: #7a7160;
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.retro-terminal-gh-more summary::-webkit-details-marker {
+  display: none;
+}
+.retro-terminal-gh-more summary:hover {
+  color: #b45309;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.retro-terminal-gh-caret {
+  display: inline-block;
+  transition: transform 0.12s ease;
+}
+.retro-terminal-gh-more[open] .retro-terminal-gh-caret {
+  transform: rotate(90deg);
+}
+.retro-terminal-gh-tail {
+  padding: 3px 6px 0 88px;
+  color: #7a7160;
+  font-size: 12px;
+}
+.retro-terminal-gh-footer {
+  margin: 8px 0 4px 26px;
+  border-top: 1px solid #eadfc9;
+  padding-top: 8px;
+  color: #7a7160;
+  font-size: 11px;
+}
+.retro-terminal-gh-footer a {
+  color: #b45309;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .retro-terminal-legal-window {
   flex: 1;
   min-height: 0;
@@ -1791,6 +1961,26 @@ html:not([data-reader]) {
     align-items: flex-start;
     flex-direction: column;
     padding: 10px;
+  }
+  /* contributions window on touch: hide the esc/drag hint, drop the sparkline
+     (no room next to the year head), and let repo names wrap. */
+  .retro-terminal-window[data-retro-window-id='github']
+    .retro-terminal-status-hint {
+    display: none;
+  }
+  .retro-terminal-gh-months {
+    display: none;
+  }
+  .retro-terminal-gh-repo {
+    grid-template-columns: 56px 1fr auto;
+  }
+  .retro-terminal-gh-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .retro-terminal-gh-more summary,
+  .retro-terminal-gh-tail {
+    padding-left: 6px;
   }
   .retro-terminal-prs-row {
     grid-template-columns: 48px 1fr;

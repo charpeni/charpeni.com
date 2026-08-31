@@ -30,6 +30,7 @@ export type TermPost = {
 export const TERM_ID = 'term';
 export const PRS_ID = 'latest-prs';
 export const NOT_FOUND_ID = 'not-found';
+export const GITHUB_ID = 'github';
 export const STORAGE_KEY = 'retro-terminal-state:v1';
 export const AGENT_INTRO_SEEN_KEY = 'retro-terminal-agent-intro-seen:v1';
 
@@ -107,6 +108,7 @@ export function windowTitle(
 ): string {
   if (id === TERM_ID) return "ssh blog@charpeni.com 'archive agent'";
   if (id === PRS_ID) return 'open https://prs.charpeni.com';
+  if (id === GITHUB_ID) return 'gh contributions charpeni --group-by=year';
   if (id === NOT_FOUND_ID) return 'archive-agent — fatal error';
   if (id.startsWith('legal:')) return `less /site/${id.slice(6)}.txt`;
   if (id.startsWith('show:')) {

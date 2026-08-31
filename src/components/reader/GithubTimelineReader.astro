@@ -1,0 +1,72 @@
+---
+import {
+  formatStars,
+  GH_TOP_REPOS,
+  ghDomainColor,
+  ghPullsUrl,
+  githubProfile,
+} from '@/utils/githubProfile';
+
+/**
+ * Reader-mode presentation of the GitHub timeline — the same per-year
+ * breakdown as the retro window (GithubTimeline.astro), restyled as a plain
+ * document with Tailwind like the other reader pages.
+ */
+const { totals, years } = githubProfile;
+---
+
+<p class="mb-8">
+  {totals.prs.toLocaleString('en-US')} pull requests across {totals.repos} public
+  repositories over {totals.years} years — every authored PR counts, ranked by
+  repository stars within each year. Refreshed {githubProfile.generatedAt}.
+</p>
+
+{
+  years.map((year) => {
+    const top = year.repos.slice(0, GH_TOP_REPOS);
+    const rest = year.repos.slice(GH_TOP_REPOS);
+    const repoItem = (repo: (typeof top)[number]) => (
+      <li class="flex items-baseline gap-2">
+        <span
+          class="inline-block w-2 h-2 rounded-full shrink-0 self-center"
+          style={`background:${ghDomainColor(repo.domain)}`}
+          aria-hidden="true"
+        />
+        <a
+          href={ghPullsUrl(repo.repo)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline underline-offset-2 break-all"
+        >
+          {repo.repo}
+        </a>
+        <span class="text-sm text-gray-500 dark:text-gray-500 whitespace-nowrap">
+          ★ {formatStars(repo.stars)} · {repo.prs} PR{repo.prs > 1 ? 's' : ''}
+        </span>
+      </li>
+    );
+    return (
+      <section class="mb-10">
+        <h2 class="font-bold text-2xl mb-1 text-black dark:text-white">
+          {year.year}
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-500 mb-3">
+          {year.prs} PR{year.prs > 1 ? 's' : ''} · {year.commits} commits · {
+            year.reviews
+          } reviews
+          {year.domains.length > 0 &&
+            ` · ${year.domains.map((d) => `${d.domain} ×${d.prs}`).join(' · ')}`}
+        </p>
+        <ul class="space-y-1.5">{top.map(repoItem)}</ul>
+        {rest.length > 0 && (
+          <details class="mt-2">
+            <summary class="cursor-pointer text-sm text-gray-500 dark:text-gray-500">
+              +{rest.length} more repositories
+            </summary>
+            <ul class="space-y-1.5 mt-2">{rest.map(repoItem)}</ul>
+          </details>
+        )}
+      </section>
+    );
+  })
+}

@@ -1,0 +1,135 @@
+---
+import {
+  formatStars,
+  GH_TOP_REPOS,
+  ghAccentColor,
+  ghDomainColor,
+  ghPullsUrl,
+  githubProfile,
+  monthSparkline,
+} from '@/utils/githubProfile';
+
+/**
+ * The GitHub timeline window content ("timeline × branches"): a per-year
+ * breakdown of open source contributions with the year's repos ranked by
+ * stars and domain chips in the blog's branch-tag vocabulary. Server
+ * rendered; the only interaction is the native <details> "+n more" — no
+ * script needed, so the markup survives window adoption untouched.
+ */
+const { totals, years } = githubProfile;
+---
+
+<div class="retro-terminal-gh-window">
+    <div class="retro-terminal-prs-toolbar">
+      <span>$ gh contributions {githubProfile.login} --group-by=year --rank=stars</span>
+      <a
+        href={`https://github.com/${githubProfile.login}`}
+        target="_blank"
+        rel="noopener noreferrer">github.com/{githubProfile.login} ↗</a
+      >
+    </div>
+    <div class="retro-terminal-gh-scroll">
+      {
+        years.map((year) => {
+          const accent = ghAccentColor(year);
+          const top = year.repos.slice(0, GH_TOP_REPOS);
+          const rest = year.repos.slice(GH_TOP_REPOS);
+          const tail = `${year.commits} commits · ${year.reviews} reviews`;
+          const repoLine = (repo: (typeof top)[number]) => (
+            <a
+              class="retro-terminal-gh-repo"
+              href={ghPullsUrl(repo.repo)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="retro-terminal-gh-stars">
+                ★ {formatStars(repo.stars)}
+              </span>
+              <span class="retro-terminal-gh-name">
+                <span
+                  class="retro-terminal-gh-dot"
+                  style={`--gh-c:${ghDomainColor(repo.domain)}`}
+                  aria-hidden="true"
+                />
+                {repo.repo}
+              </span>
+              <span class="retro-terminal-gh-count">
+                {repo.prs} PR{repo.prs > 1 ? 's' : ''}
+              </span>
+            </a>
+          );
+          return (
+            <section class="retro-terminal-gh-year">
+              <div class="retro-terminal-gh-rail" aria-hidden="true">
+                <span
+                  class="retro-terminal-gh-orb"
+                  style={`background:${accent}`}
+                />
+              </div>
+              <div class="retro-terminal-gh-body">
+                <h3 class="retro-terminal-gh-head">
+                  <span
+                    class="retro-terminal-gh-tag"
+                    style={`color:${accent}`}
+                  >
+                    (tag: {year.year})
+                  </span>
+                  <span class="retro-terminal-gh-stat">
+                    {year.prs} PR{year.prs > 1 ? 's' : ''}
+                  </span>
+                  <span
+                    class="retro-terminal-gh-months"
+                    title={`monthly activity, ${year.year}`}
+                    aria-hidden="true"
+                  >
+                    {monthSparkline(year.months)}
+                  </span>
+                </h3>
+                {year.domains.length > 0 && (
+                  <div class="retro-terminal-gh-chips">
+                    {year.domains.map((d) => (
+                      <span
+                        class="retro-terminal-gh-chip"
+                        style={`--gh-c:${ghDomainColor(d.domain)}`}
+                      >
+                        <span
+                          class="retro-terminal-gh-dot"
+                          aria-hidden="true"
+                        />
+                        {d.domain}
+                        <i>×{d.prs}</i>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {top.map(repoLine)}
+                {rest.length > 0 ? (
+                  <details class="retro-terminal-gh-more">
+                    <summary>
+                      <span
+                        class="retro-terminal-gh-caret"
+                        aria-hidden="true">▸</span
+                      >
+                      +{rest.length} more repositories · {tail}
+                    </summary>
+                    {rest.map(repoLine)}
+                  </details>
+                ) : (
+                  <div class="retro-terminal-gh-tail">{tail}</div>
+                )}
+              </div>
+            </section>
+          );
+        })
+      }
+      <div class="retro-terminal-gh-footer">
+        {totals.prs} pull requests across {totals.repos} public repositories ·
+        refreshed {githubProfile.generatedAt} · latest activity at
+        <a
+          href="https://prs.charpeni.com"
+          target="_blank"
+          rel="noopener noreferrer">prs.charpeni.com ↗</a
+        >
+      </div>
+    </div>
+  </div>

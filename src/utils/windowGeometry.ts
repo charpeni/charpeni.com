@@ -56,6 +56,17 @@ export function prsGeom(vw: number, vh: number): WinGeom {
   };
 }
 
+export function githubGeom(vw: number, vh: number): WinGeom {
+  const w = Math.max(MIN_W, Math.min(860, vw - 48));
+  const h = clampWindowHeight(vh, vh - 40);
+  return {
+    x: Math.max(20, Math.round((vw - w) / 2)),
+    y: Math.max(20, Math.round((vh - h) / 2)),
+    w,
+    h,
+  };
+}
+
 export function legalGeom(vw: number, vh: number): WinGeom {
   const w = Math.max(MIN_W, Math.min(740, vw - 48));
   const h = clampWindowHeight(

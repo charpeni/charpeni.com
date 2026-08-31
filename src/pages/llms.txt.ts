@@ -91,6 +91,7 @@ ${postLinks}
 
 - Website: ${SITE_URL}
 - Contact page: ${SITE_URL}/contact
+- Open source contributions timeline: ${SITE_URL}/contributions
 - GitHub: https://github.com/charpeni
 - LinkedIn: https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/
 - Twitter/X: https://x.com/charpeni_
