@@ -1704,21 +1704,35 @@ html:not([data-reader]) {
     padding-left: max(10px, env(safe-area-inset-left));
     padding-right: env(safe-area-inset-right);
   }
+  /* Stamp-style copy button. Explicit centering matters: the button
+     computes to display:flex here, which otherwise pins the label to the
+     box's top-left corner. */
   .retro-terminal-copy-mobile {
-    min-width: 68px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: start;
+    min-width: 80px;
     min-height: 44px;
     padding: 0 12px;
     border: 1px solid #b45309;
     background: #fffaf0;
     color: #9a4f00;
     font: inherit;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 rgba(122, 113, 96, 0.16);
     cursor: pointer;
   }
   .retro-terminal-copy-mobile:hover,
   .retro-terminal-copy-mobile:focus-visible {
     background: #f7ead0;
+  }
+  .retro-terminal-copy-mobile:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
   }
   .retro-terminal-copy-mobile:disabled {
     cursor: wait;
