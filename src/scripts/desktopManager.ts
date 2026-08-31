@@ -494,7 +494,15 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     desktopEl.classList.toggle(
       'retro-terminal-desktop--empty',
       !state.windows.some((w) => !w.minimized),
+    );    // Mobile CSS hides the reader-mode pill while a post window is the
+    // displayed (focused) window — see .retro-terminal-desktop--show-active
+    // in retro.css.
+    const focusedWin = state.focusedId ? winById(state.focusedId) : null;
+    desktopEl.classList.toggle(
+      'retro-terminal-desktop--show-active',
+      focusedWin?.kind === 'show' && !focusedWin.minimized,
     );
+
     const hasMaximizedWindow = coveringZ !== null;
     desktopEl.classList.toggle(
       'retro-terminal-desktop--window-maximized',

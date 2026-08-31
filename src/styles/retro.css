@@ -1433,6 +1433,15 @@ html:not([data-reader]) {
   .retro-terminal-desktop {
     height: 100dvh;
   }
+  /* Reading a post is the one fullscreen, chrome-free view on phones —
+     hide the reader-mode pill there so nothing floats over the article.
+     It returns as soon as the post window closes (the term and legal
+     views keep it). The --show-active class is maintained by render()
+     in desktopManager.ts; :has() would work but the Tailwind/Lightning
+     CSS pipeline strips it from the bundle. */
+  .retro-terminal-desktop--show-active .retro-terminal-exit {
+    display: none;
+  }
   .retro-terminal-profile-icon {
     display: none;
   }
