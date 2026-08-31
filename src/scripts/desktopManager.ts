@@ -241,8 +241,9 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     windows: [] as Win[],
     focusedId: null as string | null,
     cursor: 0,
-    // Maximized is the DEFAULT (OS-style fullscreen stack); only an
-    // explicit restore stores `false`.
+    // Whether content (show) windows open fullscreen — the DEFAULT.
+    // Only explicitly restoring a post window stores `false`; the term
+    // always opens as a centered window so the desktop stays visible.
     maximized: storedState.maximized !== false,
   };
   let zCounter = 0;
@@ -505,7 +506,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = maximizedGeom();
       }
       render();
-      persistMaximized(win.restoreGeom !== null);
+      if (win.kind === 'show') persistMaximized(win.restoreGeom !== null);
       if (shouldAnimate) animateGeometryFade(win);
       return;
     }
@@ -518,14 +519,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = target;
         win.restoreGeom = null;
         render();
-        persistMaximized(false);
+        if (win.kind === 'show') persistMaximized(false);
       });
     } else {
       const from = win.el.getBoundingClientRect();
       win.restoreGeom = { ...win.geom };
       win.geom = maximizedGeom();
       render();
-      persistMaximized(true);
+      if (win.kind === 'show') persistMaximized(true);
       animateGeometryChange(
         win,
         from,
@@ -579,7 +580,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     state.focusedId = win.id;
     win.z = nextZ();
     render();
-    persistMaximized(win.restoreGeom !== null);
     win.el.focus({ preventScroll: true });
     if (changed && !options?.silentUrl) syncUrl('replace');
   }
@@ -589,7 +589,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     const wasFocused = state.focusedId === win.id;
     if (wasFocused) state.focusedId = topWindow()?.id ?? null;
     render();
-    persistMaximized(topWindow()?.restoreGeom !== null);
     if (wasFocused) {
       const top = state.focusedId ? winById(state.focusedId) : null;
       if (top) top.el.focus({ preventScroll: true });
@@ -614,7 +613,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       top.z = nextZ();
     }
     render();
-    persistMaximized(top?.restoreGeom !== null);
     // Restore focus to whatever opened this window (e.g. the term-log row),
     // falling back to the new top window — important for keyboard users.
     let restoredOpenerFocus = false;
@@ -649,16 +647,20 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   function registerServerWindow(el: HTMLElement): Win {
     const id = el.dataset.retroWindowId ?? '';
     const initialGeom = defaultGeom(id);
+    // Only content (show) windows default to the fullscreen stack — the
+    // term keeps its centered listing so the desktop (profile card,
+    // footer) stays visible on the homepage.
+    const startMaximized = kindOf(id) === 'show' && state.maximized;
     const win: Win = {
       id,
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: state.maximized ? maximizedGeom() : initialGeom,
+      geom: startMaximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: state.maximized ? initialGeom : null,
+      restoreGeom: startMaximized ? initialGeom : null,
       geometryMotion: null,
       opener: null,
     };
@@ -669,7 +671,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   // --- Client-opened window frames (twin of Window.astro) ---
   function buildFrame(id: string, title: string): Win {
     const initialGeom = defaultGeom(id);
-    const inheritMaximized = topWindow()?.restoreGeom !== null;
+    const startMaximized = kindOf(id) === 'show' && state.maximized;
     const el = document.createElement('div');
     el.className = 'retro-terminal-window';
     el.dataset.retroWindowId = id;
@@ -685,11 +687,11 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: inheritMaximized ? maximizedGeom() : initialGeom,
+      geom: startMaximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: inheritMaximized ? initialGeom : null,
+      restoreGeom: startMaximized ? initialGeom : null,
       geometryMotion: null,
       opener:
         document.activeElement instanceof HTMLElement
