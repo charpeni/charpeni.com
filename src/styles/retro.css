@@ -1384,10 +1384,6 @@ html:not([data-reader]) {
   z-index: 99999;
   height: 32px;
 }
-.retro-terminal-desktop--window-maximized .retro-terminal-exit {
-  visibility: hidden;
-  pointer-events: none;
-}
 
 /* Final responsive overrides must stay last so they win over component sections above. */
 @media (max-width: 900px) {

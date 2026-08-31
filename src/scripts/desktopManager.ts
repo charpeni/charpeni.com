@@ -26,6 +26,7 @@ import {
   clampWinToViewport,
   formatIsoDate,
   legalGeom,
+  maximizedGeom as maximizedGeomAt,
   notFoundGeom,
   prsGeom,
   showGeom,
@@ -110,16 +111,10 @@ const PROFILE_AUTO_EXPAND_MIN_VH = 700;
 
 const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
-function maximizedGeom(): WinGeom {
-  const inset = Math.round(
-    Math.min(16, Math.max(12, Math.min(vw(), vh()) * 0.018)),
-  );
-  return {
-    x: inset,
-    y: inset,
-    w: vw() - inset * 2,
-    h: vh() - inset * 2,
-  };
+/** Viewport-bound maximized geometry; `depth` is the window's position in
+ * the maximized stack (see utils/windowGeometry.maximizedGeom). */
+function maximizedGeom(depth = 0): WinGeom {
+  return maximizedGeomAt(vw(), vh(), depth);
 }
 
 function finishGeometryMotion(win: Win) {
@@ -250,7 +245,10 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     windows: [] as Win[],
     focusedId: null as string | null,
     cursor: 0,
-    maximized: storedState.maximized === true,
+    // Whether content (show) windows open fullscreen — the DEFAULT.
+    // Only explicitly restoring a post window stores `false`; the term
+    // always opens as a centered window so the desktop stays visible.
+    maximized: storedState.maximized !== false,
   };
   let zCounter = 0;
   const opening = new Set<string>();
@@ -434,28 +432,17 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   /** The single reconcile point: state → DOM. Idempotent. */
   function render() {
     const phone = isPhone();
-    const coveringZ = phone
-      ? null
-      : (state.windows
+    // Maximized windows form a stack: bottom-most at the top strip, each
+    // higher window a titlebar-peek lower, so every covered window keeps a
+    // visible, clickable titlebar (clicking it brings the window forward).
+    const maximizedStack = phone
+      ? []
+      : state.windows
           .filter((win) => !win.minimized && win.restoreGeom !== null)
-          .reduce<number | null>(
-            (highest, win) => Math.max(highest ?? win.z, win.z),
-            null,
-          ) ?? null);
-    const coveringWindow =
-      coveringZ === null
-        ? null
-        : (state.windows.find((win) => win.z === coveringZ) ?? null);
-    const activeWindow =
-      document.activeElement instanceof Element
-        ? windowFromEvent(document.activeElement)
-        : null;
-    if (
-      coveringWindow &&
-      (!activeWindow || activeWindow.z < coveringWindow.z)
-    ) {
-      coveringWindow.el.focus({ preventScroll: true });
-    }
+          .toSorted((a, b) => a.z - b.z);
+    maximizedStack.forEach((win, depth) => {
+      win.geom = maximizedGeom(depth);
+    });
     for (const win of state.windows) {
       const maximized = !phone && win.restoreGeom !== null;
       win.el.classList.remove('retro-terminal-window--ssr');
@@ -471,10 +458,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       win.el.setAttribute(
         'aria-roledescription',
         maximized ? 'Maximized window' : 'Window',
-      );
-      win.el.toggleAttribute(
-        'inert',
-        coveringZ !== null && win.z < coveringZ,
       );
       if (phone) win.el.removeAttribute('aria-keyshortcuts');
       else win.el.setAttribute('aria-keyshortcuts', 'Alt+Enter');
@@ -495,14 +478,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       'retro-terminal-desktop--empty',
       !state.windows.some((w) => !w.minimized),
     );
-    const hasMaximizedWindow = coveringZ !== null;
+    const hasMaximizedWindow = maximizedStack.length > 0;
     desktopEl.classList.toggle(
       'retro-terminal-desktop--window-maximized',
       hasMaximizedWindow,
     );
     ensureLauncher();
     for (const el of desktopEl.querySelectorAll<HTMLElement>(
-      '.retro-terminal-profile, .retro-terminal-profile-toggle, .retro-terminal-profile-icon, .retro-terminal-footer, .retro-terminal-launcher, [data-reader-mode]',
+      '.retro-terminal-profile, .retro-terminal-profile-toggle, .retro-terminal-profile-icon, .retro-terminal-footer, .retro-terminal-launcher',
     )) {
       el.toggleAttribute('inert', hasMaximizedWindow);
     }
@@ -527,7 +510,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = maximizedGeom();
       }
       render();
-      persistMaximized(win.restoreGeom !== null);
+      if (win.kind === 'show') persistMaximized(win.restoreGeom !== null);
       if (shouldAnimate) animateGeometryFade(win);
       return;
     }
@@ -540,14 +523,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         win.geom = target;
         win.restoreGeom = null;
         render();
-        persistMaximized(false);
+        if (win.kind === 'show') persistMaximized(false);
       });
     } else {
       const from = win.el.getBoundingClientRect();
       win.restoreGeom = { ...win.geom };
       win.geom = maximizedGeom();
       render();
-      persistMaximized(true);
+      if (win.kind === 'show') persistMaximized(true);
       animateGeometryChange(
         win,
         from,
@@ -601,7 +584,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     state.focusedId = win.id;
     win.z = nextZ();
     render();
-    persistMaximized(win.restoreGeom !== null);
     win.el.focus({ preventScroll: true });
     if (changed && !options?.silentUrl) syncUrl('replace');
   }
@@ -611,7 +593,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     const wasFocused = state.focusedId === win.id;
     if (wasFocused) state.focusedId = topWindow()?.id ?? null;
     render();
-    persistMaximized(topWindow()?.restoreGeom !== null);
     if (wasFocused) {
       const top = state.focusedId ? winById(state.focusedId) : null;
       if (top) top.el.focus({ preventScroll: true });
@@ -636,7 +617,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       top.z = nextZ();
     }
     render();
-    persistMaximized(top?.restoreGeom !== null);
     // Restore focus to whatever opened this window (e.g. the term-log row),
     // falling back to the new top window — important for keyboard users.
     let restoredOpenerFocus = false;
@@ -671,16 +651,20 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   function registerServerWindow(el: HTMLElement): Win {
     const id = el.dataset.retroWindowId ?? '';
     const initialGeom = defaultGeom(id);
+    // Only content (show) windows default to the fullscreen stack — the
+    // term keeps its centered listing so the desktop (profile card,
+    // footer) stays visible on the homepage.
+    const startMaximized = kindOf(id) === 'show' && state.maximized;
     const win: Win = {
       id,
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: state.maximized ? maximizedGeom() : initialGeom,
+      geom: startMaximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: state.maximized ? initialGeom : null,
+      restoreGeom: startMaximized ? initialGeom : null,
       geometryMotion: null,
       opener: null,
     };
@@ -691,7 +675,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   // --- Client-opened window frames (twin of Window.astro) ---
   function buildFrame(id: string, title: string): Win {
     const initialGeom = defaultGeom(id);
-    const inheritMaximized = topWindow()?.restoreGeom !== null;
+    const startMaximized = kindOf(id) === 'show' && state.maximized;
     const el = document.createElement('div');
     el.className = 'retro-terminal-window';
     el.dataset.retroWindowId = id;
@@ -707,11 +691,11 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       kind: kindOf(id),
       el,
       url: urlOf(id),
-      geom: inheritMaximized ? maximizedGeom() : initialGeom,
+      geom: startMaximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: inheritMaximized ? initialGeom : null,
+      restoreGeom: startMaximized ? initialGeom : null,
       geometryMotion: null,
       opener:
         document.activeElement instanceof HTMLElement

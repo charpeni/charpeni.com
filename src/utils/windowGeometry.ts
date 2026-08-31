@@ -81,6 +81,35 @@ export function notFoundGeom(vw: number, vh: number): WinGeom {
   };
 }
 
+/** Height of the desktop strip above the maximized stack — keeps the
+ * reader-mode toggle (top: 12px, 32px tall) clear of the top window's
+ * titlebar. */
+export const MAXIMIZED_TOP_STRIP = 52;
+
+/** Vertical offset between stacked maximized windows — enough for the
+ * titlebar of the window beneath (36px on <=900px viewports, 24px above)
+ * plus a small gap. */
+export function maximizedPeek(vw: number): number {
+  return vw <= 900 ? 44 : 32;
+}
+
+/** Near-fullscreen geometry for a maximized window. `depth` is the window's
+ * position in the maximized stack (bottom-most = 0): each level starts a
+ * titlebar-peek lower, so every covered window keeps a visible, clickable
+ * titlebar — OS-style. Pure — unit-tested. */
+export function maximizedGeom(vw: number, vh: number, depth = 0): WinGeom {
+  const inset = Math.round(
+    Math.min(16, Math.max(12, Math.min(vw, vh) * 0.018)),
+  );
+  const y = MAXIMIZED_TOP_STRIP + depth * maximizedPeek(vw);
+  return {
+    x: inset,
+    y,
+    w: vw - inset * 2,
+    h: Math.max(MIN_H, vh - y - inset),
+  };
+}
+
 /** New top-left after a titlebar drag, clamped so the window can't leave the
  * viewport entirely. Pure — unit-tested. */
 export function clampMove(

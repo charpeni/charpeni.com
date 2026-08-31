@@ -384,6 +384,22 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
     width: min(620px, calc(100vw - 40px));
     height: min(330px, calc(100vh - 48px));
   }
+  /* Show windows open fullscreen (bottom of the maximized stack) on
+     >=640px viewports: approximate utils/windowGeometry.maximizedGeom so
+     hydration doesn't jump. clamp(12px, 1.8vmin, 16px) mirrors the inset
+     formula; 52px is the top strip that keeps the reader-mode toggle
+     clear. The term (and legal/404 windows) keep the centered fallbacks
+     above. Later rule of equal specificity, so it wins. */
+  @media (min-width: 640px) {
+    :global(html:not([data-reader]))
+      .retro-terminal-window--ssr[data-retro-window-id^='show:'] {
+      left: clamp(12px, 1.8vmin, 16px);
+      top: 52px;
+      transform: none;
+      width: calc(100vw - 2 * clamp(12px, 1.8vmin, 16px));
+      height: calc(100vh - 52px - clamp(12px, 1.8vmin, 16px));
+    }
+  }
   /* Spawn-animation delay parity: retro.css keys the term delay off a
      data attribute selector, which still matches here. */
 </style>
