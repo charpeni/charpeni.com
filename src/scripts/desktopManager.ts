@@ -26,6 +26,7 @@ import {
   clampWinToViewport,
   formatIsoDate,
   legalGeom,
+  maximizedGeom as maximizedGeomAt,
   notFoundGeom,
   prsGeom,
   showGeom,
@@ -106,16 +107,10 @@ const isPhone = () => vw() < 640 || vh() <= 500;
 
 const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
-function maximizedGeom(): WinGeom {
-  const inset = Math.round(
-    Math.min(16, Math.max(12, Math.min(vw(), vh()) * 0.018)),
-  );
-  return {
-    x: inset,
-    y: inset,
-    w: vw() - inset * 2,
-    h: vh() - inset * 2,
-  };
+/** Viewport-bound maximized geometry; `depth` is the window's position in
+ * the maximized stack (see utils/windowGeometry.maximizedGeom). */
+function maximizedGeom(depth = 0): WinGeom {
+  return maximizedGeomAt(vw(), vh(), depth);
 }
 
 function finishGeometryMotion(win: Win) {
@@ -246,7 +241,9 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     windows: [] as Win[],
     focusedId: null as string | null,
     cursor: 0,
-    maximized: storedState.maximized === true,
+    // Maximized is the DEFAULT (OS-style fullscreen stack); only an
+    // explicit restore stores `false`.
+    maximized: storedState.maximized !== false,
   };
   let zCounter = 0;
   const opening = new Set<string>();
@@ -430,28 +427,17 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   /** The single reconcile point: state → DOM. Idempotent. */
   function render() {
     const phone = isPhone();
-    const coveringZ = phone
-      ? null
-      : (state.windows
+    // Maximized windows form a stack: bottom-most at the top strip, each
+    // higher window a titlebar-peek lower, so every covered window keeps a
+    // visible, clickable titlebar (clicking it brings the window forward).
+    const maximizedStack = phone
+      ? []
+      : state.windows
           .filter((win) => !win.minimized && win.restoreGeom !== null)
-          .reduce<number | null>(
-            (highest, win) => Math.max(highest ?? win.z, win.z),
-            null,
-          ) ?? null);
-    const coveringWindow =
-      coveringZ === null
-        ? null
-        : (state.windows.find((win) => win.z === coveringZ) ?? null);
-    const activeWindow =
-      document.activeElement instanceof Element
-        ? windowFromEvent(document.activeElement)
-        : null;
-    if (
-      coveringWindow &&
-      (!activeWindow || activeWindow.z < coveringWindow.z)
-    ) {
-      coveringWindow.el.focus({ preventScroll: true });
-    }
+          .toSorted((a, b) => a.z - b.z);
+    maximizedStack.forEach((win, depth) => {
+      win.geom = maximizedGeom(depth);
+    });
     for (const win of state.windows) {
       const maximized = !phone && win.restoreGeom !== null;
       win.el.classList.remove('retro-terminal-window--ssr');
@@ -467,10 +453,6 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       win.el.setAttribute(
         'aria-roledescription',
         maximized ? 'Maximized window' : 'Window',
-      );
-      win.el.toggleAttribute(
-        'inert',
-        coveringZ !== null && win.z < coveringZ,
       );
       if (phone) win.el.removeAttribute('aria-keyshortcuts');
       else win.el.setAttribute('aria-keyshortcuts', 'Alt+Enter');
@@ -491,14 +473,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       'retro-terminal-desktop--empty',
       !state.windows.some((w) => !w.minimized),
     );
-    const hasMaximizedWindow = coveringZ !== null;
+    const hasMaximizedWindow = maximizedStack.length > 0;
     desktopEl.classList.toggle(
       'retro-terminal-desktop--window-maximized',
       hasMaximizedWindow,
     );
     ensureLauncher();
     for (const el of desktopEl.querySelectorAll<HTMLElement>(
-      '.retro-terminal-profile, .retro-terminal-profile-toggle, .retro-terminal-profile-icon, .retro-terminal-footer, .retro-terminal-launcher, [data-reader-mode]',
+      '.retro-terminal-profile, .retro-terminal-profile-toggle, .retro-terminal-profile-icon, .retro-terminal-footer, .retro-terminal-launcher',
     )) {
       el.toggleAttribute('inert', hasMaximizedWindow);
     }

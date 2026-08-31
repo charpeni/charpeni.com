@@ -8,6 +8,7 @@ import {
   clampWinToViewport,
   graphWidth,
   legalGeom,
+  maximizedGeom,
   maxWindowHeight,
   notFoundGeom,
   prsGeom,
@@ -79,4 +80,21 @@ test('clampWinToViewport re-fits a show window that shrank below 640', () => {
     showGeom(1400, 900),
     'a sub-640 show window snaps back to the article width',
   );
+});
+
+test('maximizedGeom fills the viewport below the top strip', () => {
+  assert.deepEqual(maximizedGeom(1400, 900), {
+    x: 16,
+    y: 52,
+    w: 1368,
+    h: 832,
+  });
+});
+
+test('maximizedGeom stacks each depth one titlebar-peek lower', () => {
+  const stacked = maximizedGeom(1400, 900, 2);
+  assert.equal(stacked.y, 52 + 2 * 32);
+  assert.equal(stacked.h, 900 - (52 + 2 * 32) - 16);
+  // <=900px viewports use the taller titlebar for the peek.
+  assert.equal(maximizedGeom(800, 900, 1).y, 52 + 44);
 });
