@@ -103,6 +103,10 @@ const shell = document.querySelector<HTMLElement>('.retro-terminal-shell');
 const vw = () => window.innerWidth;
 const vh = () => window.innerHeight;
 const isPhone = () => vw() < 640 || vh() <= 500;
+/** Phones at least this tall start with the About panel expanded — the
+ * expanded card costs ~250px of top inset and the term window below it still
+ * keeps a comfortable height. Shorter screens keep the collapsed toggle. */
+const PROFILE_AUTO_EXPAND_MIN_VH = 700;
 
 const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
@@ -883,6 +887,19 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     desktopEl.appendChild(launcher);
   }
 
+  /** Mobile About panel open/close — one place owns the class/aria/label
+   * sync so the default-open path and the tap toggle can't drift. */
+  function setProfileOpen(open: boolean) {
+    desktopEl.classList.toggle('retro-terminal-desktop--profile-open', open);
+    desktopEl
+      .querySelector('#retro-mobile-profile')
+      ?.classList.toggle('retro-terminal-profile--mobile-open', open);
+    const toggle = desktopEl.querySelector('[data-profile-toggle]');
+    toggle?.setAttribute('aria-expanded', String(open));
+    const label = toggle?.querySelector('[data-profile-label]');
+    if (label) label.textContent = open ? 'Close [-]' : 'About [+]';
+  }
+
   // --- Term cursor ---
   // `moveFocus` moves DOM focus onto the selected row (roving focus for
   // keyboard nav), so screen readers announce it naturally and focus stays in
@@ -956,6 +973,12 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   }
 
   render();
+
+  // On phones with enough vertical room, start with the About panel
+  // expanded instead of hiding the bio behind a tap.
+  if (isPhone() && vh() >= PROFILE_AUTO_EXPAND_MIN_VH) {
+    setProfileOpen(true);
+  }
 
   // --- Events ---
   function windowFromEvent(target: Element): Win | null {
@@ -1038,15 +1061,9 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
     const profileToggle = target.closest('[data-profile-toggle]');
     if (profileToggle) {
-      const open = desktopEl.classList.toggle(
-        'retro-terminal-desktop--profile-open',
+      setProfileOpen(
+        !desktopEl.classList.contains('retro-terminal-desktop--profile-open'),
       );
-      desktopEl
-        .querySelector('#retro-mobile-profile')
-        ?.classList.toggle('retro-terminal-profile--mobile-open', open);
-      profileToggle.setAttribute('aria-expanded', String(open));
-      const label = profileToggle.querySelector('[data-profile-label]');
-      if (label) label.textContent = open ? 'Close [-]' : 'About [+]';
       return;
     }
 
