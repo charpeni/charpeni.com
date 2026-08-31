@@ -1,0 +1,1380 @@
+{
+  "generatedAt": "2026-08-31",
+  "login": "charpeni",
+  "totals": {
+    "prs": 761,
+    "repos": 142,
+    "years": 12
+  },
+  "years": [
+    {
+      "year": 2026,
+      "prs": 121,
+      "commits": 236,
+      "reviews": 50,
+      "months": [225, 182, 490, 168, 102, 259, 364, 219, 0, 0, 0, 0],
+      "domains": [
+        {
+          "domain": "tooling",
+          "prs": 31
+        },
+        {
+          "domain": "react",
+          "prs": 18
+        }
+      ],
+      "repos": [
+        {
+          "repo": "oven-sh/bun",
+          "stars": 95823,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "pnpm/pnpm",
+          "stars": 36331,
+          "prs": 2,
+          "domain": "tooling"
+        },
+        {
+          "repo": "vercel/turborepo",
+          "stars": 31034,
+          "prs": 8,
+          "domain": "tooling"
+        },
+        {
+          "repo": "simple-icons/simple-icons",
+          "stars": 25760,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "oxc-project/oxc",
+          "stars": 22584,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "openchamber/openchamber",
+          "stars": 9420,
+          "prs": 7,
+          "domain": "other"
+        },
+        {
+          "repo": "voidzero-dev/vite-plus",
+          "stars": 5709,
+          "prs": 3,
+          "domain": "tooling"
+        },
+        {
+          "repo": "npmx-dev/npmx.dev",
+          "stars": 3605,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "rocicorp/mono",
+          "stars": 3374,
+          "prs": 3,
+          "domain": "other"
+        },
+        {
+          "repo": "get-bb/bb",
+          "stars": 2793,
+          "prs": 3,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 18,
+          "domain": "react"
+        },
+        {
+          "repo": "pnpm/pnpm.io",
+          "stars": 311,
+          "prs": 3,
+          "domain": "tooling"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 13,
+          "domain": "other"
+        },
+        {
+          "repo": "shortcut-cli/shortcut-cli",
+          "stars": 114,
+          "prs": 32,
+          "domain": "other"
+        },
+        {
+          "repo": "useshortcut/mcp-server-shortcut",
+          "stars": 98,
+          "prs": 7,
+          "domain": "other"
+        },
+        {
+          "repo": "swc-project/pkgs",
+          "stars": 85,
+          "prs": 2,
+          "domain": "tooling"
+        },
+        {
+          "repo": "get-bb/marketplace",
+          "stars": 16,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "pirsch-analytics/docs",
+          "stars": 10,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/turborepo-summary-action",
+          "stars": 6,
+          "prs": 2,
+          "domain": "tooling"
+        },
+        {
+          "repo": "charpeni/turborepo-summary",
+          "stars": 2,
+          "prs": 7,
+          "domain": "tooling"
+        },
+        {
+          "repo": "charpeni/pirsch-mcp",
+          "stars": 1,
+          "prs": 3,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/bb-plugins",
+          "stars": 0,
+          "prs": 1,
+          "domain": "other"
+        }
+      ]
+    },
+    {
+      "year": 2025,
+      "prs": 141,
+      "commits": 246,
+      "reviews": 35,
+      "months": [77, 145, 192, 166, 157, 154, 219, 238, 259, 222, 212, 244],
+      "domains": [
+        {
+          "domain": "tooling",
+          "prs": 27
+        },
+        {
+          "domain": "typescript",
+          "prs": 24
+        },
+        {
+          "domain": "react",
+          "prs": 13
+        },
+        {
+          "domain": "testing",
+          "prs": 10
+        },
+        {
+          "domain": "graphql",
+          "prs": 6
+        }
+      ],
+      "repos": [
+        {
+          "repo": "vercel/next.js",
+          "stars": 142041,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "jestjs/jest",
+          "stars": 45475,
+          "prs": 2,
+          "domain": "testing"
+        },
+        {
+          "repo": "microsoft/playwright-mcp",
+          "stars": 36662,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "vercel/turborepo",
+          "stars": 31034,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "community-scripts/ProxmoxVE",
+          "stars": 29455,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "streetsidesoftware/cspell",
+          "stars": 1681,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "web-infra-dev/rsdoctor",
+          "stars": 1139,
+          "prs": 18,
+          "domain": "tooling"
+        },
+        {
+          "repo": "js-temporal/temporal-polyfill",
+          "stars": 787,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "mmkal/expect-type",
+          "stars": 565,
+          "prs": 6,
+          "domain": "typescript"
+        },
+        {
+          "repo": "bundlewatch/bundlewatch",
+          "stars": 443,
+          "prs": 2,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 12,
+          "domain": "react"
+        },
+        {
+          "repo": "pnpm/pnpm.io",
+          "stars": 311,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 23,
+          "domain": "other"
+        },
+        {
+          "repo": "shortcut-cli/shortcut-cli",
+          "stars": 114,
+          "prs": 20,
+          "domain": "other"
+        },
+        {
+          "repo": "useshortcut/mcp-server-shortcut",
+          "stars": 98,
+          "prs": 9,
+          "domain": "other"
+        },
+        {
+          "repo": "rocicorp/zero-docs",
+          "stars": 32,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "bundlewatch/service",
+          "stars": 23,
+          "prs": 2,
+          "domain": "testing"
+        },
+        {
+          "repo": "jasonkuhrt/polen",
+          "stars": 22,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "BouyguesTelecom/SPL",
+          "stars": 11,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/react-native-bundle-scale",
+          "stars": 8,
+          "prs": 7,
+          "domain": "tooling"
+        },
+        {
+          "repo": "bundlewatch/bundlewatch.io",
+          "stars": 6,
+          "prs": 2,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/merge-drivers-cli",
+          "stars": 4,
+          "prs": 3,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/one-of",
+          "stars": 2,
+          "prs": 9,
+          "domain": "typescript"
+        },
+        {
+          "repo": "charpeni/graphql-add-id-document-transform",
+          "stars": 1,
+          "prs": 6,
+          "domain": "graphql"
+        },
+        {
+          "repo": "charpeni/groupby-typename",
+          "stars": 0,
+          "prs": 9,
+          "domain": "typescript"
+        }
+      ]
+    },
+    {
+      "year": 2024,
+      "prs": 23,
+      "commits": 93,
+      "reviews": 37,
+      "months": [83, 131, 109, 124, 120, 152, 120, 93, 115, 100, 87, 83],
+      "domains": [
+        {
+          "domain": "testing",
+          "prs": 11
+        },
+        {
+          "domain": "graphql",
+          "prs": 3
+        },
+        {
+          "domain": "typescript",
+          "prs": 3
+        }
+      ],
+      "repos": [
+        {
+          "repo": "screenpipe/screenpipe",
+          "stars": 21331,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "apollographql/apollo-client",
+          "stars": 19814,
+          "prs": 1,
+          "domain": "graphql"
+        },
+        {
+          "repo": "getsentry/sentry-javascript",
+          "stars": 8729,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "lobehub/lobe-ui",
+          "stars": 2162,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "apollographql/apollo-cache-persist",
+          "stars": 1419,
+          "prs": 2,
+          "domain": "graphql"
+        },
+        {
+          "repo": "bundlewatch/bundlewatch",
+          "stars": 443,
+          "prs": 4,
+          "domain": "testing"
+        },
+        {
+          "repo": "getsentry/sentry-docs",
+          "stars": 442,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "statelyai/docs",
+          "stars": 38,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "bundlewatch/service",
+          "stars": 23,
+          "prs": 6,
+          "domain": "testing"
+        },
+        {
+          "repo": "bundlewatch/e2e-test",
+          "stars": 3,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/one-of",
+          "stars": 2,
+          "prs": 2,
+          "domain": "typescript"
+        },
+        {
+          "repo": "charpeni/groupby-typename",
+          "stars": 0,
+          "prs": 1,
+          "domain": "typescript"
+        }
+      ]
+    },
+    {
+      "year": 2023,
+      "prs": 54,
+      "commits": 105,
+      "reviews": 10,
+      "months": [106, 112, 97, 134, 62, 158, 88, 95, 166, 245, 112, 96],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 23
+        },
+        {
+          "domain": "graphql",
+          "prs": 14
+        },
+        {
+          "domain": "typescript",
+          "prs": 2
+        },
+        {
+          "domain": "tooling",
+          "prs": 2
+        }
+      ],
+      "repos": [
+        {
+          "repo": "nilbuild/developer-roadmap",
+          "stars": 365976,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "apache/superset",
+          "stars": 74561,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "recharts/recharts",
+          "stars": 27528,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "apollographql/apollo-client",
+          "stars": 19814,
+          "prs": 2,
+          "domain": "graphql"
+        },
+        {
+          "repo": "sindresorhus/type-fest",
+          "stars": 17387,
+          "prs": 2,
+          "domain": "typescript"
+        },
+        {
+          "repo": "dotansimha/graphql-code-generator",
+          "stars": 11263,
+          "prs": 11,
+          "domain": "graphql"
+        },
+        {
+          "repo": "jmforsythe/Git-Heat-Map",
+          "stars": 1030,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 15,
+          "domain": "react"
+        },
+        {
+          "repo": "the-guild-org/website",
+          "stars": 164,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "GraphQLGuide/book",
+          "stars": 106,
+          "prs": 1,
+          "domain": "graphql"
+        },
+        {
+          "repo": "changesets/bot",
+          "stars": 101,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "recharts/recharts.org",
+          "stars": 47,
+          "prs": 4,
+          "domain": "react"
+        },
+        {
+          "repo": "jfromaniello/lru-memoizer",
+          "stars": 31,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/react-native-bundle-scale",
+          "stars": 8,
+          "prs": 2,
+          "domain": "tooling"
+        },
+        {
+          "repo": "stivaugoin/bidou",
+          "stars": 5,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/merge-drivers-cli",
+          "stars": 4,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/recharts.org",
+          "stars": 0,
+          "prs": 3,
+          "domain": "react"
+        },
+        {
+          "repo": "SimonPringleWallace/code-gen-issue",
+          "stars": 0,
+          "prs": 3,
+          "domain": "other"
+        }
+      ]
+    },
+    {
+      "year": 2022,
+      "prs": 40,
+      "commits": 110,
+      "reviews": 11,
+      "months": [190, 57, 67, 37, 104, 84, 140, 73, 97, 93, 36, 70],
+      "domains": [
+        {
+          "domain": "testing",
+          "prs": 17
+        },
+        {
+          "domain": "react",
+          "prs": 15
+        },
+        {
+          "domain": "graphql",
+          "prs": 2
+        },
+        {
+          "domain": "tooling",
+          "prs": 1
+        }
+      ],
+      "repos": [
+        {
+          "repo": "expo/expo",
+          "stars": 51937,
+          "prs": 6,
+          "domain": "react"
+        },
+        {
+          "repo": "jestjs/jest",
+          "stars": 45475,
+          "prs": 3,
+          "domain": "testing"
+        },
+        {
+          "repo": "mantinedev/mantine",
+          "stars": 31644,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "apollographql/apollo-client",
+          "stars": 19814,
+          "prs": 2,
+          "domain": "graphql"
+        },
+        {
+          "repo": "mdn/content",
+          "stars": 10962,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "ckeditor/ckeditor5",
+          "stars": 10484,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "GoogleChrome/lighthouse-ci",
+          "stars": 7061,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "statoscope/statoscope",
+          "stars": 1580,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "bundlewatch/bundlewatch",
+          "stars": 443,
+          "prs": 5,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 8,
+          "domain": "react"
+        },
+        {
+          "repo": "alexnault/classix",
+          "stars": 216,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "swc-project/website",
+          "stars": 111,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "CircleCI-Public/cimg-node",
+          "stars": 46,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "bundlewatch/service",
+          "stars": 23,
+          "prs": 6,
+          "domain": "testing"
+        },
+        {
+          "repo": "bundlewatch/bundlewatch.io",
+          "stars": 6,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/bundlewatch-example",
+          "stars": 0,
+          "prs": 1,
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "year": 2021,
+      "prs": 51,
+      "commits": 118,
+      "reviews": 48,
+      "months": [125, 116, 120, 66, 2, 72, 30, 87, 189, 57, 159, 165],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 20
+        },
+        {
+          "domain": "testing",
+          "prs": 6
+        },
+        {
+          "domain": "typescript",
+          "prs": 1
+        }
+      ],
+      "repos": [
+        {
+          "repo": "DefinitelyTyped/DefinitelyTyped",
+          "stars": 51419,
+          "prs": 1,
+          "domain": "typescript"
+        },
+        {
+          "repo": "jestjs/jest",
+          "stars": 45475,
+          "prs": 3,
+          "domain": "testing"
+        },
+        {
+          "repo": "GoogleChrome/lighthouse-ci",
+          "stars": 7061,
+          "prs": 2,
+          "domain": "testing"
+        },
+        {
+          "repo": "import-js/eslint-plugin-import",
+          "stars": 5940,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "GoogleChrome/web.dev",
+          "stars": 3615,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "statoscope/statoscope",
+          "stars": 1580,
+          "prs": 3,
+          "domain": "other"
+        },
+        {
+          "repo": "benjamn/ast-types",
+          "stars": 1173,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "jsdom/whatwg-url",
+          "stars": 421,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 20,
+          "domain": "react"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 14,
+          "domain": "other"
+        },
+        {
+          "repo": "shortcut-cli/shortcut-cli",
+          "stars": 114,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/sync-external-contributions",
+          "stars": 45,
+          "prs": 1,
+          "domain": "other"
+        }
+      ]
+    },
+    {
+      "year": 2020,
+      "prs": 30,
+      "commits": 60,
+      "reviews": 69,
+      "months": [108, 73, 143, 139, 155, 75, 133, 79, 130, 99, 32, 64],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 26
+        },
+        {
+          "domain": "testing",
+          "prs": 4
+        }
+      ],
+      "repos": [
+        {
+          "repo": "react/react-native",
+          "stars": 126463,
+          "prs": 2,
+          "domain": "react"
+        },
+        {
+          "repo": "wix/react-native-navigation",
+          "stars": 13175,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "DylanVann/react-native-fast-image",
+          "stars": 8422,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "jsdom/whatwg-url",
+          "stars": 421,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 22,
+          "domain": "react"
+        },
+        {
+          "repo": "charpeni/whatwg-url",
+          "stars": 4,
+          "prs": 3,
+          "domain": "testing"
+        }
+      ]
+    },
+    {
+      "year": 2019,
+      "prs": 74,
+      "commits": 164,
+      "reviews": 227,
+      "months": [48, 86, 175, 172, 90, 126, 166, 237, 202, 185, 207, 117],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 50
+        },
+        {
+          "domain": "tooling",
+          "prs": 3
+        },
+        {
+          "domain": "testing",
+          "prs": 3
+        }
+      ],
+      "repos": [
+        {
+          "repo": "react/react-native",
+          "stars": 126463,
+          "prs": 5,
+          "domain": "react"
+        },
+        {
+          "repo": "react/create-react-app",
+          "stars": 103279,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "oblador/react-native-vector-icons",
+          "stars": 17914,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "facebook/flipper",
+          "stars": 13455,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "wix/react-native-navigation",
+          "stars": 13175,
+          "prs": 3,
+          "domain": "react"
+        },
+        {
+          "repo": "remarkjs/remark",
+          "stars": 8989,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "react/metro",
+          "stars": 5627,
+          "prs": 2,
+          "domain": "tooling"
+        },
+        {
+          "repo": "jorgebastida/awslogs",
+          "stars": 4989,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "react-native-share/react-native-share",
+          "stars": 3893,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "margelo/react-native-blur",
+          "stars": 3881,
+          "prs": 4,
+          "domain": "react"
+        },
+        {
+          "repo": "callstack/react-native-testing-library",
+          "stars": 3413,
+          "prs": 3,
+          "domain": "testing"
+        },
+        {
+          "repo": "wix/react-native-notifications",
+          "stars": 3341,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "jeremybarbet/react-native-modalize",
+          "stars": 2884,
+          "prs": 2,
+          "domain": "react"
+        },
+        {
+          "repo": "react/react-native-website",
+          "stars": 2158,
+          "prs": 22,
+          "domain": "react"
+        },
+        {
+          "repo": "react-native-segmented-control/segmented-control",
+          "stars": 666,
+          "prs": 8,
+          "domain": "react"
+        },
+        {
+          "repo": "charpeni/react-native-url-polyfill",
+          "stars": 412,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "Instabug/Instabug-React-Native",
+          "stars": 328,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "rnc-archive/.github",
+          "stars": 199,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "useshortcut/shortcut-client-js",
+          "stars": 140,
+          "prs": 13,
+          "domain": "other"
+        },
+        {
+          "repo": "shortcut-cli/shortcut-cli",
+          "stars": 114,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/ios-simulator-app-exporter",
+          "stars": 71,
+          "prs": 1,
+          "domain": "other"
+        }
+      ]
+    },
+    {
+      "year": 2018,
+      "prs": 62,
+      "commits": 106,
+      "reviews": 253,
+      "months": [27, 43, 38, 33, 57, 59, 44, 42, 40, 40, 31, 28],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 53
+        }
+      ],
+      "repos": [
+        {
+          "repo": "react/react-native",
+          "stars": 126463,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-navigation/react-navigation",
+          "stars": 24502,
+          "prs": 3,
+          "domain": "react"
+        },
+        {
+          "repo": "react-native-image-picker/react-native-image-picker",
+          "stars": 8634,
+          "prs": 8,
+          "domain": "react"
+        },
+        {
+          "repo": "satya164/react-native-tab-view",
+          "stars": 5105,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "meliorence/react-native-render-html",
+          "stars": 3665,
+          "prs": 2,
+          "domain": "react"
+        },
+        {
+          "repo": "Bogdanp/awesome-advent-of-code",
+          "stars": 3223,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "react/react-native-website",
+          "stars": 2158,
+          "prs": 8,
+          "domain": "react"
+        },
+        {
+          "repo": "facebookincubator/spectrum",
+          "stars": 1972,
+          "prs": 4,
+          "domain": "other"
+        },
+        {
+          "repo": "react-native-documents/document-picker",
+          "stars": 1516,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-native-community/jsc-android-buildscripts",
+          "stars": 1069,
+          "prs": 2,
+          "domain": "react"
+        },
+        {
+          "repo": "wix-incubator/react-native-zss-rich-text-editor",
+          "stars": 836,
+          "prs": 11,
+          "domain": "react"
+        },
+        {
+          "repo": "meteor/guide",
+          "stars": 827,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "inProgress-team/react-native-meteor",
+          "stars": 688,
+          "prs": 2,
+          "domain": "react"
+        },
+        {
+          "repo": "react-navigation/react-native-safe-area-view",
+          "stars": 656,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "CRAlpha/react-native-wkwebview",
+          "stars": 637,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-navigation/tabs",
+          "stars": 327,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-navigation/react-navigation.github.io",
+          "stars": 324,
+          "prs": 6,
+          "domain": "react"
+        },
+        {
+          "repo": "charpeni/react-native-speech-bubble",
+          "stars": 51,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "Clever/ios-sdk",
+          "stars": 13,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/react-native-website",
+          "stars": 0,
+          "prs": 4,
+          "domain": "react"
+        }
+      ]
+    },
+    {
+      "year": 2017,
+      "prs": 69,
+      "commits": 112,
+      "reviews": 62,
+      "months": [68, 44, 64, 27, 6, 16, 16, 2, 15, 19, 10, 20],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 23
+        },
+        {
+          "domain": "tooling",
+          "prs": 2
+        },
+        {
+          "domain": "testing",
+          "prs": 1
+        }
+      ],
+      "repos": [
+        {
+          "repo": "react/react-native",
+          "stars": 126463,
+          "prs": 6,
+          "domain": "react"
+        },
+        {
+          "repo": "yarnpkg/yarn",
+          "stars": 41485,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "angular/angular-cli",
+          "stars": 27019,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "react-navigation/react-navigation",
+          "stars": 24502,
+          "prs": 3,
+          "domain": "react"
+        },
+        {
+          "repo": "PatrickJS/awesome-angular",
+          "stars": 10068,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "aksonov/react-native-router-flux",
+          "stars": 8916,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react/react-native-website",
+          "stars": 2158,
+          "prs": 4,
+          "domain": "react"
+        },
+        {
+          "repo": "thymikee/jest-preset-angular",
+          "stars": 920,
+          "prs": 1,
+          "domain": "testing"
+        },
+        {
+          "repo": "inProgress-team/react-native-meteor",
+          "stars": 688,
+          "prs": 3,
+          "domain": "react"
+        },
+        {
+          "repo": "infinitered/solidarity",
+          "stars": 639,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "sherweb/ngx-materialize",
+          "stars": 312,
+          "prs": 39,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/svelte-example",
+          "stars": 87,
+          "prs": 6,
+          "domain": "react"
+        },
+        {
+          "repo": "ci-samples/angular-heroku-review",
+          "stars": 1,
+          "prs": 2,
+          "domain": "other"
+        }
+      ]
+    },
+    {
+      "year": 2016,
+      "prs": 92,
+      "commits": 157,
+      "reviews": 24,
+      "months": [103, 108, 110, 121, 140, 77, 90, 63, 47, 1, 35, 23],
+      "domains": [
+        {
+          "domain": "react",
+          "prs": 88
+        },
+        {
+          "domain": "tooling",
+          "prs": 1
+        }
+      ],
+      "repos": [
+        {
+          "repo": "ohmyzsh/ohmyzsh",
+          "stars": 189480,
+          "prs": 1,
+          "domain": "tooling"
+        },
+        {
+          "repo": "react/react-native",
+          "stars": 126463,
+          "prs": 13,
+          "domain": "react"
+        },
+        {
+          "repo": "sveltejs/svelte",
+          "stars": 88034,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "Dogfalo/materialize",
+          "stars": 38815,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "jondot/awesome-react-native",
+          "stars": 35694,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "reactnativecn/react-native-guide",
+          "stars": 17831,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-native-camera/react-native-camera",
+          "stars": 9630,
+          "prs": 4,
+          "domain": "react"
+        },
+        {
+          "repo": "aksonov/react-native-router-flux",
+          "stars": 8916,
+          "prs": 26,
+          "domain": "react"
+        },
+        {
+          "repo": "itinance/react-native-fs",
+          "stars": 5043,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "facebookarchive/react-native-fbsdk",
+          "stars": 2974,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "ArnaudRinquin/react-native-radio-buttons",
+          "stars": 410,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "react-native-simple-router-community/react-native-simple-router",
+          "stars": 265,
+          "prs": 37,
+          "domain": "react"
+        },
+        {
+          "repo": "rangle/ngCourse2",
+          "stars": 182,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "jucastilhoduarte/react-native-form",
+          "stars": 146,
+          "prs": 1,
+          "domain": "react"
+        },
+        {
+          "repo": "nHiRanZ/react-native-kenburns-view",
+          "stars": 62,
+          "prs": 1,
+          "domain": "react"
+        }
+      ]
+    },
+    {
+      "year": 2015,
+      "prs": 4,
+      "commits": 5,
+      "reviews": 0,
+      "months": [0, 0, 0, 0, 11, 0, 0, 3, 0, 9, 0, 3],
+      "domains": [],
+      "repos": [
+        {
+          "repo": "MikaelCarpenter/gb-native-router",
+          "stars": 64,
+          "prs": 1,
+          "domain": "other"
+        },
+        {
+          "repo": "em0ney/meteor-amcharts",
+          "stars": 3,
+          "prs": 2,
+          "domain": "other"
+        },
+        {
+          "repo": "charpeni/slideout",
+          "stars": 1,
+          "prs": 1,
+          "domain": "other"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 ---
 import TermLog from '@/components/desktop/TermLog.astro';
 import Window from '@/components/desktop/Window.astro';
+import GithubTimeline from '@/components/desktop/GithubTimeline.astro';
 import ContactContent from '@/components/reader/ContactContent.astro';
 import LegalContent from '@/components/reader/LegalContent.astro';
 import { shortHash } from '@/utils/graph';
@@ -29,6 +30,7 @@ type Focused =
   | 'legal:disclaimer'
   | 'legal:privacy-policy'
   | 'legal:contact'
+  | 'github'
   | 'not-found';
 
 type Props = {
@@ -177,7 +179,10 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
           rel="noopener noreferrer">bsky.app/charpeni.bsky.social</a
         > · <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer"
           >rss</a
-        > · <a href="https://prs.charpeni.com" data-open-prs>latest PRs</a>
+        > · <a href="https://prs.charpeni.com" data-open-prs>latest PRs</a> · <a
+          href="/contributions"
+          data-open-github>contributions</a
+        >
       </div>
     </aside>
 
@@ -301,6 +306,22 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
     }
 
     {
+      focused === 'github' && (
+        <Window id="github" title={windowTitle('github', posts)} active>
+          <GithubTimeline />
+          <div class="retro-terminal-status" slot="status">
+            <span>
+              <b>contributions</b> · by year
+            </span>
+            <span class="retro-terminal-status-hint">
+              esc close · drag ◢ to resize
+            </span>
+          </div>
+        </Window>
+      )
+    }
+
+    {
       focused === 'not-found' && (
         <Window id="not-found" title={windowTitle('not-found', posts)} active>
           <div class="retro-terminal-legal-window">
@@ -378,6 +399,11 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
     .retro-terminal-window--ssr[data-retro-window-id^='legal:'] {
     width: min(740px, calc(100vw - 48px));
     height: min(620px, 78vh);
+  }
+  :global(html:not([data-reader]))
+    .retro-terminal-window--ssr[data-retro-window-id='github'] {
+    width: min(860px, calc(100vw - 48px));
+    height: min(80vh, calc(100vh - 40px));
   }
   :global(html:not([data-reader]))
     .retro-terminal-window--ssr[data-retro-window-id='not-found'] {

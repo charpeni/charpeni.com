@@ -25,6 +25,8 @@ import {
   clampResize,
   clampWinToViewport,
   formatIsoDate,
+  GITHUB_ID,
+  githubGeom,
   legalGeom,
   notFoundGeom,
   prsGeom,
@@ -36,7 +38,7 @@ import {
 
 import type { LegalWindowVariant, TermPost, WinGeom } from '@/utils/retro';
 
-type Kind = 'term' | 'show' | 'legal' | 'prs' | 'not-found';
+type Kind = 'term' | 'show' | 'legal' | 'prs' | 'gh' | 'not-found';
 
 type GeometryMotion = {
   animations: Animation[];
@@ -134,12 +136,14 @@ function finishGeometryMotion(win: Win) {
 function kindOf(id: string): Kind {
   if (id === 'term') return 'term';
   if (id === 'latest-prs') return 'prs';
+  if (id === GITHUB_ID) return 'gh';
   if (id === 'not-found') return 'not-found';
   if (id.startsWith('legal:')) return 'legal';
   return 'show';
 }
 
 function urlOf(id: string): string | null {
+  if (id === GITHUB_ID) return '/contributions';
   if (id.startsWith('show:')) return `/blog/${id.slice(5)}`;
   if (id.startsWith('legal:')) return `/${id.slice(6)}`;
   if (id === 'not-found') return location.pathname;
@@ -294,6 +298,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     if (kind === 'term') return termGeom(vw(), vh(), posts);
     if (kind === 'show') return showGeom(vw(), vh());
     if (kind === 'prs') return prsGeom(vw(), vh());
+    if (kind === 'gh') return githubGeom(vw(), vh());
     if (kind === 'not-found') return notFoundGeom(vw(), vh());
     return legalGeom(vw(), vh());
   }
@@ -868,6 +873,14 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       });
   }
 
+  function openGithub() {
+    void openPartialWindow(
+      GITHUB_ID,
+      '/partials/github-profile',
+      '<div class="retro-terminal-status retro-only"><span><b>contributions</b> · by year</span><span class="retro-terminal-status-hint">esc close · drag ◢ to resize</span></div>',
+    );
+  }
+
   function ensureLauncher() {
     const termVisible = state.windows.some(
       (w) => w.kind === 'term' && !w.minimized,
@@ -1061,6 +1074,12 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       return;
     }
 
+    if (target.closest('[data-open-github]')) {
+      event.preventDefault();
+      openGithub();
+      return;
+    }
+
     if (target.closest('[data-reader-mode]')) {
       document.cookie = 'retro-os=0; path=/; max-age=31536000; samesite=lax';
       location.reload();
@@ -1144,6 +1163,11 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       if (legal) {
         event.preventDefault();
         openLegal(legal[1] as LegalWindowVariant);
+        return;
+      }
+      if (href === '/contributions') {
+        event.preventDefault();
+        openGithub();
         return;
       }
       const match = href.match(/^\/blog\/([^/.]+)$/);
@@ -1233,6 +1257,10 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     }
     if (path === '/disclaimer' || path === '/privacy-policy') {
       openLegal(path.slice(1) as 'disclaimer' | 'privacy-policy');
+      return;
+    }
+    if (path === '/contributions') {
+      openGithub();
       return;
     }
     if (path === '/') {

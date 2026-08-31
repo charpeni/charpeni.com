@@ -26,6 +26,7 @@ html[data-reader] .retro-only {
  * main, so hide the whole window in reader mode. Show windows stay: the
  * post article flowing out of its un-skinned window IS the reader page. */
 html[data-reader] [data-retro-window-id^='legal:'],
+html[data-reader] [data-retro-window-id='github'],
 html[data-reader] [data-retro-window-id='not-found'] {
   display: none !important;
 }
