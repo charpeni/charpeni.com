@@ -1744,6 +1744,26 @@ html:not([data-reader]) {
   .retro-terminal-resize {
     display: none;
   }
+  /* The post window's footer duplicates the header's refs line and lists
+     keyboard-only shortcuts — dead weight on touch. Drop it and give the
+     article the room; extra bottom padding keeps the last lines clear of
+     the floating reader-mode pill. */
+  .retro-terminal-window[data-retro-window-id^='show:']
+    .retro-terminal-status {
+    display: none;
+  }
+  .retro-terminal-window[data-retro-window-id^='show:']
+    .retro-terminal-show-scroll {
+    padding-bottom: calc(max(14px, env(safe-area-inset-bottom)) + 54px);
+  }
+  /* Legal/404 windows keep their one-line status but lose the esc/drag
+     hints that don't exist on touch. */
+  .retro-terminal-window[data-retro-window-id^='legal:']
+    .retro-terminal-status-hint,
+  .retro-terminal-window[data-retro-window-id='not-found']
+    .retro-terminal-status-hint {
+    display: none;
+  }
   .retro-terminal-prs-toolbar {
     align-items: flex-start;
     flex-direction: column;
