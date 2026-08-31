@@ -1418,9 +1418,14 @@ html:not([data-reader]) {
 }
 
 @media (max-width: 639px), (max-height: 500px) and (pointer: coarse) {
+  /* On phones windows go fullscreen (show windows inset to 0), so a
+     top-right toggle would sit on the titlebar's close button. Park it in
+     the bottom-right corner instead — taskbar-style, over the status
+     strip's empty right side. */
   .retro-toggle--retro {
-    top: 5px;
-    right: 8px;
+    top: auto;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
     min-height: 44px;
     height: 44px;
     padding: 0 9px;
