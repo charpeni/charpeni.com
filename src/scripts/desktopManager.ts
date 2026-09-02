@@ -683,17 +683,22 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
 
   function registerServerWindow(el: HTMLElement): Win {
     const id = el.dataset.retroWindowId ?? '';
+    const kind = kindOf(id);
     const initialGeom = defaultGeom(id);
+    // The term window is home: it must never load maximized, or it would
+    // cover the About panel on first paint. Post windows still restore the
+    // stored maximized state (a maximized post covering About is fine).
+    const maximized = state.maximized && kind !== 'term';
     const win: Win = {
       id,
-      kind: kindOf(id),
+      kind,
       el,
       url: urlOf(id),
-      geom: state.maximized ? maximizedGeom() : initialGeom,
+      geom: maximized ? maximizedGeom() : initialGeom,
       z: nextZ(),
       userResized: false,
       minimized: false,
-      restoreGeom: state.maximized ? initialGeom : null,
+      restoreGeom: maximized ? initialGeom : null,
       geometryMotion: null,
       opener: null,
     };
