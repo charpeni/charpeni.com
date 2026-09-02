@@ -10,6 +10,7 @@ import {
   branchOf,
   formatLongDate,
   isBranch,
+  termFitWidth,
   windowTitle,
 } from '@/utils/retro';
 
@@ -76,6 +77,11 @@ const legalTitles: Record<LegalWindowVariant, string> = {
 // pick from, and it downloads it on every page.
 const AVATAR = '/static/images/nicolas_charpentier.jpeg';
 const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
+
+// Pre-hydration width for the term window (retro.css `--ssr` rules): the
+// manager's termGeom caps the window at its fit-to-content width, which
+// depends on the post titles, so the CSS placeholder can't derive it alone.
+const termFitW = termFitWidth(posts);
 ---
 
 <div class="retro-terminal-shell" data-desktop-shell>
@@ -209,6 +215,7 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
         title={windowTitle('term', posts)}
         active={focused === 'term'}
         role="region"
+        style={`--retro-term-fit-w: ${termFitW}px`}
       >
         <TermLog posts={posts} cursor={cursor} />
         <div class="retro-terminal-status" slot="status">
@@ -380,36 +387,3 @@ const avatarSrcset = getResponsiveImage(AVATAR)?.srcset;
   </script>
 </div>
 
-<style>
-  /* Pre-hydration geometry: viewport-relative approximations of the exact
-     utils/retro.ts formulas the island applies as px on hydration. */
-  :global(html:not([data-reader])) .retro-terminal-window--ssr {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: min(80vw, calc(100vw - 40px));
-    height: min(80vh, 620px);
-  }
-  :global(html:not([data-reader]))
-    .retro-terminal-window--ssr[data-retro-window-id^='show:'] {
-    width: min(914px, calc(100vw - 48px));
-    height: min(80vh, calc(100vh - 40px));
-  }
-  :global(html:not([data-reader]))
-    .retro-terminal-window--ssr[data-retro-window-id^='legal:'] {
-    width: min(740px, calc(100vw - 48px));
-    height: min(620px, 78vh);
-  }
-  :global(html:not([data-reader]))
-    .retro-terminal-window--ssr[data-retro-window-id='github'] {
-    width: min(860px, calc(100vw - 48px));
-    height: min(80vh, calc(100vh - 40px));
-  }
-  :global(html:not([data-reader]))
-    .retro-terminal-window--ssr[data-retro-window-id='not-found'] {
-    width: min(620px, calc(100vw - 40px));
-    height: min(330px, calc(100vh - 48px));
-  }
-  /* Spawn-animation delay parity: retro.css keys the term delay off a
-     data attribute selector, which still matches here. */
-</style>

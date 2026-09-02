@@ -169,6 +169,47 @@ html:not([data-reader]) {
   box-shadow: 2px 3px 0 rgba(122, 113, 96, 0.18);
   transform-origin: left bottom;
 }
+
+/* Pre-hydration geometry: viewport-relative approximations of the exact
+ * utils/windowGeometry.ts formulas the manager applies as px on hydration
+ * (it drops the --ssr class). These must live here rather than in
+ * DesktopShell.astro's scoped <style>: Astro scopes that block to the
+ * shell's data-astro-cid attribute, which the Window.astro element never
+ * carries, so the rules silently never matched and every window painted
+ * at 0,0 content-sized until the script ran. Centring uses inset + auto
+ * margins instead of translate(-50%, -50%) because the spawn animation
+ * owns `transform` and would cancel the translate while it plays. The
+ * per-window qualifiers sit in :where() so they add no specificity and the
+ * phone layout further down (same specificity, later) still wins. */
+.retro-terminal-window--ssr {
+  inset: 0;
+  margin: auto;
+  width: min(80vw, calc(100vw - 40px));
+  height: min(80vh, 620px);
+}
+/* termGeom: min(80vw, fit-to-content width) — the fit width depends on the
+ * post titles, so DesktopShell.astro passes it as a custom property. */
+.retro-terminal-window--ssr:where([data-retro-window-id='term']) {
+  width: min(80vw, calc(100vw - 40px), var(--retro-term-fit-w, 100vw));
+}
+.retro-terminal-window--ssr:where([data-retro-window-id^='show:']),
+.retro-terminal-window--ssr:where([data-retro-window-id='github']) {
+  height: min(80vh, calc(100vh - 40px));
+}
+.retro-terminal-window--ssr:where([data-retro-window-id^='show:']) {
+  width: min(914px, calc(100vw - 48px));
+}
+.retro-terminal-window--ssr:where([data-retro-window-id='github']) {
+  width: min(860px, calc(100vw - 48px));
+}
+.retro-terminal-window--ssr:where([data-retro-window-id^='legal:']) {
+  width: min(740px, calc(100vw - 48px));
+  height: min(620px, 78vh);
+}
+.retro-terminal-window--ssr:where([data-retro-window-id='not-found']) {
+  width: min(620px, calc(100vw - 40px));
+  height: min(330px, calc(100vh - 48px));
+}
 .retro-terminal-window:focus {
   outline: none;
 }
