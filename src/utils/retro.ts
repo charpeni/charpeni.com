@@ -70,7 +70,7 @@ export const branchOf = (post: { tags: string[] }) =>
 const ROW_CHAR_W = 7.8;
 const TERM_CHROME_W = 112;
 
-function termFitWidth(posts: TermPost[]): number {
+export function termFitWidth(posts: TermPost[]): number {
   const graph = computeGraph(posts, posts);
   let maxChars = 0;
   for (const post of posts) {
