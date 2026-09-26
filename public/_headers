@@ -39,14 +39,19 @@
   Cache-Control: public, max-age=2592000
 
 # Markdown alternates. /api/blog/* is safe as a splat (that prefix contains
-# only .md files). VERIFY the :slug.md placeholder rule on the first preview
-# deploy — _headers has no regex, and if the placeholder doesn't match a
-# dotted suffix, Cloudflare still serves .md with a text/markdown guess
-# (only the explicit charset is at stake).
+# only .md files). The :slug.md placeholder compiles to /blog/([^/]+)\.md —
+# the dotted suffix matches (verified against the rules engine miniflare
+# bundles); worst case Cloudflare still serves .md with a text/markdown
+# guess and only the explicit charset is at stake. These rules also apply
+# when src/worker.ts fetches the .md variants through the ASSETS binding
+# for Accept: text/markdown negotiation.
 /blog/:slug.md
   Content-Type: text/markdown; charset=utf-8
 
 /api/blog/*
+  Content-Type: text/markdown; charset=utf-8
+
+/index.md
   Content-Type: text/markdown; charset=utf-8
 
 # Window-content partials are headless fragments (no <head>, no robots meta) —
