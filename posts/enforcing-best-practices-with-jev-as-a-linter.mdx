@@ -1,0 +1,121 @@
+---
+title: 'Enforcing Best Practices with Jev as a Linter'
+publishedAt: '2026-10-01T12:00:00Z'
+summary: 'Agents write most of our code now, and they respond to checks far more reliably than to documents. I turned a best practice written in plain English into a lint rule with Jev and Oxlint, annotated inline in GitHub pull requests.'
+tags: ['ai', 'oxlint', 'code-review', 'tooling', 'github-actions']
+series: 'Enforcing Best Practices'
+---
+
+A few years ago, I opened [a post about Betterer](/blog/enforce-best-practices-incrementally-with-betterer) with a line you've probably heard before:
+
+> If we can't lint it, then we can't enforce it
+
+Today, I would go one step further: **if we can't enforce it, then it isn't a best practice, it's a suggestion!**
+
+Best practices used to spread through code review: someone left a comment, and the author remembered it. But agents write most of the code I review now, and an agent doesn't remember last week's comment. It writes the same pattern again, and I leave the same comment again.
+
+At that point, repeating best practices on every single review wastes everyone's time. You could fix the pattern everywhere so the next agent picks up the right one from the surrounding code, but even then, there's no guarantee it will.
+
+## Best Practices That Only Live in a Document
+
+Our monorepo has an `AI-REVIEW.md` full of best practices extracted from past pull request reviews. One entry looks like this:
+
+```tsx
+// Bad - manual useState + useCallback
+const [isDismissed, setIsDismissed] = useState(false);
+const dismiss = useCallback(() => setIsDismissed(true), []);
+
+// Good - useBooleanState provides memoized handlers
+const [isDismissed, toggle] = useBooleanState(false);
+const dismiss = toggle.on;
+```
+
+An agent may or may not read that document, and an AI reviewer may flag the pattern on one pull request and miss it on the next. I could write an AST rule for that one, exceptions included. Then I'd need one for every other entry, and some, like _"Name test cases to reflect their purpose"_, can't be expressed as syntax at all.
+
+## Lint Rules Written in Plain English
+
+[Jev](https://docs.typesafe.ai/concepts/system-one) is a TypeSafe model that doesn't generate text: give it some state and a typed question, and it returns a typed answer with a calibrated probability.
+
+Think _Hotdog, Not Hotdog_ from Silicon Valley, except you write the question and get back the probability that the answer is yes. A lint rule is the same app: violation, not violation.
+
+<div className="img-center">
+  <Image
+    alt={`The SeeFood app from Silicon Valley, showing Hotdog for a hot dog and Not hotdog for a shoe`}
+    src={`/static/images/enforcing-best-practices-with-jev-as-a-linter/hotdog-not-hotdog.png`}
+    width={269}
+    height={230}
+  />
+</div>
+
+[`oxlint-plugin-jev`](https://github.com/wobsoriano/oxlint-plugin-jev), by [Robert Soriano](https://robsoriano.com), turns each rule into a question, a target (a function, a call, a JSX element, or a file), and a cutoff. We already run [Oxlint](/blog/migrating-from-eslint-biome-prettier-to-oxlint-oxfmt), so adding the plugin was the easy part.
+
+## Writing the Rule
+
+Let's write the rule. As the plugin's README puts it: _"The wording of the question is the rule."_ Here's ours, pinned to `jev-1.13.0`:
+
+```json:.oxlintrc.semantic.json
+{
+  "id": "prefer-use-boolean-state",
+  "target": "file",
+  "question": "Does this file contain a violation of our best practice #41: ...",
+  "cutoff": 0.9,
+  "location": {
+    "question": "Select the variable declaration line for the React useState call ...",
+    "cutoff": 0.75
+  }
+}
+```
+
+The question (abridged) reads like the best practice itself, with every exception spelled out:
+
+```text
+Does this file contain a violation of our best practice #41: prefer useBooleanState from @/hooks/useBooleanState over React useState initialized with a boolean plus a memoized setter-only callback?
+A qualifying state is a React useState boolean paired with useCallback whose entire body unconditionally calls that state's setter with the literal true or false.
+Resolve React import aliases. Exclude a candidate state if its callbacks perform additional work or conditional logic, it can also be null or undefined, it uses a lazy initializer or functional updater, or its setter is passed elsewhere.
+If no candidate clearly qualifies, answer no.
+```
+
+The high cutoff and the last sentence are there on purpose, we would rather miss a violation than have a check that cries wolf and gets ignored after a week. And since the wording is the rule, it has tests: labeled fixtures, including near-misses, that run against the real model whenever the question changes.
+
+## Pointing at the Right Line
+
+Unfortunately, with `target: "file"`, the plugin reported every finding on line 1, which isn't super helpful on a 400-line component.
+
+So I [added](https://github.com/wobsoriano/oxlint-plugin-jev/pull/8) an optional `location` question. The plugin sends the file with numbered lines, and asks Jev to select one:
+
+```text
+L3|   const [open, setOpen] = useState(false);
+L4|   const close = useCallback(() => setOpen(false), []);
+```
+
+Each line is an option in a multiple-choice question, plus `unknown`. If we ask the model for a line number, it could make one up, but if it has to pick one from the list, the answer is always a real line, and it comes with a probability. An uncertain answer keeps the file-level diagnostic. It was released as part of `0.1.3`.
+
+## Inline in the Pull Request
+
+Oxlint's `github` formatter already prints [workflow commands](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands) that GitHub turns into annotations, but its message is the model, the score, and the whole question. A small wrapper replaces it with a short explanation and a link to the guideline:
+
+<div className="img-center">
+  <Image
+    alt={`GitHub pull request diff with a failing Jev annotation on a useState(false) line, linking to the best practice`}
+    src={`/static/images/enforcing-best-practices-with-jev-as-a-linter/github-annotation.png`}
+    width={1518}
+    height={498}
+  />
+</div>
+
+> [!NOTE]
+> We say _suspects_ on purpose, Jev only gives us a probability, so the annotation shouldn't sound more sure than the model is.
+
+## What It Costs
+
+Over our first 175 runs, Jev cost us a total of **$0.35**, about a fifth of a cent per run! Jev only [bills input tokens](https://docs.typesafe.ai/models), at $0.042 per million.
+
+Over the same runs, the workflow used about 167 runner minutes, roughly $0.67 at our runner's per-minute rate. **Running GitHub Actions ended up being more expensive than Jev itself!**
+
+## Wrapping Up
+
+Agents iterate until the checks pass. The annotation gives agents the line to fix and a link to the guideline, so I don't have to leave the same comment again.
+
+With Jev, we can write a rule like this one in English, including the exceptions we already documented.
+
+What's the first entry in your best practices document you'd turn into a rule?
