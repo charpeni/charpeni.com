@@ -34,7 +34,28 @@ export type GithubProfile = {
 export const githubProfile = profile as GithubProfile;
 
 /** How many repos a year shows before the expandable "+n more". */
-export const GH_TOP_REPOS = 10;
+const GH_TOP_REPOS = 10;
+
+/**
+ * Never headlined: still counted and star-ranked, but always inside the
+ * "+n more" list so their sheer star count doesn't lead the year.
+ */
+const GH_COLLAPSED_REPOS = new Set([
+  'public-apis/public-apis',
+  'nilbuild/developer-roadmap',
+]);
+
+/** A year's star-ranked repos, split into the headline list and "+n more". */
+export function ghSplitRepos(year: GithubYear): {
+  top: GithubRepo[];
+  rest: GithubRepo[];
+} {
+  const top = year.repos
+    .filter((repo) => !GH_COLLAPSED_REPOS.has(repo.repo))
+    .slice(0, GH_TOP_REPOS);
+  const rest = year.repos.filter((repo) => !top.includes(repo));
+  return { top, rest };
+}
 
 /**
  * Domain colors follow the blog's branch-tag vocabulary (BRANCH_COLORS),

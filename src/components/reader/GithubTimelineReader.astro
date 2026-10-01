@@ -1,9 +1,9 @@
 ---
 import {
   formatStars,
-  GH_TOP_REPOS,
   ghDomainColor,
   ghPullsUrl,
+  ghSplitRepos,
   githubProfile,
 } from '@/utils/githubProfile';
 
@@ -23,8 +23,7 @@ const { totals, years } = githubProfile;
 
 {
   years.map((year) => {
-    const top = year.repos.slice(0, GH_TOP_REPOS);
-    const rest = year.repos.slice(GH_TOP_REPOS);
+    const { top, rest } = ghSplitRepos(year);
     const repoItem = (repo: (typeof top)[number]) => (
       <li class="flex items-baseline gap-2">
         <span

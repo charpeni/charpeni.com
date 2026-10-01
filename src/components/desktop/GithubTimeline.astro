@@ -1,10 +1,10 @@
 ---
 import {
   formatStars,
-  GH_TOP_REPOS,
   ghAccentColor,
   ghDomainColor,
   ghPullsUrl,
+  ghSplitRepos,
   githubProfile,
   monthSparkline,
 } from '@/utils/githubProfile';
@@ -32,8 +32,7 @@ const { totals, years } = githubProfile;
       {
         years.map((year) => {
           const accent = ghAccentColor(year);
-          const top = year.repos.slice(0, GH_TOP_REPOS);
-          const rest = year.repos.slice(GH_TOP_REPOS);
+          const { top, rest } = ghSplitRepos(year);
           const tail = `${year.commits} commits · ${year.reviews} reviews`;
           const repoLine = (repo: (typeof top)[number]) => (
             <a
