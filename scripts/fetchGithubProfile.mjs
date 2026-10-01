@@ -42,7 +42,7 @@ const DOMAIN_PATTERNS = [
     'typescript',
     /definitelytyped|type-fest|typescript|one-of|groupby-typename|expect-type/,
   ],
-  ['tooling', /pnpm|turborepo|oxc|rsdoctor|vite|yarn|swc|metro|angular-cli|npmx|bun|flipper|simple-icons|ohmyzsh/],
+  ['tooling', /pnpm|turborepo|oxc|oxlint|rsdoctor|vite|yarn|swc|metro|angular-cli|npmx|bun|deno|nodejs\/|flipper|simple-icons|ohmyzsh/],
   ['react', /react|expo\/|svelte|next\.js|recharts|mantine/],
 ];
 
