@@ -10,7 +10,7 @@ import Socials from '@/components/reader/Socials.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { BRANCH_TAGS } from '@/utils/graph';
 import { buildHomePages } from '@/utils/homePages';
-import { getResponsiveImage } from '@/utils/postMeta';
+import { getResponsiveImage, SITE_URL } from '@/utils/postMeta';
 
 // 8 posts per page (classic charpeni.com), ?page=N shallow routing. Only
 // page 1 is server-rendered here: the other pages live at
@@ -26,6 +26,7 @@ const firstPage = pages[0];
 <BaseLayout
   title="Nicolas Charpentier — Frontend Infrastructure & Developer Tooling"
   description="Software Engineer focused on frontend infrastructure and developer tooling. I write about TypeScript, React, React Native, GraphQL, Apollo Client, CI/CD, and shipping reliable code."
+  markdownUrl={`${SITE_URL}/index.md`}
 >
   <Header />
   <DesktopShell posts={termPosts} focused="term" />

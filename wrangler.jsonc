@@ -7,6 +7,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "charpeni-com",
   "compatibility_date": "2026-08-01",
+  // Custom entry wrapping the adapter's handler with Accept: text/markdown
+  // content negotiation (acceptmarkdown.com) and a markdown 404. The
+  // adapter's config merge keeps user-set `main` (default would be
+  // @astrojs/cloudflare/entrypoints/server, which is `{ fetch: handle }`).
+  "main": "./src/worker.ts",
   // nodejs_compat provides node:stream & friends for small CJS deps
   // (e.g. reading-time) in the Worker/prerender runtime.
   "compatibility_flags": ["nodejs_compat"],
@@ -16,6 +21,18 @@
     // redirects down. The workerd default (auto-trailing-slash) would make
     // the trailing-slash form canonical instead.
     "html_handling": "drop-trailing-slash",
+    // Content-negotiated URLs must hit the worker before the asset layer.
+    // "/" matches the root only; "/blog/*" splats across slashes but not
+    // bare /blog (its redirect stays on the asset layer). The negations run
+    // first and keep single-representation URLs (.md alternates, RSS,
+    // window-content partials) on the zero-invocation asset path.
+    "run_worker_first": [
+      "/",
+      "/blog/*",
+      "!/blog/*.md",
+      "!/blog/rss.xml",
+      "!/blog/*/content",
+    ],
   },
   "observability": {
     "enabled": true,
