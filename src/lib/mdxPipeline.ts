@@ -11,6 +11,8 @@ import rehypeCodeTitles from 'rehype-code-titles';
 import rehypeSlug from 'rehype-slug';
 import { visit } from 'unist-util-visit';
 
+import { rehypeMermaid } from './mermaidDiagrams.ts';
+
 /**
  * The MDX rehype pipeline, ported verbatim from the Next.js site's
  * utils/mdx.ts (which fed next-mdx-remote's serialize()). Astro's built-in
@@ -209,6 +211,7 @@ function normalizeInlineTwoslashQueries() {
 }
 
 export const rehypePlugins = [
+  rehypeMermaid,
   rehypeRestoreCodeMeta,
   rehypeSlug,
   [

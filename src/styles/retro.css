@@ -2217,3 +2217,12 @@ html:not([data-reader]) a.series-stack-title:hover {
 html:not([data-reader]) .series-stack-current .series-stack-title {
   font-weight: 700;
 }
+
+/* Mermaid gitGraph diagrams on cream paper: the window's background behind
+ * hollow commits, and main in the skin's ink instead of reader gray. */
+html:not([data-reader]) .mermaid-diagram {
+  --mermaid-bg: #fbf6e9;
+  --mermaid-guide: rgba(122, 113, 96, 0.38);
+  --mermaid-label: #fbf6e9;
+  --mermaid-git0: #7a7160;
+}
