@@ -338,3 +338,173 @@ html[data-reader] .series-stack-here {
 html[data-reader].dark .series-stack-here {
   color: #60a5fa;
 }
+
+/* ---------------------------------------------------------------------------
+ * Mermaid gitGraph diagrams (src/lib/mermaidDiagrams.ts). The pre-rendered
+ * SVG ships without Mermaid's theme <style>, so these rules color it, keyed
+ * off the classes gitGraph emits; lane N is `.commitN`/`.arrowN`/`.labelN`,
+ * cycling every 8 branches. Global for the same reason as the series stack:
+ * window-manager partials ship no CSS. Lanes reuse the homepage graph's
+ * branch-tag colors (utils/retro.ts BRANCH_COLORS), with `main` neutral.
+ * Light reader skin here; dark below; the retro skin lives in retro.css.
+ * ------------------------------------------------------------------------- */
+.mermaid-diagram {
+  --mermaid-bg: #ffffff;
+  --mermaid-guide: #d1d5db;
+  --mermaid-label: #ffffff;
+  --mermaid-git0: #6b7280;
+  --mermaid-git1: #3b6db8;
+  --mermaid-git2: #4a7c3a;
+  --mermaid-git3: #7c5e9e;
+  --mermaid-git4: #9a4f00;
+  --mermaid-git5: #3b8a9e;
+  --mermaid-git6: #a8443a;
+  --mermaid-git7: #b45309;
+}
+html[data-reader].dark .mermaid-diagram {
+  --mermaid-bg: #000000;
+  --mermaid-guide: #374151;
+  --mermaid-label: #000000;
+  --mermaid-git0: #9ca3af;
+  --mermaid-git1: #7aa2e3;
+  --mermaid-git2: #86b673;
+  --mermaid-git3: #b096d1;
+  --mermaid-git4: #d99a4e;
+  --mermaid-git5: #6fbccf;
+  --mermaid-git6: #dc8377;
+  --mermaid-git7: #f59e0b;
+}
+.mermaid-diagram svg {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  font-family: 'Fixel Text', sans-serif;
+  /* The size scripts/generateMermaidDiagrams.ts measured labels at. Prose
+   * spacing and small-size hinting would widen the text past its label box
+   * once the diagram scales down on phones. */
+  font-size: 14px;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-rendering: geometricPrecision;
+}
+.mermaid-diagram .branch {
+  stroke: var(--mermaid-guide);
+  stroke-width: 1;
+  stroke-dasharray: 2;
+}
+.mermaid-diagram .arrow {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.mermaid-diagram .commit {
+  fill: var(--mermaid-bg);
+  stroke-width: 3;
+}
+/* Merge commits draw a second, smaller circle: a solid dot in the ring. */
+.mermaid-diagram .commit.commit-merge {
+  stroke: none;
+}
+.mermaid-diagram .branch-label0,
+.mermaid-diagram .branch-label1,
+.mermaid-diagram .branch-label2,
+.mermaid-diagram .branch-label3,
+.mermaid-diagram .branch-label4,
+.mermaid-diagram .branch-label5,
+.mermaid-diagram .branch-label6,
+.mermaid-diagram .branch-label7 {
+  fill: var(--mermaid-label);
+}
+.mermaid-diagram .commit-label,
+.mermaid-diagram .tag-label {
+  font-size: 10px;
+  fill: currentColor;
+}
+.mermaid-diagram .commit-label-bkg,
+.mermaid-diagram .tag-label-bkg {
+  fill: var(--mermaid-bg);
+  stroke: var(--mermaid-guide);
+}
+.mermaid-diagram .tag-hole {
+  fill: var(--mermaid-guide);
+}
+.mermaid-diagram .commit0 {
+  stroke: var(--mermaid-git0);
+}
+.mermaid-diagram .commit-merge.commit0,
+.mermaid-diagram .label0 {
+  fill: var(--mermaid-git0);
+}
+.mermaid-diagram .arrow0 {
+  stroke: var(--mermaid-git0);
+}
+.mermaid-diagram .commit1 {
+  stroke: var(--mermaid-git1);
+}
+.mermaid-diagram .commit-merge.commit1,
+.mermaid-diagram .label1 {
+  fill: var(--mermaid-git1);
+}
+.mermaid-diagram .arrow1 {
+  stroke: var(--mermaid-git1);
+}
+.mermaid-diagram .commit2 {
+  stroke: var(--mermaid-git2);
+}
+.mermaid-diagram .commit-merge.commit2,
+.mermaid-diagram .label2 {
+  fill: var(--mermaid-git2);
+}
+.mermaid-diagram .arrow2 {
+  stroke: var(--mermaid-git2);
+}
+.mermaid-diagram .commit3 {
+  stroke: var(--mermaid-git3);
+}
+.mermaid-diagram .commit-merge.commit3,
+.mermaid-diagram .label3 {
+  fill: var(--mermaid-git3);
+}
+.mermaid-diagram .arrow3 {
+  stroke: var(--mermaid-git3);
+}
+.mermaid-diagram .commit4 {
+  stroke: var(--mermaid-git4);
+}
+.mermaid-diagram .commit-merge.commit4,
+.mermaid-diagram .label4 {
+  fill: var(--mermaid-git4);
+}
+.mermaid-diagram .arrow4 {
+  stroke: var(--mermaid-git4);
+}
+.mermaid-diagram .commit5 {
+  stroke: var(--mermaid-git5);
+}
+.mermaid-diagram .commit-merge.commit5,
+.mermaid-diagram .label5 {
+  fill: var(--mermaid-git5);
+}
+.mermaid-diagram .arrow5 {
+  stroke: var(--mermaid-git5);
+}
+.mermaid-diagram .commit6 {
+  stroke: var(--mermaid-git6);
+}
+.mermaid-diagram .commit-merge.commit6,
+.mermaid-diagram .label6 {
+  fill: var(--mermaid-git6);
+}
+.mermaid-diagram .arrow6 {
+  stroke: var(--mermaid-git6);
+}
+.mermaid-diagram .commit7 {
+  stroke: var(--mermaid-git7);
+}
+.mermaid-diagram .commit-merge.commit7,
+.mermaid-diagram .label7 {
+  fill: var(--mermaid-git7);
+}
+.mermaid-diagram .arrow7 {
+  stroke: var(--mermaid-git7);
+}
