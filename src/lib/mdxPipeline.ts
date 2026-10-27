@@ -70,6 +70,67 @@ function rehypeRestoreCodeMeta() {
   };
 }
 
+const EXTERNAL_LINK_CLASS = 'external-link';
+const EXTERNAL_HREF = /^https?:\/\//;
+
+type JsxAttribute = { type: string; name?: string; value?: unknown };
+
+/**
+ * Tags links that leave the site with `.external-link`, which global.css
+ * draws the arrow icon from. Uses the same test as the new-tab upgrade in
+ * Enhancer.astro (`href^="http"`), but runs at build time, so the arrow
+ * also shows without JS. Markdown links arrive as `a` elements, and anchors
+ * written as JSX in a post arrive as `mdxJsxTextElement`/`mdxJsxFlowElement`
+ * nodes. Only links in the post body are tagged, so the links inside
+ * embeds like Sandpack keep their own styling.
+ */
+export function rehypeExternalLinks() {
+  return (tree: unknown) => {
+    visit(
+      tree as never,
+      (node: {
+        type: string;
+        tagName?: string;
+        name?: string;
+        properties?: Record<string, unknown>;
+        attributes?: JsxAttribute[];
+      }) => {
+        if (node.type === 'element' && node.tagName === 'a') {
+          if (!EXTERNAL_HREF.test(String(node.properties?.href ?? ''))) return;
+          const className = node.properties!.className;
+          node.properties!.className = [
+            ...(Array.isArray(className) ? className : []),
+            EXTERNAL_LINK_CLASS,
+          ];
+          return;
+        }
+
+        if (
+          (node.type === 'mdxJsxTextElement' ||
+            node.type === 'mdxJsxFlowElement') &&
+          node.name === 'a' &&
+          node.attributes
+        ) {
+          const attribute = (name: string) =>
+            node.attributes!.find((a) => a.name === name);
+          const href = attribute('href')?.value;
+          if (typeof href !== 'string' || !EXTERNAL_HREF.test(href)) return;
+          const className = attribute('className');
+          if (!className) {
+            node.attributes.push({
+              type: 'mdxJsxAttribute',
+              name: 'className',
+              value: EXTERNAL_LINK_CLASS,
+            });
+          } else if (typeof className.value === 'string') {
+            className.value = `${className.value} ${EXTERNAL_LINK_CLASS}`;
+          }
+        }
+      },
+    );
+  };
+}
+
 function createTwoslashRenderer() {
   const renderer = rendererRich({ queryRendering: 'line' });
   const renderLineQuery = renderer.lineQuery;
@@ -213,6 +274,7 @@ function normalizeInlineTwoslashQueries() {
 export const rehypePlugins = [
   rehypeMermaid,
   rehypeRestoreCodeMeta,
+  rehypeExternalLinks,
   rehypeSlug,
   [
     rehypeAutolinkHeadings,
