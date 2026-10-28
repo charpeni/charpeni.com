@@ -1100,10 +1100,6 @@ html:not([data-reader]) {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.retro-terminal-comments iframe {
-  color-scheme: light;
-}
-
 /* resize handle */
 .retro-terminal-resize {
   position: absolute;

@@ -171,6 +171,20 @@ html[data-reader] .retro-terminal-legal-title {
 }
 
 /* ---------------------------------------------------------------------------
+ * Giscus iframe (both modes). The widget page declares
+ * `color-scheme: light dark` and giscus's `light` theme never narrows it, so
+ * under an OS dark preference the embedded document resolves to dark. When
+ * that differs from the <iframe> element's own color scheme, the browser
+ * paints an opaque canvas in the embedded scheme — a black slab behind the
+ * light theme. Letting the element follow the OS too keeps both sides in
+ * agreement, so the canvas stays transparent and the theme Enhancer.astro
+ * picks is what shows.
+ * ------------------------------------------------------------------------- */
+iframe.giscus-frame {
+  color-scheme: light dark;
+}
+
+/* ---------------------------------------------------------------------------
  * Series stack (SeriesStack.astro). Styled globally — not in the component —
  * because the markup also arrives via the window-manager partial
  * (blog/[slug]/content), which ships no CSS of its own; the styles must
