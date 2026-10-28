@@ -508,3 +508,342 @@ html[data-reader].dark .mermaid-diagram {
 .mermaid-diagram .arrow7 {
   stroke: var(--mermaid-git7);
 }
+
+/* ---------------------------------------------------------------------------
+ * <LockfileVisibility /> (src/components/mdx/LockfileVisibility.astro): the
+ * demo project's dependency tree, toggled between what package.json gives
+ * GitHub and what bun.lock records. Script-free: the state is the checked
+ * radio, read with :has(). Light reader skin here, dark below; the retro skin
+ * only swaps the tokens, in retro.css.
+ * ------------------------------------------------------------------------- */
+.lockfile-vis {
+  --lv-surface: #f9fafb;
+  --lv-head-bg: transparent;
+  --lv-border: #e5e7eb;
+  --lv-ink: #374151;
+  --lv-strong: #111827;
+  --lv-muted: #6b7280;
+  --lv-faint: #9ca3af;
+  --lv-guide: #9ca3af;
+  --lv-alert: #2563eb;
+  --lv-danger: #dc2626;
+  --lv-code: #db2777;
+  --lv-redact: #d1d5db;
+  --lv-tab-border: transparent;
+  --lv-tab-on-bg: #ffffff;
+  --lv-tab-on-ink: #111827;
+  --lv-tab-on-border: #d1d5db;
+  --lv-radius: 0.75rem;
+  --lv-tab-radius: 0.5rem;
+  --lv-tag-radius: 9999px;
+  --lv-shadow: none;
+  --lv-font: ui-monospace, 'SF Mono', 'Menlo', 'JetBrains Mono', monospace;
+  --lv-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --lv-stagger: 45ms;
+  --lv-shift: 0.25em;
+
+  /* The containing block of the sr-only radios and spans. Otherwise it's the
+   * retro window, outside its scroller, and focusing a radio scrolls the
+   * window itself. */
+  position: relative;
+  margin: 2em 0;
+  border: 1px solid var(--lv-border);
+  border-radius: var(--lv-radius);
+  background: var(--lv-surface);
+  box-shadow: var(--lv-shadow);
+  color: var(--lv-ink);
+  overflow: hidden;
+}
+html[data-reader].dark .lockfile-vis {
+  --lv-surface: #0b0f19;
+  --lv-border: #1f2937;
+  --lv-ink: #d1d5db;
+  --lv-strong: #f3f4f6;
+  --lv-muted: #9ca3af;
+  --lv-faint: #6b7280;
+  --lv-guide: #4b5563;
+  --lv-alert: #60a5fa;
+  --lv-danger: #f87171;
+  --lv-code: #f472b6;
+  --lv-redact: #374151;
+  --lv-tab-on-bg: #1f2937;
+  --lv-tab-on-ink: #f3f4f6;
+  --lv-tab-on-border: #374151;
+}
+
+.lockfile-vis .lv-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--lv-border);
+  background: var(--lv-head-bg);
+}
+.lockfile-vis .lv-switch {
+  display: flex;
+  gap: 0.375rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.lockfile-vis .lv-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--lv-tab-border);
+  border-radius: var(--lv-tab-radius);
+  color: var(--lv-muted);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+.lockfile-vis .lv-tab:has(:checked) {
+  border-color: var(--lv-tab-on-border);
+  background: var(--lv-tab-on-bg);
+  color: var(--lv-tab-on-ink);
+}
+.lockfile-vis .lv-tab:has(:focus-visible) {
+  outline: 2px solid var(--lv-alert);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lockfile-vis .lv-tab:not(:has(:checked)):hover {
+    color: var(--lv-strong);
+  }
+}
+.lockfile-vis .lv-tab-file {
+  font-family: var(--lv-font);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.lockfile-vis .lv-tab-hint {
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+.lockfile-vis .lv-summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lv-muted);
+}
+.lockfile-vis .lv-summary strong {
+  font-weight: 700;
+  color: var(--lv-strong);
+}
+
+.lockfile-vis .lv-tree {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  list-style: none;
+  font-family: var(--lv-font);
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+.lockfile-vis .lv-row {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  padding: 0;
+}
+.lockfile-vis .lv-row[data-kind='manifest'] {
+  font-weight: 700;
+  color: var(--lv-muted);
+}
+.lockfile-vis .lv-row[data-kind='manifest']:not(:first-child) {
+  margin-top: 0.5rem;
+}
+.lockfile-vis .lv-guide {
+  white-space: pre;
+  color: var(--lv-guide);
+}
+.lockfile-vis .lv-pkg {
+  position: relative;
+  display: inline-block;
+  color: var(--lv-strong);
+}
+.lockfile-vis .lv-ver {
+  color: var(--lv-muted);
+}
+.lockfile-vis .lv-catalog {
+  color: var(--lv-code);
+}
+.lockfile-vis .lv-badges {
+  margin-left: 1.25em;
+  font-size: 0.75rem;
+}
+.lockfile-vis .lv-sev {
+  padding: 0 0.5em;
+  border: 1px solid currentColor;
+  border-radius: var(--lv-tag-radius);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--lv-danger);
+}
+.lockfile-vis .lv-arrow {
+  margin: 0 0.35em;
+  font-weight: 400;
+  color: var(--lv-faint);
+}
+.lockfile-vis .lv-miss {
+  color: var(--lv-muted);
+}
+.lockfile-vis .lv-caption {
+  padding: 0.75rem 1rem 0.875rem;
+  border-top: 1px solid var(--lv-border);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--lv-muted);
+}
+.lockfile-vis code {
+  font-family: var(--lv-font);
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--lv-code);
+  white-space: nowrap;
+}
+
+/* Crossfades: both states share one grid cell, so swapping never shifts the
+ * layout. The leaving state hides (visibility) only once it has faded out. */
+.lockfile-vis .lv-swap {
+  display: inline-grid;
+}
+.lockfile-vis .lv-summary.lv-swap,
+.lockfile-vis .lv-caption.lv-swap {
+  display: grid;
+}
+.lockfile-vis .lv-swap > * {
+  grid-area: 1 / 1;
+}
+.lockfile-vis .lv-when-package,
+.lockfile-vis .lv-when-lock {
+  display: inline-block;
+  transition:
+    opacity 200ms var(--lv-ease-out),
+    transform 200ms var(--lv-ease-out),
+    visibility 0s;
+}
+.lockfile-vis .lv-when-lock,
+.lockfile-vis:has([value='bun-lock']:checked) .lv-when-package {
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, 0s, 200ms;
+}
+.lockfile-vis .lv-when-lock {
+  transform: translateY(var(--lv-shift));
+}
+.lockfile-vis:has([value='bun-lock']:checked) .lv-when-package {
+  transform: translateY(calc(-1 * var(--lv-shift)));
+}
+.lockfile-vis:has([value='bun-lock']:checked) .lv-when-lock {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.lockfile-vis .lv-alert {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--lv-alert);
+}
+.lockfile-vis .lv-dot {
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.35em;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+/* Transitive rows: redacted while GitHub's view is on, then wiped away left
+ * to right, one row after another, when bun.lock is picked. Hiding again is
+ * quicker and all at once. */
+.lockfile-vis .lv-row[data-kind='transitive'] .lv-guide {
+  opacity: 0.45;
+  transition: opacity 200ms var(--lv-ease-out);
+}
+.lockfile-vis .lv-row[data-kind='transitive'] .lv-pkg > :not(.lv-redact) {
+  visibility: hidden;
+  transition: visibility 0s 200ms;
+}
+.lockfile-vis .lv-redact {
+  position: absolute;
+  inset: 0.3em -0.25em;
+  border: 1px dashed var(--lv-faint);
+  border-radius: 0.25rem;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      var(--lv-redact) 0 1.5px,
+      transparent 1.5px 5px
+    ),
+    var(--lv-surface);
+  clip-path: inset(0);
+  transition:
+    clip-path 200ms var(--lv-ease-out),
+    visibility 0s;
+}
+.lockfile-vis:has([value='bun-lock']:checked) .lv-row[data-kind='transitive'] {
+  --lv-delay: calc(var(--i) * var(--lv-stagger));
+}
+.lockfile-vis:has([value='bun-lock']:checked)
+  .lv-row[data-kind='transitive']
+  .lv-guide {
+  opacity: 1;
+  transition: opacity 320ms var(--lv-ease-out) var(--lv-delay);
+}
+.lockfile-vis:has([value='bun-lock']:checked)
+  .lv-row[data-kind='transitive']
+  .lv-pkg
+  > :not(.lv-redact) {
+  visibility: visible;
+  transition: visibility 0s var(--lv-delay);
+}
+.lockfile-vis:has([value='bun-lock']:checked) .lv-redact {
+  clip-path: inset(0 0 0 100%);
+  visibility: hidden;
+  transition:
+    clip-path 360ms var(--lv-ease-out) var(--lv-delay),
+    visibility 0s calc(360ms + var(--lv-delay));
+}
+.lockfile-vis:has([value='bun-lock']:checked)
+  .lv-row[data-kind='transitive']
+  .lv-when-lock {
+  transition-delay: calc(var(--lv-delay) + 180ms);
+}
+
+/* Screen readers get the state in words; the redaction is visual only. */
+.lockfile-vis .lv-sr-lock,
+.lockfile-vis:has([value='bun-lock']:checked) .lv-sr-package {
+  display: none;
+}
+.lockfile-vis:has([value='bun-lock']:checked) .lv-sr-lock {
+  display: inline;
+}
+
+/* Reduced motion: no stagger, no movement, no wipe; states still crossfade. */
+@media (prefers-reduced-motion: reduce) {
+  .lockfile-vis {
+    --lv-stagger: 0ms;
+    --lv-shift: 0;
+  }
+  .lockfile-vis .lv-redact {
+    transition:
+      opacity 150ms ease,
+      visibility 0s;
+  }
+  .lockfile-vis:has([value='bun-lock']:checked) .lv-redact {
+    clip-path: inset(0);
+    opacity: 0;
+    transition:
+      opacity 150ms ease,
+      visibility 0s 150ms;
+  }
+}

@@ -1,0 +1,183 @@
+---
+title: "The Bun Dependabot Gap: Dependabot Alerts Don't See bun.lock"
+publishedAt: '2026-10-28T12:00:00Z'
+summary: "GitHub's dependency graph doesn't read bun.lock yet, so in Bun projects Dependabot alerts only cover what's written in package.json, and never a transitive dependency. Here's how to check if you're affected, and how I closed the gap with a GitHub Action."
+tags: ['dependencies', 'security', 'tooling', 'bun', 'github-actions']
+series: 'CVE Hygiene'
+---
+
+This is the fifth installment of my series about CVE hygiene. The previous ones were about **fixing** CVEs. This one is about **knowing** about them in the first place.
+
+For a while, I'd been wondering why one of our frontends had so many Dependabot alerts, while another one, already on Bun, had so few. Then Bun learned to migrate Yarn Berry lockfiles, we moved a few more packages over, and something didn't add up: on our Bun projects, every single Dependabot alert was about a direct dependency. Not one transitive. With thousands of packages in those lockfiles, that couldn't be right, so I dug into it.
+
+The short version: **GitHub's dependency graph doesn't read `bun.lock` yet.** In a Bun project, Dependabot alerts only cover the versions written in your `package.json` files. Every transitive dependency (a dependency of a dependency), and every dependency declared with `catalog:`, is invisible to it. That's why our Bun app looked so much cleaner: Dependabot couldn't see most of its dependencies.
+
+## What Dependabot sees in a Bun project
+
+Dependabot alerts are built on top of GitHub's dependency graph. For npm, Yarn, and pnpm, the dependency graph reads your lockfile, so it knows the exact version of everything you install, transitives included. You can see it in the [supported ecosystems](https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems) table: `package-lock.json`, `yarn.lock`, and `pnpm-lock.yaml` are all there. `bun.lock` isn't, so for a Bun project, the dependency graph falls back to `package.json`, which only lists what you declare yourself.
+
+This is about alerts. Dependabot version updates have [supported Bun since early 2025](https://github.blog/changelog/2025-02-13-dependabot-version-updates-now-support-the-bun-package-manager-ga), which is what makes this easy to miss: they update your `bun.lock`, but alerts come from the dependency graph, which doesn't read it.
+
+Let's set up a minimal reproduction: a workspace with one direct dependency, one dependency that pulls in a transitive, and one dependency declared through a catalog.
+
+```json:package.json
+{
+  "name": "bun-dependabot-demo",
+  "private": true,
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalog": {
+      "happy-dom": "20.8.9"
+    }
+  },
+  "dependencies": {
+    "@ngneat/falso": "8.0.2",
+    "zod": "3.25.76"
+  }
+}
+```
+
+```json:packages/app/package.json
+{
+  "name": "app",
+  "private": true,
+  "devDependencies": {
+    "happy-dom": "catalog:"
+  }
+}
+```
+
+`@ngneat/falso` pins `uuid` to an old version, which makes for a convenient vulnerable transitive:
+
+```bash
+bun why uuid
+# uuid@8.3.2
+#   └─ @ngneat/falso@8.0.2 (requires 8.3.2)
+#      └─ bun-dependabot-demo (requires 8.0.2)
+```
+
+And `bun audit` finds three advisories:
+
+```bash
+bun audit
+# happy-dom@20.8.9
+#   workspace:app > happy-dom
+#   high: Happy DOM: Incomplete fix for CVE-2026-33943: unsanitized import alias leads to host code execution (>=17.0.0 <=21.0.3)
+#
+# uuid@8.3.2
+#   @ngneat/falso > uuid
+#   moderate: uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided (<11.1.1)
+#
+# zod@3.25.76
+#   (direct dependency)
+#   high: Zod can exhaust memory while validating oversized constrained collections (<4.6.6)
+#
+# 3 vulnerabilities (2 high, 1 moderate)
+```
+
+Push that to GitHub, and Dependabot raises **one** alert: `zod`. The dependency graph only knows about what the two `package.json` files declare:
+
+- `uuid@8.3.2` isn't in the graph at all. It only exists in `bun.lock`.
+- `happy-dom` is in the graph, but its version is the literal string `catalog:`, which never matches an advisory.
+
+Here's the same project, as GitHub reads it and as Bun installs it. Switch to `bun.lock` to see what the dependency graph is missing:
+
+<LockfileVisibility />
+
+On a real project, most of what you install is transitive, so the gap is a lot bigger than two out of three.
+
+## Migrating to Bun can quietly close alerts
+
+This one surprised me the most. When a project moves from npm or Yarn to Bun, its `package-lock.json` or `yarn.lock` goes away. GitHub can no longer see the dependencies that lockfile described, so it marks their open alerts as **fixed**. The vulnerable packages are usually still there, now locked in `bun.lock`.
+
+I saw it happen on a real migration: a few transitive alerts flipped to fixed on the day of the switch, and `bun audit` still reported every one of them.
+
+> [!WARNING]
+> If you've migrated to Bun, have a second look at the Dependabot alerts that were closed around your migration date.
+
+## Are you affected?
+
+If your repository uses Bun and relies on Dependabot alerts, probably. Here are two quick ways to check:
+
+1. In **Insights → Dependency graph**, look for `bun.lock` in the list of manifests. If only `package.json` files show up for your Bun projects, Dependabot can't see your lockfile.
+2. Compare where your open alerts come from with what `bun audit` reports. If `bun audit` finds vulnerable transitive dependencies and every alert on a Bun project points to a `package.json`, that's the gap:
+
+   ```bash
+   gh api --paginate 'repos/OWNER/REPO/dependabot/alerts?state=open&per_page=100' \
+     --jq '.[].dependency.manifest_path' | sort | uniq -c
+   ```
+
+## Closing the gap with the dependency submission API
+
+GitHub has an escape hatch for ecosystems its dependency graph doesn't read: the [dependency submission API](https://docs.github.com/en/rest/dependency-graph/dependency-submission). Any tool can send it the resolved dependency tree of a manifest, and Dependabot raises alerts on it, just like on a lockfile GitHub parsed itself.
+
+If you already run `bun audit` in CI, keep it. The two complement each other: `bun audit` speaks when a pipeline runs, while a Dependabot alert fires when a new advisory lands on code that hasn't changed.
+
+So I built [bun-lock-submission](https://github.com/charpeni/bun-lock-submission), a GitHub Action that reads every `bun.lock` in your repository and submits it. Add one workflow:
+
+```yaml:.github/workflows/dependency-submission.yml
+name: Dependency submission
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/bun.lock'
+      - .github/workflows/dependency-submission.yml
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: charpeni/bun-lock-submission@v1
+```
+
+`contents: write` is what GitHub's dependency submission API requires. The action has no runtime dependencies and makes a single call to that API. Pin it to a commit SHA if a moving tag bothers you.
+
+Here's what it does:
+
+- It reads `bun.lock` the way Bun installs it, workspaces and catalogs included.
+- It labels each package as direct or transitive, and as runtime or development, so you can triage your dev tooling separately.
+- It skips the duplicates it can. A direct dependency pinned to an exact version already gets its alert from `package.json`, so it's left out by default. A direct dependency declared with a range, like `^8.3.0`, gets two alerts, one per file: GitHub checks the range, and the action submits what you installed. If your `package.json` files use ranges, set `layout: workspaces`, which replaces GitHub's own reading of each `package.json` instead of adding to it.
+- It submits all the lockfiles of a repository at once, monorepos included.
+
+On the demo project, which pins its direct dependencies exactly, the first run brings the alerts to three, each reported exactly once: `zod` on `package.json`, and `uuid` and `happy-dom` on `bun.lock`. In my tests, the alerts showed up within a couple of minutes of the submission, often within seconds.
+
+It also ships as a CLI on npm, which is handy to preview what it would submit, without submitting anything:
+
+```bash
+bunx bun-lock-submission snapshot > snapshot.json
+# bun.lock: 10 packages (1 direct, 9 transitive, 2 exact pins left to package.json)
+```
+
+Since the whole point is to trust what it reports, I tested it against real projects installed by Bun 1.1.43, 1.2.23, 1.3.14, and 1.4.4, covering lockfile versions 0 to 3. Each [fixture](https://github.com/charpeni/bun-lock-submission/tree/main/packages/core/fixtures/projects) compares what the action submits with what Bun actually installed in `node_modules`.
+
+## Good to know
+
+A few things to keep in mind before adding it:
+
+- **Alerts follow the default branch.** A submission from another branch is stored, but it doesn't raise alerts, so run it on pushes to your default branch.
+- **You get alerts, not fixes.** Dependabot doesn't open security update pull requests for Bun projects. That's where [`bun audit fix`](/blog/the-bun-cve-gap-closed-surgical-updates-land-in-bun-1-4) comes in.
+- **Expect a wave of alerts on the first run.** That's the point, but plan some time to triage them.
+- **Leave private packages out.** GitHub matches advisories by package name, so a private package sharing its name with a public one would get that package's alerts. Use the `exclude` input.
+- **A submission stays in place until the next one replaces it**, so commits that leave your lockfiles alone keep their alerts. That's why the workflow above only runs when a `bun.lock` changes.
+
+## Wrapping up
+
+If you're using Bun with Dependabot alerts, here's what I'd do today:
+
+1. Check whether you're affected, using the checks above.
+2. Have a second look at alerts that closed around a migration to Bun.
+3. Add [bun-lock-submission](https://github.com/charpeni/bun-lock-submission) to your repository, and plan some time for the first wave of alerts.
+4. Remove it once GitHub reads `bun.lock` natively: delete the workflow, then run `bunx bun-lock-submission clear` from your default branch to remove what it submitted.
+
+I'm hopeful this post will age quickly. Until then, I'd rather know about the vulnerabilities in my lockfile than find out about them the hard way. 🙂
+
+> [!NOTE]
+> Tested on Linux in October 2026 with **Bun 1.4.4** and **bun-lock-submission 1.0.0**.

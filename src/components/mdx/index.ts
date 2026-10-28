@@ -1,3 +1,4 @@
+import LockfileVisibility from '@/components/mdx/LockfileVisibility.astro';
 import MdxImage from '@/components/mdx/MdxImage.astro';
 import Sandpack from '@/components/mdx/Sandpack.astro';
 
@@ -9,5 +10,6 @@ import Sandpack from '@/components/mdx/Sandpack.astro';
  */
 export const mdxComponents = {
   Image: MdxImage,
+  LockfileVisibility,
   Sandpack,
 };
