@@ -8,7 +8,7 @@ import { defineCollection, z } from 'astro:content';
  * - `slug` → `entry.id` (from the filename)
  * - `wordCount` / `readingTime` → computed from `entry.body`
  *   (src/utils/postMeta.ts, same reading-time package)
- * - `ogImage` → filesystem fallback to a generated OG card
+ * - social preview → `ogImage`, banner, or a generated OG card
  * - `blurDataURL` → plaiceholder at render time for banner blur-up
  */
 const posts = defineCollection({
@@ -18,7 +18,10 @@ const posts = defineCollection({
     publishedAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }).optional(),
     summary: z.string(),
+    /** Article banner, also used as the social preview unless overridden. */
     image: z.string().startsWith('/').optional(),
+    /** Social preview only; does not render a banner in the article. */
+    ogImage: z.string().startsWith('/').optional(),
     tags: z.array(z.string()).default([]),
     /** Display name of the series this post belongs to; posts sharing the
      * same value are grouped and ordered by publishedAt (SeriesStack). */
