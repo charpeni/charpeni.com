@@ -3,7 +3,7 @@ import '@shikijs/twoslash/style-rich.css';
 import 'rehype-callouts/theme/obsidian';
 
 import Enhancer from '@/components/Enhancer.astro';
-import { SITE_URL } from '@/utils/postMeta';
+import { getResponsiveImage, SITE_URL } from '@/utils/postMeta';
 import { personLd, websiteLd } from '@/utils/structuredData';
 import '@/styles/app.css';
 
@@ -39,6 +39,9 @@ const {
   structuredData = [],
   markdownUrl,
 } = Astro.props;
+
+const imagePath = image.startsWith(SITE_URL) ? image.slice(SITE_URL.length) : image;
+const imageDimensions = getResponsiveImage(imagePath);
 
 // Strip query/hash and the on-disk `.html` (build.format 'file') so
 // canonicals match the clean URLs Vercel serves.
@@ -154,8 +157,8 @@ const allLd = [websiteLd(), personLd(), ...structuredData];
     <meta property="og:description" content={description} />
     <meta property="og:title" content={title} />
     <meta property="og:image" content={image} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:width" content={String(imageDimensions?.width ?? 1200)} />
+    <meta property="og:image:height" content={String(imageDimensions?.height ?? 630)} />
     <meta property="og:image:alt" content={title} />
 
     <meta name="twitter:card" content="summary_large_image" />
