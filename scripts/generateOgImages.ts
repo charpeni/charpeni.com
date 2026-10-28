@@ -1,9 +1,9 @@
 /**
  * Generates per-post Open Graph fallback images for blog posts that don't
- * ship a custom banner.
+ * ship a custom social preview or banner.
  *
- * For every `posts/<slug>.mdx` whose front matter omits `image`, this script
- * writes `/public/static/images/<slug>/og.png` (1200x630), which
+ * For every `posts/<slug>.mdx` whose front matter omits `ogImage` and `image`,
+ * this script writes `/public/static/images/<slug>/og.png` (1200x630), which
  * `getOgImagePath` picks up as the OG/Twitter image for that post.
  *
  * The card mirrors the terminal desktop — the site's default presentation —
@@ -33,6 +33,7 @@ function matter(source: string): {
   data: {
     title?: string;
     image?: string;
+    ogImage?: string;
     publishedAt?: string;
     tags?: string[];
   };
@@ -62,6 +63,7 @@ function matter(source: string): {
     data: {
       title: field('title'),
       image: field('image'),
+      ogImage: field('ogImage'),
       publishedAt: field('publishedAt'),
       tags,
     },
@@ -149,9 +151,8 @@ for (const file of mdxFiles) {
   const source = await readFile(path.join(POSTS_DIR, file), 'utf8');
   const { data, body } = matter(source);
 
-  // Posts that ship a banner already have a stronger social preview than we
-  // can synthesize here — the layout uses their banner directly.
-  if (data.image) {
+  // Posts with a custom social preview or banner already supply their image.
+  if (data.ogImage || data.image) {
     skipped += 1;
     continue;
   }
@@ -166,5 +167,5 @@ for (const file of mdxFiles) {
 }
 
 console.log(
-  `\nGenerated ${generated} OG image(s), skipped ${skipped} (banner present or missing title).`,
+  `\nGenerated ${generated} OG image(s), skipped ${skipped} (custom image present or missing title).`,
 );

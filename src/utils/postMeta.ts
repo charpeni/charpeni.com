@@ -46,12 +46,13 @@ export function sortByPublishedAt(posts: Post[]) {
 }
 
 /**
- * Social-preview image resolution, in the same priority order as the old
- * BlogLayout: custom banner (`image`) → generated per-post OG card
+ * Social-preview image resolution: explicit `ogImage` → custom banner
+ * (`image`) → generated per-post OG card
  * (public/static/images/<slug>/og.png, produced by scripts/generateOgImages)
  * → sitewide default (handled by the layout).
  */
 export function getOgImagePath(post: Post): string | undefined {
+  if (post.data.ogImage) return post.data.ogImage;
   if (post.data.image) return post.data.image;
   const ogImageRelative = `/static/images/${post.id}/og.png`;
   if (`/public${ogImageRelative}` in OG_CARDS) {
