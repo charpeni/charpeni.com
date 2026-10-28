@@ -2226,3 +2226,33 @@ html:not([data-reader]) .mermaid-diagram {
   --mermaid-label: #fbf6e9;
   --mermaid-git0: #7a7160;
 }
+
+/* <LockfileVisibility /> on cream paper: square corners, the skin's ink
+ * border and offset shadow, a "$ cat source"-style head bar, and the active
+ * tab in the titlebar orange. Structure and motion live in app.css. */
+html:not([data-reader]) .lockfile-vis {
+  --lv-surface: #fbf6e9;
+  --lv-head-bg: #f4ecd8;
+  --lv-border: #2a2a2a;
+  --lv-ink: #2a2a2a;
+  --lv-strong: #1c1913;
+  --lv-muted: #7a7160;
+  --lv-faint: #a89b7e;
+  --lv-guide: #7a7160;
+  --lv-alert: #3b6db8;
+  --lv-danger: #a8443a;
+  --lv-code: #9a4f00;
+  --lv-redact: #d4c9a8;
+  --lv-tab-border: #d4c9a8;
+  --lv-tab-on-bg: #b45309;
+  --lv-tab-on-ink: #fbf6e9;
+  --lv-tab-on-border: #2a2a2a;
+  --lv-radius: 0;
+  --lv-tab-radius: 0;
+  --lv-tag-radius: 0;
+  --lv-shadow: 2px 3px 0 rgba(122, 113, 96, 0.16);
+  --lv-font: inherit;
+}
+html:not([data-reader]) .lockfile-vis .lv-redact {
+  border-radius: 0;
+}

@@ -1,0 +1,231 @@
+---
+/**
+ * Interactive figure for "The Bun Dependabot Gap": the demo project's
+ * dependency tree as GitHub's dependency graph reads it (package.json: direct
+ * dependencies only, no version for a `catalog:` one) and as bun.lock records
+ * it (every installed package, transitives included).
+ *
+ * The toggle is two radio inputs, and the styles key off
+ * `.lockfile-vis:has([value='bun-lock']:checked)`. There is no script, so it
+ * works unchanged inside a window adopted from a fetched partial, where
+ * scripts don't run (see Enhancer.astro). For the same reason the styles live
+ * in app.css (reader light and dark) and retro.css (terminal skin), like
+ * .mermaid-diagram, rather than in a scoped <style>.
+ *
+ * The data is the demo project's real bun.lock. @types/ws also depends on
+ * @types/node; that second edge is left out so the tree reads as a tree.
+ */
+type Dep = {
+  name: string;
+  version: string;
+  severity?: 'high' | 'moderate';
+  alerted?: boolean;
+  catalog?: boolean;
+  deps?: Dep[];
+};
+
+const manifests: { path: string; deps: Dep[] }[] = [
+  {
+    path: 'package.json',
+    deps: [
+      { name: 'zod', version: '3.25.76', severity: 'high', alerted: true },
+      {
+        name: '@ngneat/falso',
+        version: '8.0.2',
+        deps: [
+          { name: 'seedrandom', version: '3.0.5' },
+          { name: 'uuid', version: '8.3.2', severity: 'moderate' },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'packages/app/package.json',
+    deps: [
+      {
+        name: 'happy-dom',
+        version: '20.8.9',
+        catalog: true,
+        severity: 'high',
+        deps: [
+          {
+            name: '@types/node',
+            version: '26.6.5',
+            deps: [{ name: 'undici-types', version: '8.9.0' }],
+          },
+          { name: '@types/whatwg-mimetype', version: '3.0.2' },
+          { name: '@types/ws', version: '8.18.2' },
+          { name: 'entities', version: '7.0.1' },
+          { name: 'whatwg-mimetype', version: '3.0.0' },
+          { name: 'ws', version: '8.22.0' },
+        ],
+      },
+    ],
+  },
+];
+
+type Row =
+  | { kind: 'manifest'; path: string }
+  | {
+      kind: 'direct' | 'transitive';
+      dep: Dep;
+      guide: string;
+      via?: string;
+      // Reveal order of the transitive rows, for the stagger.
+      order: number;
+    };
+
+// Flatten into `bun why`-style rows: the guide is the tree drawn in text.
+const rows: Row[] = [];
+let transitiveCount = 0;
+function walk(deps: Dep[], prefix: string, parent?: Dep) {
+  deps.forEach((dep, index) => {
+    const last = index === deps.length - 1;
+    rows.push({
+      kind: parent ? 'transitive' : 'direct',
+      dep,
+      guide: prefix + (last ? '└─ ' : '├─ '),
+      via: parent?.name,
+      order: parent ? transitiveCount++ : 0,
+    });
+    if (dep.deps) walk(dep.deps, prefix + (last ? '   ' : '│  '), dep);
+  });
+}
+for (const manifest of manifests) {
+  rows.push({ kind: 'manifest', path: manifest.path });
+  walk(manifest.deps, '');
+}
+
+const packages = rows.filter((row) => row.kind !== 'manifest');
+const direct = packages.filter((row) => row.kind === 'direct').length;
+const alerts = packages.filter((row) => row.dep.alerted).length;
+const vulnerable = packages.filter((row) => row.dep.severity).length;
+
+interface Props {
+  // Radio group name; only needs changing if a page renders two figures.
+  name?: string;
+}
+
+const { name = 'lockfile-vis' } = Astro.props;
+---
+
+<figure class="lockfile-vis not-prose">
+  <div class="lv-head">
+    <fieldset class="lv-switch">
+      <legend class="sr-only">Show the dependencies listed in</legend>
+      <label class="lv-tab">
+        <input
+          class="lv-input sr-only"
+          type="radio"
+          name={name}
+          value="package-json"
+          checked
+        />
+        <span class="lv-tab-file">package.json</span>
+        <span class="lv-tab-hint">what GitHub reads</span>
+      </label>
+      <label class="lv-tab">
+        <input class="lv-input sr-only" type="radio" name={name} value="bun-lock" />
+        <span class="lv-tab-file">bun.lock</span>
+        <span class="lv-tab-hint">what Bun installs</span>
+      </label>
+    </fieldset>
+    <p class="lv-summary lv-swap">
+      <span class="lv-when-package">
+        GitHub sees <strong>{direct} of {packages.length}</strong> packages
+        · {alerts} alert
+      </span>
+      <span class="lv-when-lock">
+        Bun installs <strong>{packages.length}</strong> packages
+        · {vulnerable} vulnerable
+      </span>
+    </p>
+  </div>
+
+  <ul class="lv-tree" role="list">
+    {
+      rows.map((row) =>
+        row.kind === 'manifest' ? (
+          <li class="lv-row" data-kind="manifest">
+            <span class="lv-manifest">{row.path}</span>
+          </li>
+        ) : (
+          <li
+            class="lv-row"
+            data-kind={row.kind}
+            data-severity={row.dep.severity}
+            style={`--i: ${row.order}`}
+          >
+            <span class="lv-guide" aria-hidden="true">
+              {row.guide}
+            </span>
+            <span class="lv-pkg">
+              <span class="lv-name">{row.dep.name}</span>{' '}
+              {row.dep.catalog ? (
+                <span class="lv-ver lv-swap">
+                  <span class="lv-when-package lv-catalog">catalog:</span>
+                  <span class="lv-when-lock">{row.dep.version}</span>
+                </span>
+              ) : (
+                <span class="lv-ver">{row.dep.version}</span>
+              )}
+              {row.kind === 'transitive' && (
+                <span class="lv-redact" aria-hidden="true" />
+              )}
+            </span>
+            {row.kind === 'transitive' && (
+              <>
+                <span class="sr-only lv-sr-package">
+                  A dependency of {row.via}, not in package.json.
+                </span>
+                <span class="sr-only lv-sr-lock">
+                  , a dependency of {row.via}
+                </span>
+              </>
+            )}
+            {row.dep.alerted ? (
+              <span class="lv-badges">
+                <span class="lv-sev">{row.dep.severity}</span>
+                <span class="lv-when-package lv-alert">
+                  <span class="lv-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <span class="lv-dot" aria-hidden="true" />
+                  alert
+                </span>
+              </span>
+            ) : row.dep.catalog ? (
+              <span class="lv-badges lv-swap">
+                <span class="lv-when-package lv-miss">
+                  no version
+                  <span class="lv-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  no alert
+                </span>
+                <span class="lv-when-lock">
+                  <span class="lv-sev">{row.dep.severity}</span>
+                </span>
+              </span>
+            ) : row.dep.severity ? (
+              <span class="lv-badges">
+                <span class="lv-when-lock lv-sev">{row.dep.severity}</span>
+              </span>
+            ) : null}
+          </li>
+        ),
+      )
+    }
+  </ul>
+
+  <figcaption class="lv-caption lv-swap">
+    <span class="lv-when-package">
+      What GitHub's dependency graph reads from <code>package.json</code>:
+      direct dependencies only, and <code>happy-dom</code> without a version.
+    </span>
+    <span class="lv-when-lock">
+      What <code>bun.lock</code> records: every package Bun installs, at its
+      exact version. <code>bun audit</code> reads it. GitHub doesn't.
+    </span>
+  </figcaption>
+</figure>
