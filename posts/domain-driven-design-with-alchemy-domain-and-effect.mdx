@@ -16,7 +16,7 @@ To build a dashboard, bilan syncs a repository's pull requests from GitHub. A sy
 
 Around that, bilan has rules: one sync per repository at a time, quotas per user and globally, and a run that goes silent must eventually be given up so the repository isn't stuck forever.
 
-Getting this right took three rounds of fixes, over two days in September:
+Getting this right took three rounds of fixes, over two days last month:
 
 1. **[Syncs stuck forever](https://github.com/charpeni/bilan/commit/35e5fe2).** A job stayed `running` until the Workflow's last step updated it. If the Workflow died first, the page kept polling and every new sync of that repository was refused. The fix asked the Workflow engine about each job and marked it lost when its run was gone.
 2. **[Syncs the engine still called running](https://github.com/charpeni/bilan/commit/207aa82).** After a restart, the engine could keep reporting a run as running even though it never resumed. The fix added a heartbeat after every page, and gave up on a job silent for ten minutes, unless it was waiting on GitHub's rate limit.
@@ -65,6 +65,8 @@ A repository's sync has exactly one owner: an aggregate that decides every chang
 
 **With a single writer per repository, two requests can't both see no active sync at the same time**, because only one place answers that question. DDD calls this a consistency boundary: everything inside it changes one decision at a time.
 
+That's the race behind the third fix, which took a carefully written database statement to close. In the model, it can't happen by construction: while a run is current, a second request is refused with `SyncAlreadyRunning`.
+
 ## Events Are the Record, Views Are for Reading
 
 What happened is stored once, as events: `SyncRequested`, `SyncAdmitted`, `SyncProgressed`, `SyncFinished`. Everything else is derived from them:
@@ -80,7 +82,11 @@ Policies say what happens next: "when a run is admitted, start it", and "when a 
 
 The biggest change is how time is handled. Every wait gets a deadline: a request that's never admitted expires, a run that goes silent for ten minutes is lost, and no run lasts more than six hours. Deadlines are commands too. A policy schedules them, and the same aggregate that handles the run's reports decides them.
 
-This replaced the heuristics. The aggregate decides a late report and its deadline one after the other, so **they can't both take effect.**
+That's what ended the first two rounds of fixes. **A sync can't be stuck forever anymore:** when a run goes quiet, its deadline gives it up, the repository can sync again, and a policy stops the Workflow in case it's still going somewhere. The model never asks the Workflow engine whether a run is alive, so it no longer matters when the engine gets it wrong.
+
+The rate-limit exception stopped being a heuristic too. Before waiting on GitHub's rate limit, the run says so with `PauseSync`, along with when it will resume, and its deadline moves to ten minutes after that. A quiet run is never mistaken for a lost one, and a run that doesn't come back from its pause is given up like any other.
+
+The aggregate also decides a late report and its deadline one after the other, so **they can't both take effect.**
 
 ## Other Systems Sit Behind a Small Contract
 
@@ -118,7 +124,7 @@ The same goes for Effect. It runs the model and the Worker that hosts it. The we
 
 ## Where Effect Fits
 
-Besides schemas and layers, typed errors earned their place. When the Workflow engine is down, starting a run fails with a typed error, so the model has to decide what that means (retry a few times, then fail the run) instead of retrying forever.
+Besides schemas and layers, typed errors earned their place. When the Workflow engine is down, starting a run fails with a typed error, so the model has to decide what that means (retry a few times, then fail the run) instead of retrying forever. Failing the run frees the repository right away, instead of after the ten-minute deadline.
 
 ## Why It Suits Agent-Led Work
 
@@ -128,18 +134,10 @@ Agents write code quickly, but they need to know what must stay true. Domain-dri
 - **The building blocks are a vocabulary.** "Add a policy that reacts to `SyncLost`" is a precise instruction. "Handle lost syncs somewhere" isn't.
 - **Types catch drift.** Contracts shared across packages come from the same schemas, so a copy can't silently diverge.
 
-## What the Tests Didn't Catch
-
-The live status stream had a comment saying the status was pushed from the model, so nothing polled. The agent wrote it, the tests passed, and it was wrong. The in-memory platform the tests run on really does push. The real host re-read the Durable Object every few hundred milliseconds for as long as a page was open.
-
-We found it by reading the platform's implementation, and fixed it the same day.
-
-This applies beyond Alchemy: an in-memory platform is good for running the spec, but it doesn't behave exactly like production. Test the parts that depend on the platform against the real platform, and keep reviewing what agents write.
-
 ## Wrapping up
 
 Should you reach for a domain model? For anything with a lifecycle (states, deadlines, retries, and other systems involved), **yes**. For CRUD, no.
 
-The fragile code is gone, the behavior fits in one file I can read, and I'm comfortable letting an agent change it.
+For bilan, the model settled what all three rounds of fixes had been patching: a sync can't be stuck forever, the Workflow engine's view of a run no longer matters, and one place decides whether a repository is syncing. The fragile code is gone, the behavior fits in one file I can read, and I'm comfortable letting an agent change it.
 
 It used to be the part of bilan I worried about the most, and it no longer is.
