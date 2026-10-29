@@ -1,0 +1,143 @@
+---
+title: 'Domain-Driven Design with Alchemy Domain and Effect'
+publishedAt: '2026-10-29T13:00:00Z'
+summary: "The most fragile code in bilan guessed whether a sync was still alive. Agents replaced it with a small domain model built on Alchemy Domain and Effect, specified by stories that play hours of a sync's life in milliseconds. Here are the principles I took away from it."
+tags: ['alchemy', 'effect', 'architecture', 'ai']
+series: 'bilan on Effect and Alchemy'
+---
+
+In [the previous post](/blog/your-infrastructure-belongs-next-to-your-code-moving-bilan-to-alchemy), I covered how agents moved [bilan](https://bilan.dev)'s infrastructure to Alchemy. This one covers the sync logic. **The most fragile code in bilan is gone, replaced by a small domain model that decides whether a repository is syncing.**
+
+As with the infrastructure, agents led this part. They wrote the model, the stories that specify it, and the code that hosts it. I made the calls about what belongs in the model and what doesn't, and reviewed.
+
+## The Problem
+
+To build a dashboard, bilan syncs a repository's pull requests from GitHub. A sync can be quick, or it can take hours: GitHub's rate limit pauses it, and a deep history takes many pages. It runs on a Cloudflare Workflow, a job that runs step by step and survives restarts, with one step per page of results.
+
+Around that, bilan has rules: one sync per repository at a time, quotas per user and globally, and a run that goes silent must eventually be given up so the repository isn't stuck forever.
+
+Getting this right took three rounds of fixes, over two days last month:
+
+1. **[Syncs stuck forever](https://github.com/charpeni/bilan/commit/35e5fe2).** A job stayed `running` until the Workflow's last step updated it. If the Workflow died first, the page kept polling and every new sync of that repository was refused. The fix asked the Workflow engine about each job and marked it lost when its run was gone.
+2. **[Syncs the engine still called running](https://github.com/charpeni/bilan/commit/207aa82).** After a restart, the engine could keep reporting a run as running even though it never resumed. The fix added a heartbeat after every page, and gave up on a job silent for ten minutes, unless it was waiting on GitHub's rate limit.
+3. **[Two syncs at once](https://github.com/charpeni/bilan/commit/149e709).** Checking for an active sync and then inserting one could race between two requests, and the cooldown lived in an eventually consistent cache. The fix made admission a single atomic database statement.
+
+Each fix was right, and each added another special case. The underlying problem stayed: the truth about a sync lived in two places that could disagree, the database row and the Workflow engine, and a reconcile step compared them on every read. It was the code I trusted the least, and I avoided touching it.
+
+It's now deleted: 85 lines of reconciliation and 139 lines of tests for timing edge cases. **The model is the only record of whether a repository is syncing, so there's nothing left to reconcile.**
+
+## Domain-Driven Design, 10 Years Later
+
+Domain-driven design (DDD) is a way to structure software around the problem it solves. The business rules live in one model, named the way the people who own the product talk about them, and databases, APIs, and frameworks stay at the edges.
+
+About 10 years ago, I worked with a bunch of co-workers who were fully into domain-driven design. It sounded interesting at the time, but I didn't fully grasp everything, and it seemed like a lot of ceremony for the value, though I assumed the long-term gains were worth it.
+
+Alchemy Domain made it click for me. It keeps the core ideas of DDD and leaves most of the jargon out.
+
+And these days, those long-term gains matter even more: with AI mapping your domain and making changes to it, an explicit model is what keeps those changes on track.
+
+## What Are Effect and Alchemy Domain?
+
+[Effect](https://effect.website) is a TypeScript library for writing programs whose types say more than what they return. An Effect also declares how it can fail and what it needs to run, such as a database or another service. It comes with the pieces you'd otherwise assemble yourself: schemas to validate data at the edges, retries, streams, and a test clock that lets you fast-forward time. You provide what a program needs as a layer, so swapping the real database for an in-memory one in tests is a one-line change.
+
+[Alchemy Domain](https://alchemy.run/domain/) is built on Effect, and it's the domain-driven design part. You describe your domain with a handful of small, named building blocks:
+
+- **Aggregates** own a piece of state and decide what happens to it.
+- **Commands** ask an aggregate to do something, and **events** record what it decided.
+- **Policies** react to events.
+- **Views** and **projections** turn events into something to read.
+- **External systems** are the outside services the model calls.
+
+You test the model with stories (more on those below), in memory. In production, Alchemy hosts it on Cloudflare Durable Objects: small stateful servers, each with its own storage, addressed by a key. Each aggregate gets its own, so in bilan, each repository has one.
+
+> [!NOTE]
+> As of October 2026, Alchemy Domain is in beta, and its API is still moving. The principles below are what I'd keep regardless of the library.
+
+## Speak the Product's Language
+
+Commands and events are named the way you'd say them out loud: `RequestSync`, `AdmitSync`, `MarkSyncStarted`, `SyncLost`, `NotCurrentJob`.
+
+This helped more than I expected. The code, the tests, and my conversations with the agent use the same words. When I asked "what happens if a run reports progress after it was given up?", the answer was in the code, in those terms: the report is refused with `NotCurrentJob`. DDD calls this the ubiquitous language.
+
+## An Aggregate Is a Consistency Boundary
+
+A repository's sync has exactly one owner: an aggregate that decides every change to it. A request, an admission, a progress report, a deadline: each is a command sent to that one aggregate, which decides against its current state and records what happened.
+
+**With a single writer per repository, two requests can't both see no active sync at the same time**, because only one place answers that question. DDD calls this a consistency boundary: everything inside it changes one decision at a time.
+
+That's the race behind the third fix, which took a carefully written database statement to close. In the model, it can't happen by construction: while a run is current, a second request is refused with `SyncAlreadyRunning`.
+
+## Events Are the Record, Views Are for Reading
+
+What happened is stored once, as events: `SyncRequested`, `SyncAdmitted`, `SyncProgressed`, `SyncFinished`. Everything else is derived from them:
+
+- **A view** gives each page the current status of a repository's sync.
+- **A projection** keeps the database's job history and quota counts in step with what the model decided.
+
+Since both are derived from the same events, they stay consistent with each other. The old code had two sources of truth and needed reconciling.
+
+## Policies Are the Reactions, and Time Is One of Them
+
+Policies say what happens next: "when a run is admitted, start it", and "when a run is given up, stop it". Each one is small and does one thing.
+
+The biggest change is how time is handled. Every wait gets a deadline: a request that's never admitted expires, a run that goes silent for ten minutes is lost, and no run lasts more than six hours. Deadlines are commands too. A policy schedules them, and the same aggregate that handles the run's reports decides them.
+
+That's what ended the first two rounds of fixes. **A sync can't be stuck forever anymore:** when a run goes quiet, its deadline gives it up, the repository can sync again, and a policy stops the Workflow in case it's still going somewhere. The model never asks the Workflow engine whether a run is alive, so it no longer matters when the engine gets it wrong.
+
+The rate-limit exception stopped being a heuristic too. Before waiting on GitHub's rate limit, the run says so with `PauseSync`, along with when it will resume, and its deadline moves to ten minutes after that. A quiet run is never mistaken for a lost one, and a run that doesn't come back from its pause is given up like any other.
+
+The aggregate also decides a late report and its deadline one after the other, so **they can't both take effect.**
+
+## Other Systems Sit Behind a Small Contract
+
+The model never knows how a sync actually runs. To the model, the Workflow engine is an external system with two operations: start a run, stop a run.
+
+It's the part most likely to change, so it helps to keep it behind a small contract. The rules can be tested without Cloudflare, and how runs execute can change without touching the rules. The Workflow itself stays plain TypeScript and reports each step back to the model.
+
+## Specification by Example
+
+This is the part I like the most. The model is specified by stories: given what happened, when a command arrives, then these events, these calls to other systems, and this view.
+
+```ts
+it.effect('a run that never starts is lost ten minutes after admission', () =>
+  story(
+    ...admitted,
+    clock('2026-10-28T12:09:59Z'),
+    then(repo),
+    clock('2026-10-28T12:10:00Z'),
+    then(repo, new SyncLost({ jobId: j1, reason: 'never started' })),
+    expectCall(SyncRunner.stop, { jobId: j1 }),
+    resolve(SyncRunner.stop, undefined),
+  ),
+);
+```
+
+Stories run on a virtual clock, so **six hours of a sync's life play out in milliseconds**. They read like product requirements, they also serve as the tests, and they're what I review first in a pull request that touches the model.
+
+## Know Where the Model Ends
+
+Not everything belongs in the model, and drawing that line was my call more than the agents'.
+
+The quotas (two active syncs per user, two hundred a day globally) stayed in the database, enforced by one atomic statement. Moving them into the model would have meant an aggregate per user, another one for the whole app, and a multi-step process to coordinate them, to replace a single `INSERT` that already worked. **A domain model is most useful where the rules are complex,** and the quotas weren't.
+
+The same goes for Effect. It runs the model and the Worker that hosts it. The web app and the browser stay plain TypeScript: a browser client for live status would have shipped 76 KB of Effect to every visitor, so live status uses Server-Sent Events, a plain HTTP stream browsers support natively, instead.
+
+## Where Effect Fits
+
+Besides schemas and layers, typed errors earned their place. When the Workflow engine is down, starting a run fails with a typed error, so the model has to decide what that means (retry a few times, then fail the run) instead of retrying forever. Failing the run frees the repository right away, instead of after the ten-minute deadline.
+
+## Why It Suits Agent-Led Work
+
+Agents write code quickly, but they need to know what must stay true. Domain-driven design makes that explicit:
+
+- **The stories are the contract.** I review the stories; the agent's job is to keep them green.
+- **The building blocks are a vocabulary.** "Add a policy that reacts to `SyncLost`" is a precise instruction. "Handle lost syncs somewhere" isn't.
+- **Types catch drift.** Contracts shared across packages come from the same schemas, so a copy can't silently diverge.
+
+## Wrapping up
+
+Should you reach for a domain model? For anything with a lifecycle (states, deadlines, retries, and other systems involved), **yes**. For CRUD, no.
+
+For bilan, the model settled what all three rounds of fixes had been patching: a sync can't be stuck forever, the Workflow engine's view of a run no longer matters, and one place decides whether a repository is syncing. The fragile code is gone, the behavior fits in one file I can read, and I'm comfortable letting an agent change it.
+
+It used to be the part of bilan I worried about the most, and it no longer is.

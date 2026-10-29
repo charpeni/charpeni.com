@@ -1,0 +1,116 @@
+---
+title: 'Your Infrastructure Belongs Next to Your Code: Moving bilan to Alchemy'
+publishedAt: '2026-10-29T12:00:00Z'
+summary: 'Agents moved bilan from a Wrangler config to Alchemy in a day. Every pull request now gets its own copy of the app, production never went down, and the whole system lives in one typed file. Here are the principles that made it worth it.'
+tags: ['cloudflare', 'alchemy', 'infrastructure', 'ai']
+series: 'bilan on Effect and Alchemy'
+---
+
+[bilan](https://bilan.dev) is a side project of mine: it turns a GitHub repository's pull request history into a dashboard of what's actually happening in it. It runs on Cloudflare: Workers for the code, D1 (SQLite) for the database, R2 for file storage, KV as a cache, and Workflows for long-running jobs.
+
+Until yesterday, it was deployed the way most Workers projects are, with Wrangler, Cloudflare's CLI: a `wrangler.jsonc` config file, a `wrangler deploy`, and a handful of secrets set by hand on the Worker. It worked, but the definition of bilan was split between a config file, the Cloudflare dashboard, and my memory.
+
+Yesterday, bilan moved to [Alchemy](https://alchemy.run), and its sync logic moved to a domain model built with two libraries I introduce in the next post: [Effect](https://effect.website) and [Alchemy Domain](https://alchemy.run/domain/). **Every pull request now gets its own copy of bilan, with its own database, storage, and URL, and it disappears when the pull request closes.** Production never went down along the way.
+
+I didn't write it, though. **Agents led this migration**: they planned it, wrote the code, opened the pull requests, and ran the cutover. My job was the one I described in [AI Turned Every Engineer Into a Tech Lead](/blog/ai-turned-every-engineer-into-a-tech-lead-most-dont-know-it-yet): pick the direction, make the calls that shape the system, and review.
+
+This is the first of two posts: this one covers the infrastructure, and the next one covers domain-driven design. I'll focus on principles and benefits rather than step-by-step instructions, which would get outdated quickly.
+
+> [!NOTE]
+> As of October 2026, Alchemy v2 is in beta. Pin exact versions if you try it.
+
+## Why Alchemy?
+
+Infrastructure as code means describing your cloud resources (servers, databases, storage, and how they connect) in files you commit, instead of clicking through a dashboard. A tool then creates, updates, or deletes resources until your account matches those files.
+
+Alchemy does that in TypeScript. You declare your Workers, databases, buckets, and Workflows, and how they bind together. A binding is how Cloudflare gives code access to a resource: a Worker gets a handle to its database, its bucket, or another Worker.
+
+I had three reasons to look at it:
+
+1. **I wanted pull request previews.** With a single Wrangler config, a full copy of bilan per pull request wasn't realistic.
+2. **I wanted the system described in one place,** in the same language as the app.
+3. **I wanted to try Alchemy Domain** for the sync lifecycle, which is the subject of the next post, and it's hosted by Alchemy anyway.
+
+## Infrastructure Is Code, in the Same Language as the App
+
+I'm used to Terraform, the most common infrastructure-as-code tool, but I've always found it odd to write, and I'm never too sure I got it right until it's applied. Alchemy fixed that for me by using TypeScript: the same language, editor, and type checker as the rest of the app.
+
+**bilan's whole system now lives in the repository, in TypeScript, and gets reviewed like any other change**: the database, the bucket, the cache, the sync Workflow, and three Workers that bind to each other. Adding a binding or renaming a resource shows up in a pull request. I no longer have to check the dashboard to understand why something is configured the way it is.
+
+Types help here too. A binding refers to the resource itself rather than to a name repeated somewhere else, so a typo fails at compile time.
+
+## One Definition, Every Environment
+
+This is the principle I like the most. Alchemy calls each environment a stage, and **production, each pull request, and my laptop come from the same definition. Only the stage changes.**
+
+```ts
+// The production names stay pinned; every other stage gets its own.
+const workerName = (base: string) => (prod ? base : `${base}-${stage}`);
+```
+
+`prod` keeps the names production already had. A pull request becomes stage `pr-42`, with its own database, bucket, cache, Workflow, and Workers. My laptop gets a local stage that runs everything locally, with no Cloudflare account involved.
+
+Since every environment comes from the same definition, they don't drift apart. If something works in a preview, I can expect it to work in production, without anyone having to configure the preview by hand.
+
+## Previews Change How You Review
+
+**With a preview per pull request, I review a running app along with the diff.** Of everything in this migration, it's the part I use the most.
+
+Each same-repository pull request is deployed to its own URL on `workers.dev`, the address Cloudflare gives every Worker, starts with empty storage, and is destroyed when the pull request closes. A weekly job sweeps any stage that was left behind.
+
+Three decisions keep previews safe:
+
+- **Previews live on `workers.dev`, never under `bilan.dev`.** A preview can't set a cookie production would read. While at it, the session cookie moved to a `__Host-` name, which browsers lock to the exact host.
+- **Previews sign in through a separate GitHub App,** so a preview never touches production's credentials for users.
+- **Fork pull requests never deploy.** Their code would run with the preview's secrets.
+
+When an agent opens a pull request, I open the preview and try the change myself.
+
+## Production Is a Stage With Stricter Rules
+
+Moving an app that's already in production is usually the riskiest part of an infrastructure migration. In bilan, **production is a stage like the others, with stricter rules written next to the resources they protect**, and that's what kept the cutover uneventful.
+
+In bilan's case, two rules apply to production only:
+
+- **Adopt, don't recreate.** The existing Worker, database, bucket, and cache were adopted as they were. The first deploy didn't change them; Alchemy started managing them.
+- **Retain, don't destroy.** Removing production's database or bucket from the code can't delete them. In a preview, destroying everything is exactly what you want.
+
+Even the database migration history came along: the migrations Wrangler had already applied were adopted, so nothing ran twice. The cutover was a regular deploy, and nothing needed to be rolled back.
+
+## Deploys Carry Everything
+
+**A deploy now carries the code, the schema migrations, and the secrets, in one step, from CI only.**
+
+Before, a deploy shipped code, migrations were their own command, and secrets were set by hand. Now:
+
+- **Migrations are applied by the deploy,** so there's no separate step to forget.
+- **Secrets live in GitHub environments** (`production` and `preview`), and every deploy sets them. What production runs with is what the environment says.
+- **Only `main`'s current head deploys.** A CI run that finishes late, or an old run re-run from the Actions tab, can't roll production back to an older definition of the system.
+
+That last rule came from reviewing the setup afterward. With infrastructure as code, deploying an old commit reapplies the old infrastructure definition along with the old code.
+
+## Why It Suits Agent-Led Work
+
+I didn't expect this part to matter as much as it did. Alchemy works well for agents, for the same reasons it works well for people:
+
+- **One typed file describes the whole system.** An agent reads it and knows every resource and every binding, instead of guessing from a config and a dashboard it can't see.
+- **A plan shows what a change will do before it happens.** Alchemy lists what a deploy would create, update, or delete. I reviewed plans for the risky changes, like the cutover, before anything touched production.
+- **Previews let me use the app while reviewing.** I reviewed every pull request on its own URL.
+- **Production's rules are set once.** I don't have to check adoption and retention in every change.
+
+The agents wrote the code, and **I spent my time on the decisions**: moving infrastructure first and the domain model second, putting previews on `workers.dev`, and choosing when to cut over.
+
+## The Trade-offs
+
+Here's what to weigh before trying it:
+
+- **It's young software.** A few times, the documentation and the installed version disagreed, and the installed code was right. Pinning exact versions helped.
+- **You own a state store.** Alchemy keeps track of what it deployed, and that state lives on your Cloudflare account.
+
+## Should You Migrate?
+
+If your app is a single Worker and you're happy with it, probably not yet.
+
+If your app is a few Workers and some storage, or you want a preview of every pull request, **yes**. The previews alone were worth it for me, and having the whole system in one typed file makes later changes easier to reason about, whether I make them or an agent does.
+
+In [the next post](/blog/domain-driven-design-with-alchemy-domain-and-effect), I cover how a small domain model, built with Effect and Alchemy Domain, replaced the most fragile code in bilan.
