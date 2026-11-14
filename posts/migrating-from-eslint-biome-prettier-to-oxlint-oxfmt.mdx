@@ -9,7 +9,7 @@ I had been hearing about [Oxc](https://oxc.rs/) for a while, but I never quite f
 
 Our monorepo had accumulated a small mess of linters and formatters: ESLint in some packages, Biome in others, Prettier in a few corners, with overlapping rules, duplicated configs, and a CI step that took way too long.
 
-So I tasked an agent to migrate everything to [Oxlint](https://oxc.rs/docs/guide/usage/linter/) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter/), and the result was hard to argue with.
+So I tasked an agent to migrate everything to [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter), and the result was hard to argue with.
 
 **Our full lint pipeline went from ~81 seconds to ~2.5 seconds.** 🔥
 
@@ -33,7 +33,7 @@ Here's the part that surprised me the most: **I didn't really do the migration m
 A few things made this work better than expected:
 
 1. **The migration tooling already exists.** [`@oxlint/migrate`](https://github.com/oxc-project/oxlint-migrate) reads your ESLint flat config and outputs an `.oxlintrc.json`. Oxfmt has a `--migrate=prettier`/`--migrate=biome` flag built in. Half the work is automated out of the box.
-2. **The migration guides are good.** The [Oxlint](https://oxc.rs/docs/guide/usage/linter/) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter/) docs cover the plugin name mapping, the unsupported features to watch for, and how to update CI scripts. Pointing the agent at them up front is what kept it from going off the rails.
+2. **The migration guides are good.** The [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) docs cover the plugin name mapping, the unsupported features to watch for, and how to update CI scripts. Pointing the agent at them up front is what kept it from going off the rails.
 3. **The work is mostly mechanical.** Run the migration tool, review the output, swap `biome-ignore` comments for `eslint-disable` equivalents (Oxlint understands them natively), update the CI scripts, and prune dead dependencies. It's exactly the kind of work you want to delegate.
 
 The agent ran the migration, ran the new lint and format commands, fixed the diffs, updated the package scripts, pruned the now-unused dependencies, and produced a PR I could review like any other one. I spent my time on the parts that actually required judgment: deciding which rule gaps mattered, validating the architectural rules we ported to a custom JS plugin, and reviewing the final diff.
