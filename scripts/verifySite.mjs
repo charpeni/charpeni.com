@@ -379,6 +379,16 @@ check(
     );
   }),
 );
+check(
+  'reader mode: no window chrome (title bar, status bar, resize grip) is visible',
+  await reader.evaluate(() =>
+    [
+      ...document.querySelectorAll(
+        '.retro-terminal-titlebar, .retro-terminal-status, .retro-terminal-resize',
+      ),
+    ].every((el) => !el.checkVisibility()),
+  ),
+);
 await reader.screenshot({ path: 'docs/reader-post.png' });
 // Reader homepage: the classic hero + git-graph post list (not the terminal).
 await reader.goto(`${BASE}/`, { waitUntil: 'networkidle' });
