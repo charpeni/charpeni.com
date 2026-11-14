@@ -12,6 +12,7 @@ import {
   notFoundGeom,
   prsGeom,
   showGeom,
+  termVerticalGeom,
 } from '../src/utils/windowGeometry.ts';
 
 test('clampCursor stays within [0, length-1]', () => {
@@ -69,6 +70,48 @@ test('geometry presets are centred and viewport-fitted', () => {
   assert.equal(notFoundGeom(1400, 900).w, 620);
   // Narrow viewport shrinks widths to fit.
   assert.equal(showGeom(400, 900).w, 400 - 48);
+});
+
+test('the home window never opens over the profile card', () => {
+  // Desktop bands: the card ends at 185px, the footer starts 90px from the
+  // bottom, and each keeps a 16px gap (DEFAULT_TERM_INSETS).
+  for (const vh of [520, 600, 690, 720, 768, 800, 900, 1000, 1080, 1440]) {
+    const { y, h } = termVerticalGeom(vh);
+    assert.ok(y >= 201, `${vh}: starts below the card (y=${y})`);
+    assert.ok(y + h <= vh - 20, `${vh}: stays inside the viewport (${y + h})`);
+  }
+});
+
+test('the home window clears the footer from 720px of height up', () => {
+  for (const vh of [720, 768, 800, 900, 1000, 1080, 1440]) {
+    const { y, h } = termVerticalGeom(vh);
+    assert.ok(y + h <= vh - 106, `${vh}: ends above the footer (${y + h})`);
+  }
+  // Tucked under the card, filling the band.
+  assert.deepEqual(termVerticalGeom(720), { y: 201, h: 413 });
+  assert.deepEqual(termVerticalGeom(900), { y: 201, h: 593 });
+  // Tall viewports: full height and centred, as before.
+  assert.deepEqual(termVerticalGeom(1080), { y: 230, h: 620 });
+  assert.deepEqual(termVerticalGeom(1440), { y: 410, h: 620 });
+});
+
+test('on short viewports the home window keeps a usable height', () => {
+  // The band alone would leave 383px and 293px: the 400px floor takes over
+  // and the window extends over the footer, never past 20px from the edge.
+  assert.deepEqual(termVerticalGeom(690), { y: 201, h: 400 });
+  assert.deepEqual(termVerticalGeom(600), { y: 201, h: 379 });
+});
+
+test('the home window follows measured bands (a taller, wrapped card)', () => {
+  assert.deepEqual(termVerticalGeom(900, { top: 240, bottom: 94 }), {
+    y: 240,
+    h: 566,
+  });
+  // No card or footer to avoid: back to a centred 620px window.
+  assert.deepEqual(termVerticalGeom(900, { top: 20, bottom: 20 }), {
+    y: 140,
+    h: 620,
+  });
 });
 
 test('clampWinToViewport re-fits a show window that shrank below 640', () => {

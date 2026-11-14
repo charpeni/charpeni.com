@@ -188,9 +188,40 @@ html:not([data-reader]) {
   height: min(80vh, 620px);
 }
 /* termGeom: min(80vw, fit-to-content width) — the fit width depends on the
- * post titles, so DesktopShell.astro passes it as a custom property. */
+ * post titles, so DesktopShell.astro passes it as a custom property.
+ * Vertically it mirrors termVerticalGeom: the window fills the band between
+ * the profile card (--retro-term-top) and the footer (--retro-term-bottom),
+ * between 400px and 620px tall, and is centred only when that keeps it
+ * below the card. On short viewports the 400px floor wins and the window
+ * extends over the footer, down to 20px from the edge. The two bands are
+ * DEFAULT_TERM_INSETS in utils/windowGeometry.ts — keep them in sync
+ * (tests/ssrWindowGeometry.test.mjs checks). */
 .retro-terminal-window--ssr:where([data-retro-window-id='term']) {
+  --retro-term-top: 201px;
+  --retro-term-bottom: 106px;
+  --retro-term-h: clamp(
+    140px,
+    max(
+      calc(100vh - var(--retro-term-top) - var(--retro-term-bottom)),
+      min(400px, calc(100vh - var(--retro-term-top) - 20px))
+    ),
+    min(80vh, 620px)
+  );
   width: min(80vw, calc(100vw - 40px), var(--retro-term-fit-w, 100vw));
+  height: var(--retro-term-h);
+  top: max(var(--retro-term-top), calc((100vh - var(--retro-term-h)) / 2));
+  bottom: auto;
+  margin-block: 0;
+}
+/* Up to 900px wide the card moves up and its links wrap onto a second line,
+ * and the footer sits lower. The manager measures the real card; these are
+ * the values it finds in the common case, so the window doesn't shift when
+ * it takes over. */
+@media (max-width: 900px) {
+  .retro-terminal-window--ssr:where([data-retro-window-id='term']) {
+    --retro-term-top: 204px;
+    --retro-term-bottom: 94px;
+  }
 }
 .retro-terminal-window--ssr:where([data-retro-window-id^='show:']),
 .retro-terminal-window--ssr:where([data-retro-window-id='github']) {
