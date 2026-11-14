@@ -183,9 +183,12 @@ const LATIN_SUBSET = (() => {
  * largest payload on any page.
  *
  * Runs on the build output rather than public/ so the licensed originals stay
- * intact in the repo, and the /fonts/* URLs (and their immutable cache header)
- * never move. Fails the build if a page renders a glyph that Fixel covers but
- * the subset drops, so new content can't silently lose its typeface.
+ * intact in the repo, and the /fonts/* URLs never move. The flip side: those
+ * URLs are not content-hashed, so widening LATIN_SUBSET changes the bytes
+ * behind the same URL. public/_headers therefore caches /fonts/* for a day
+ * with background revalidation instead of as immutable. Fails the build if a
+ * page renders a glyph that Fixel covers but the subset drops, so new content
+ * can't silently lose its typeface.
  */
 function subsetFixelFonts() {
   return {
