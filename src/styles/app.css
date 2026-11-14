@@ -70,9 +70,15 @@ html:not([data-reader]) .retro-terminal-window {
 
 /* Keyboard focus indicator for windows. retro.css sets
  * `.retro-terminal-window:focus { outline: none }` (an a11y anti-pattern);
- * restore a visible ring for keyboard focus only. */
+ * restore a visible ring for keyboard focus only. The window manager focuses
+ * a window's scroll container (so keyboard scrolling works), hence the
+ * scrollers of every window kind are listed alongside the frame. */
 html:not([data-reader]) .retro-terminal-window:focus-visible,
 html:not([data-reader]) .retro-terminal-content:focus-visible,
+html:not([data-reader]) .retro-terminal-show-scroll:focus-visible,
+html:not([data-reader]) .retro-terminal-legal-window:focus-visible,
+html:not([data-reader]) .retro-terminal-gh-scroll:focus-visible,
+html:not([data-reader]) .retro-terminal-prs-list:focus-visible,
 html:not([data-reader]) .retro-terminal-row:focus-visible {
   outline: 2px solid #b45309;
   outline-offset: -2px;

@@ -166,6 +166,29 @@ check(
   }),
 );
 check(
+  'client-opened post window scrolls from the keyboard (Space, PageDown)',
+  await (async () => {
+    const scrollTop = () =>
+      page.evaluate(
+        () =>
+          document.querySelector(
+            '[data-retro-window-id^="show:"] .retro-terminal-show-scroll',
+          ).scrollTop,
+      );
+    await page.evaluate(() => {
+      document.querySelector(
+        '[data-retro-window-id^="show:"] .retro-terminal-show-scroll',
+      ).scrollTop = 0;
+    });
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(400);
+    const afterSpace = await scrollTop();
+    await page.keyboard.press('PageDown');
+    await page.waitForTimeout(400);
+    return afterSpace > 0 && (await scrollTop()) > afterSpace;
+  })(),
+);
+check(
   'terminal-opened window: copy buttons injected + Giscus embed added',
   await page.evaluate(() => {
     const win = document.querySelector('[data-retro-window-id^="show:"]');
@@ -198,17 +221,18 @@ check(
 check(
   'F6 cycles focus to another window; Shift+F6 returns',
   await (async () => {
-    const first = await page.evaluate(
-      () => document.activeElement?.dataset?.retroWindowId,
-    );
+    // Focus lands on the window's scroller, so resolve the window from it.
+    const focusedWindow = () =>
+      page.evaluate(
+        () =>
+          document.activeElement?.closest('[data-retro-window-id]')?.dataset
+            .retroWindowId,
+      );
+    const first = await focusedWindow();
     await page.keyboard.press('F6');
-    const second = await page.evaluate(
-      () => document.activeElement?.dataset?.retroWindowId,
-    );
+    const second = await focusedWindow();
     await page.keyboard.press('Shift+F6');
-    const third = await page.evaluate(
-      () => document.activeElement?.dataset?.retroWindowId,
-    );
+    const third = await focusedWindow();
     return first && second && first !== second && third === first;
   })(),
 );
@@ -284,6 +308,32 @@ check(
 check(
   'copy buttons injected into article code blocks',
   (await page2.locator('.code-block .copy-code-button').count()) > 0,
+);
+// A deep link starts with focus on <body>: the first scroll key has to reach
+// the post, and the first Tab has to enter its window (not the links behind).
+check(
+  'deep link: the post scrolls from the keyboard with nothing focused',
+  await (async () => {
+    await page2.keyboard.press('PageDown');
+    await page2.waitForTimeout(400);
+    return page2.evaluate(
+      () =>
+        document.querySelector(
+          '[data-retro-window-id^="show:"] .retro-terminal-show-scroll',
+        ).scrollTop > 0,
+    );
+  })(),
+);
+await page2.reload({ waitUntil: 'networkidle' });
+await page2.waitForFunction(() => window.__osReady === true);
+await page2.keyboard.press('Tab');
+check(
+  'deep link: the first Tab enters the post window',
+  await page2.evaluate(
+    () =>
+      document.activeElement?.closest('[data-retro-window-id]')?.dataset
+        .retroWindowId === 'show:be-careful-with-javascript-default-parameters',
+  ),
 );
 await page2.close();
 
