@@ -32,11 +32,18 @@ import {
   prsGeom,
   showGeom,
   STORAGE_KEY,
+  TERM_INSET_GAP,
   termGeom,
+  WINDOW_EDGE_MARGIN,
   windowTitle,
 } from '@/utils/retro';
 
-import type { LegalWindowVariant, TermPost, WinGeom } from '@/utils/retro';
+import type {
+  LegalWindowVariant,
+  TermInsets,
+  TermPost,
+  WinGeom,
+} from '@/utils/retro';
 
 type Kind = 'term' | 'show' | 'legal' | 'prs' | 'gh' | 'not-found';
 
@@ -293,9 +300,33 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     return top;
   }
 
+  /**
+   * The bands the home window stays out of: down to the bottom of the profile
+   * card, and up from the top of the footer. Measured rather than assumed,
+   * because the card grows when its links wrap (viewports up to 900px wide).
+   * Layout offsets are used instead of getBoundingClientRect() so the card's
+   * enter animation, a transform, doesn't skew the result.
+   */
+  function termInsets(): TermInsets {
+    const card = desktopEl.querySelector<HTMLElement>(
+      '.retro-terminal-profile',
+    );
+    const footer = desktopEl.querySelector<HTMLElement>(
+      '.retro-terminal-footer',
+    );
+    return {
+      top: card?.offsetParent
+        ? card.offsetTop + card.offsetHeight + TERM_INSET_GAP
+        : WINDOW_EDGE_MARGIN,
+      bottom: footer?.offsetParent
+        ? desktopEl.clientHeight - footer.offsetTop + TERM_INSET_GAP
+        : WINDOW_EDGE_MARGIN,
+    };
+  }
+
   function defaultGeom(id: string): WinGeom {
     const kind = kindOf(id);
-    if (kind === 'term') return termGeom(vw(), vh(), posts);
+    if (kind === 'term') return termGeom(vw(), vh(), posts, termInsets());
     if (kind === 'show') return showGeom(vw(), vh());
     if (kind === 'prs') return prsGeom(vw(), vh());
     if (kind === 'gh') return githubGeom(vw(), vh());
@@ -1288,7 +1319,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         if (win.restoreGeom) {
           win.restoreGeom =
             win.kind === 'term' && !win.userResized
-              ? termGeom(vw(), vh(), posts)
+              ? termGeom(vw(), vh(), posts, termInsets())
               : clampWinToViewport(
                   { id: win.id, z: win.z, ...win.restoreGeom },
                   vw(),
@@ -1296,7 +1327,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
                 );
           win.geom = maximizedGeom();
         } else if (win.kind === 'term' && !win.userResized) {
-          win.geom = termGeom(vw(), vh(), posts);
+          win.geom = termGeom(vw(), vh(), posts, termInsets());
         } else {
           win.geom = clampWinToViewport(
             { id: win.id, z: win.z, ...win.geom },

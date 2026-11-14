@@ -2,9 +2,9 @@ import { format, parseISO } from 'date-fns';
 
 import { computeGraph, isBranchTag, shortHash } from '@/utils/graph';
 
-import { clampWindowHeight, graphWidth, MIN_W } from './windowGeometry';
+import { graphWidth, MIN_W, termVerticalGeom } from './windowGeometry';
 
-import type { WinGeom } from './windowGeometry';
+import type { TermInsets, WinGeom } from './windowGeometry';
 
 // Re-export the pure geometry module so existing importers of '@/utils/retro'
 // keep working (the manager pulls both geometry and terminal-domain helpers
@@ -89,17 +89,22 @@ export function termFitWidth(posts: TermPost[]): number {
   );
 }
 
-export function termGeom(vw: number, vh: number, posts: TermPost[]): WinGeom {
+/**
+ * The home window is centred horizontally and placed vertically by
+ * termVerticalGeom, so it never opens on top of the profile card or the
+ * footer. `insets` are the measured bands; omitted, the desktop defaults apply.
+ */
+export function termGeom(
+  vw: number,
+  vh: number,
+  posts: TermPost[],
+  insets?: TermInsets,
+): WinGeom {
   const maxW = Math.max(MIN_W, vw - 40);
   const targetW = Math.min(Math.round(vw * 0.8), termFitWidth(posts));
   const w = Math.min(maxW, Math.max(MIN_W, targetW));
-  const h = clampWindowHeight(vh, Math.min(vh - 80, 620));
-  return {
-    x: Math.round((vw - w) / 2),
-    y: Math.max(20, Math.round((vh - h) / 2)),
-    w,
-    h,
-  };
+  const { y, h } = termVerticalGeom(vh, insets);
+  return { x: Math.round((vw - w) / 2), y, w, h };
 }
 // --- window titles (RetroTerminal.tsx) ---
 export function windowTitle(

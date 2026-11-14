@@ -81,6 +81,22 @@ check(
   }),
 );
 check(
+  // The card and the footer sit on the desktop behind every window, so the
+  // home window has to open in the band between them.
+  'term window opens clear of the profile card and the footer',
+  await page.evaluate(() => {
+    const [term, card, footer] = [
+      '[data-retro-window-id="term"]',
+      '.retro-terminal-profile',
+      '.retro-terminal-footer',
+    ].map((selector) => document.querySelector(selector));
+    return (
+      term.offsetTop >= card.offsetTop + card.offsetHeight &&
+      term.offsetTop + term.offsetHeight <= footer.offsetTop
+    );
+  }),
+);
+check(
   'term log lists all 36 posts with graph svg + hashes',
   (await page.locator('[data-log-index]').count()) === 36 &&
     (await page.locator('.retro-terminal-graph').count()) === 36 &&

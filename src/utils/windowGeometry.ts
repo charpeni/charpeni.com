@@ -31,6 +31,56 @@ export function clampWindowHeight(vh: number, h: number): number {
   return Math.min(Math.max(MIN_H, h), maxWindowHeight(vh));
 }
 
+/**
+ * Vertical bands the home (archive) window stays out of, measured from the
+ * top and bottom edges of the viewport. The profile card sits in the top band
+ * and the footer in the bottom one. Both live on the desktop, behind every
+ * window, so a window placed over them hides them.
+ */
+export type TermInsets = { top: number; bottom: number };
+
+/** Breathing room between the home window and the card / footer. */
+export const TERM_INSET_GAP = 16;
+
+/**
+ * Bands for the desktop layout (viewports wider than 900px), where the card
+ * and the footer have a fixed size: the card starts 56px from the top and is
+ * 129px tall, the footer is 58px tall and sits 32px from the bottom, plus the
+ * gap on each side. The pre-hydration CSS (retro.css, `--ssr`) hard-codes the
+ * same two numbers. The window manager measures the real elements instead,
+ * which yields these values on desktop and the right ones on narrower
+ * viewports, where the card's links wrap and make it taller (the CSS
+ * approximates those with a second pair under its 900px media query).
+ */
+export const DEFAULT_TERM_INSETS: TermInsets = { top: 201, bottom: 106 };
+
+export const TERM_MAX_H = 620;
+/** Below this the archive shows too few rows to browse (about eight at
+ * 400px), so on short viewports the window keeps this height and extends
+ * over the footer instead. The profile card always stays clear. */
+export const TERM_MIN_H = 400;
+/** Smallest gap left between a window and the viewport edge. */
+export const WINDOW_EDGE_MARGIN = 20;
+
+/**
+ * Vertical placement of the home window: as tall as the band between the
+ * profile card and the footer allows (between TERM_MIN_H and TERM_MAX_H),
+ * centred in the viewport when that keeps it clear of the card, otherwise
+ * tucked right under the card. Pure — unit-tested.
+ */
+export function termVerticalGeom(
+  vh: number,
+  insets: TermInsets = DEFAULT_TERM_INSETS,
+): { y: number; h: number } {
+  const room = vh - insets.top - insets.bottom;
+  const floor = Math.min(TERM_MIN_H, vh - insets.top - WINDOW_EDGE_MARGIN);
+  const h = clampWindowHeight(
+    vh,
+    Math.min(Math.max(room, floor), TERM_MAX_H),
+  );
+  return { y: Math.max(insets.top, Math.round((vh - h) / 2)), h };
+}
+
 export function showGeom(vw: number, vh: number): WinGeom {
   const TERMINAL_ARTICLE_W = 840;
   const SHOW_CHROME_W = 74;
