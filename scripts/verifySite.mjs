@@ -121,6 +121,35 @@ check(
   ),
 );
 
+// A modified click on an archive row is the browser's: it opens the post in
+// a new tab and neither selects the row nor opens a window in place.
+{
+  const cursorBefore = await page.evaluate(
+    () => document.querySelector('.retro-terminal-row--selected')?.dataset.logIndex,
+  );
+  const [tab] = await Promise.all([
+    context.waitForEvent('page', { timeout: 5000 }).catch(() => null),
+    page.click('[data-log-index="3"] .retro-terminal-msg', {
+      modifiers: ['ControlOrMeta'],
+    }),
+  ]);
+  const slug = await page.getAttribute('[data-log-index="3"]', 'data-log-slug');
+  check(
+    'Ctrl/Cmd+click on an archive row opens the post in a new tab',
+    tab !== null &&
+      new URL(tab.url()).pathname === `/blog/${slug}` &&
+      (await page.evaluate(
+        (expectedCursor) =>
+          location.pathname === '/' &&
+          !document.querySelector('[data-retro-window-id^="show:"]') &&
+          document.querySelector('.retro-terminal-row--selected')?.dataset
+            .logIndex === expectedCursor,
+        cursorBefore,
+      )),
+  );
+  await tab?.close();
+}
+
 // Keyboard: ArrowDown then Enter opens the second post as a window.
 await page.keyboard.press('ArrowDown');
 await page.keyboard.press('Enter');
