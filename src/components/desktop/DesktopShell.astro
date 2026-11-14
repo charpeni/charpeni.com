@@ -262,7 +262,11 @@ const termFitW = termFitWidth(posts);
             <slot name="article" />
             <slot name="comments" />
           </div>
-          <div class="retro-terminal-status" slot="status">
+          {/* `retro-only`: unlike the other windows, the show window's
+              content flows as the page in reader mode, so its status bar
+              would otherwise print as raw text under the comments. Matches
+              the client-built status in desktopManager's openShow(). */}
+          <div class="retro-terminal-status retro-only" slot="status">
             <span>
               branch{' '}
               <b>{showBranch ? `refs/heads/${showBranch}` : 'main'}</b>
