@@ -600,6 +600,14 @@ check(
 );
 await legacy.close();
 
+// --- Root favicon: clients that never read the HTML ask for /favicon.ico ---
+const favicon = await page.request.get(`${BASE}/favicon.ico`);
+check(
+  '/favicon.ico resolves to the icon (not the 404 page)',
+  favicon.status() === 200 &&
+    (favicon.headers()['content-type'] ?? '').startsWith('image/'),
+);
+
 // --- AI-indexing surface ---
 const md = await page.request.get(
   `${BASE}/blog/graphql-enums-are-unsafe.md`,
