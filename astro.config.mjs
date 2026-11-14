@@ -295,6 +295,11 @@ export default defineConfig({
     // next-sitemap emitted /sitemap.xml; @astrojs/sitemap emits
     // /sitemap-index.xml — keep the URL registered in search consoles alive.
     '/sitemap.xml': '/sitemap-index.xml',
+    // The icons live under /static/favicons/ and every page links them from
+    // its <head>. Clients that never read that HTML ask for the conventional
+    // root path instead — feed readers, link unfurlers, a browser tab showing
+    // rss.xml or a .md file — and used to get the 404 page.
+    '/favicon.ico': '/static/favicons/favicon.ico',
   },
   integrations: [
     mdx(),
