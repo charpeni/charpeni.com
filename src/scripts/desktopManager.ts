@@ -112,6 +112,26 @@ const PROFILE_AUTO_EXPAND_MIN_VH = 700;
 
 const WINDOW_GEOMETRY_ANIMATION_ID = 'retro-terminal-window-geometry';
 
+/** The element that scrolls inside each kind of window (see retro.css). */
+const SCROLLER_SELECTOR = [
+  '.retro-terminal-show-scroll',
+  '.retro-terminal-legal-window',
+  '.retro-terminal-gh-scroll',
+  '.retro-terminal-prs-list',
+  '.retro-terminal-content',
+].join(', ');
+
+/** Keys whose default action scrolls the focused element's scroller. */
+const SCROLL_KEYS = new Set([
+  ' ',
+  'PageDown',
+  'PageUp',
+  'Home',
+  'End',
+  'ArrowDown',
+  'ArrowUp',
+]);
+
 function maximizedGeom(): WinGeom {
   const inset = Math.round(
     Math.min(16, Math.max(12, Math.min(vw(), vh()) * 0.018)),
@@ -459,7 +479,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       coveringWindow &&
       (!activeWindow || activeWindow.z < coveringWindow.z)
     ) {
-      coveringWindow.el.focus({ preventScroll: true });
+      focusWindow(coveringWindow);
     }
     for (const win of state.windows) {
       const maximized = !phone && win.restoreGeom !== null;
@@ -570,6 +590,38 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     }
   }
 
+  /** The visible scroll container of a window, if it has one. */
+  function scrollerOf(win: Win): HTMLElement | null {
+    for (const el of win.el.querySelectorAll<HTMLElement>(SCROLLER_SELECTOR)) {
+      if (el.getClientRects().length > 0) return el;
+    }
+    return null;
+  }
+
+  /**
+   * Move DOM focus into a window. Focus goes to the scroll container rather
+   * than the frame: a browser scrolls from the focused element up through its
+   * ancestors, and the scroller is a descendant of the frame. With the frame
+   * focused, Space, Page Up/Down, Home/End and the arrow keys had nothing to
+   * scroll. `tabindex="-1"` keeps the scroller out of the Tab order while
+   * letting scripts and clicks inside the content focus it.
+   */
+  function focusWindow(win: Win) {
+    const scroller = scrollerOf(win);
+    if (scroller && !scroller.hasAttribute('tabindex')) scroller.tabIndex = -1;
+    (scroller ?? win.el).focus({ preventScroll: true });
+  }
+
+  /** Replacing a window's body removes the scroller that held focus, which
+   * drops focus to <body>. Put it back if the window is still the focused one. */
+  function restoreWindowFocus(win: Win) {
+    if (state.focusedId !== win.id) return;
+    const active = document.activeElement;
+    if (!active || active === document.body || active === win.el) {
+      focusWindow(win);
+    }
+  }
+
   /** Tab title tracks the focused window (RetroTerminal.tsx parity). */
   function syncTitle() {
     const HOME_TITLE =
@@ -615,7 +667,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     win.z = nextZ();
     render();
     persistMaximized(win.restoreGeom !== null);
-    win.el.focus({ preventScroll: true });
+    focusWindow(win);
     if (changed && !options?.silentUrl) syncUrl('replace');
   }
 
@@ -627,7 +679,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     persistMaximized(topWindow()?.restoreGeom !== null);
     if (wasFocused) {
       const top = state.focusedId ? winById(state.focusedId) : null;
-      if (top) top.el.focus({ preventScroll: true });
+      if (top) focusWindow(top);
       else focusFallback();
     }
     syncUrl('replace');
@@ -662,7 +714,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       restoredOpenerFocus = document.activeElement === win.opener;
     }
     if (!restoredOpenerFocus && top) {
-      top.el.focus({ preventScroll: true });
+      focusWindow(top);
     } else if (!restoredOpenerFocus) {
       focusFallback();
     }
@@ -788,6 +840,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       const root = doc.querySelector('[data-window-content]');
       if (!root) throw new Error('malformed partial');
       setBody(win.el, document.adoptNode(root), statusHtml);
+      restoreWindowFocus(win);
       // Let the page-level enhancers decorate the adopted content (copy
       // buttons, Giscus) — adopted DOM never ran its own scripts.
       document.dispatchEvent(
@@ -801,6 +854,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
           win.el,
           '<div class="retro-terminal-show-scroll"><div class="retro-terminal-show-meta">error: could not load — reopen to retry</div></div>',
         );
+        restoreWindowFocus(win);
       }
     } finally {
       opening.delete(id);
@@ -1225,6 +1279,28 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     }
 
     const focused = state.focusedId ? winById(state.focusedId) : null;
+    const active = document.activeElement;
+    const nothingFocused = !active || active === document.body;
+
+    // A freshly loaded post or legal page has its window on top but focus
+    // still on <body>, so Tab would walk every link behind the window before
+    // reaching it. Enter the window instead, where focus lands when the same
+    // window is opened client-side.
+    if (
+      event.key === 'Tab' &&
+      !event.shiftKey &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      nothingFocused &&
+      focused &&
+      focused.kind !== 'term'
+    ) {
+      event.preventDefault();
+      focusWindow(focused);
+      return;
+    }
+
     if (focused?.kind === 'term') {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
@@ -1248,6 +1324,19 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
         focused.id.slice(5),
         focused.el.querySelector('[data-show-status-hint]'),
       );
+    }
+
+    // Scroll keys only reach a window's scroller when focus is inside it.
+    // Focus can also sit on the frame (a click on the title bar, a Tab onto
+    // the window) or nowhere at all (a fresh page load). Move it into the
+    // scroller and leave the key alone, so its default scrolling runs there.
+    if (
+      focused &&
+      !event.defaultPrevented &&
+      SCROLL_KEYS.has(event.key) &&
+      (nothingFocused || active === focused.el)
+    ) {
+      focusWindow(focused);
     }
   });
 
