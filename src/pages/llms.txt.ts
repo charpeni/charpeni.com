@@ -13,7 +13,16 @@ import type { CollectionEntry } from 'astro:content';
  *
  * The canonical Markdown URL moves to /blog/{slug}.md; the legacy
  * /api/blog/{slug}.md URLs remain live for previously published copies.
+ *
+ * Every URL is written as a Markdown link in the llmstxt.org list form,
+ * `- [name](url): notes`. That is what the format's parsers extract, and
+ * what Lighthouse's llms.txt audit looks for; a bare URL is neither.
  */
+
+/** Markdown link, with the characters that would end the link text escaped. */
+function link(text: string, url: string): string {
+  return `[${text.replace(/[\\[\]]/g, '\\$&')}](${url})`;
+}
 
 function formatDate(date: string): string {
   return new Date(date).toISOString().slice(0, 10);
@@ -52,8 +61,8 @@ export function generateLlmsTxt(posts: CollectionEntry<'posts'>[]): string {
 
       return `### ${post.data.title}
 
-- Canonical URL: ${htmlUrl}
-- Markdown URL: ${markdownUrl}
+- ${link(post.data.title, htmlUrl)}: canonical URL
+- ${link(`${post.data.title} (Markdown)`, markdownUrl)}: Markdown URL
 - Published: ${formatDate(post.data.publishedAt)}
 - Tags: ${formatTags(post.data.tags)}
 - Summary: ${post.data.summary}
@@ -89,14 +98,14 @@ ${postLinks}
 
 ## Contact
 
-- Website: ${SITE_URL}
-- Contact page: ${SITE_URL}/contact
-- Open source contributions timeline: ${SITE_URL}/contributions
-- GitHub: https://github.com/charpeni
-- LinkedIn: https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/
-- Twitter/X: https://x.com/charpeni_
-- Bluesky: https://bsky.app/profile/charpeni.bsky.social
-- Email: blog@nicolascharpentier.com
+- ${link('Website', SITE_URL)}
+- ${link('Contact page', `${SITE_URL}/contact`)}
+- ${link('Open source contributions timeline', `${SITE_URL}/contributions`)}
+- ${link('GitHub', 'https://github.com/charpeni')}
+- ${link('LinkedIn', 'https://www.linkedin.com/in/nicolas-charpentier-8a2b8a104/')}
+- ${link('Twitter/X', 'https://x.com/charpeni_')}
+- ${link('Bluesky', 'https://bsky.app/profile/charpeni.bsky.social')}
+- ${link('Email', 'mailto:blog@nicolascharpentier.com')}: blog@nicolascharpentier.com
 `;
 }
 

@@ -621,6 +621,21 @@ check(
     mdLegacy.status() === 200 &&
     (await md.text()) === (await mdLegacy.text()),
 );
+// llms.txt follows the llmstxt.org shape: every post is reachable through
+// Markdown links (its canonical page and its .md source), not bare URLs.
+{
+  const text = await (await page.request.get(`${BASE}/llms.txt`)).text();
+  const count = (pattern) => (text.match(pattern) ?? []).length;
+  const posts = count(/^### /gm);
+  check(
+    'llms.txt links every post as Markdown: canonical page and .md source',
+    posts > 0 &&
+      count(/^- \[.+\]\(https?:[^)\s]+\/blog\/[^)\s.]+\): canonical URL$/gm) ===
+        posts &&
+      count(/^- \[.+\]\(https?:[^)\s]+\/blog\/[^)\s]+\.md\): Markdown URL$/gm) ===
+        posts,
+  );
+}
 const llms = await page.request.get(`${BASE}/llms.txt`);
 const llmsFull = await page.request.get(`${BASE}/llms-full.txt`);
 const rss = await page.request.get(`${BASE}/blog/rss.xml`);
