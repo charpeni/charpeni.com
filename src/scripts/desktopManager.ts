@@ -162,6 +162,22 @@ function kindOf(id: string): Kind {
   return 'show';
 }
 
+/**
+ * A plain primary-button click. Ctrl/Cmd, Shift and Alt ask the browser for a
+ * new tab, a new window or a download; every link on the desktop is a real
+ * URL, so those clicks are left to the browser instead of being turned into
+ * an in-place window.
+ */
+function isPlainClick(event: MouseEvent): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
 function urlOf(id: string): string | null {
   if (id === GITHUB_ID) return '/contributions';
   if (id.startsWith('show:')) return `/blog/${id.slice(5)}`;
@@ -1120,6 +1136,10 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
       return;
     }
 
+    // Archive rows and the legal / PRs / contributions links are anchors:
+    // let a modified click open them the way the browser normally would.
+    if (!isPlainClick(event) && target.closest('a[href]')) return;
+
     const legalLink = target.closest<HTMLElement>('[data-open-legal]');
     if (legalLink) {
       event.preventDefault();
@@ -1180,6 +1200,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
     const target = event.target as Element;
     const row = target.closest<HTMLElement>('[data-log-index]');
     if (row) {
+      if (!isPlainClick(event)) return;
       event.preventDefault();
       openShow(row.dataset.logSlug ?? '');
       return;
@@ -1201,16 +1222,7 @@ function init(desktopEl: HTMLElement, shellEl: HTMLElement) {
   shellEl.addEventListener(
     'click',
     (event) => {
-      if (
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
-        return;
-      }
+      if (event.defaultPrevented || !isPlainClick(event)) return;
       const anchor = (event.target as Element).closest<HTMLAnchorElement>(
         'a[href]',
       );
