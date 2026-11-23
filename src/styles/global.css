@@ -157,6 +157,20 @@ a {
   overflow-wrap: break-word;
 }
 
+/* Arrow after links that leave the site (tagged at build time by
+ * rehypeExternalLinks in src/lib/mdxPipeline.ts). It is an empty inline box,
+ * not an inline-block: an atomic inline adds a line-break opportunity, so the
+ * arrow could wrap onto a line of its own. The mask paints the lucide
+ * arrow-up-right glyph in the link's currentColor, so hover and the retro
+ * palette apply to it too. */
+.external-link::after {
+  content: '';
+  padding-right: 0.95em;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E")
+    no-repeat right 0 top 30% / 0.8em;
+}
+
 .content-header-link {
   opacity: 0;
   margin-left: -20px;
