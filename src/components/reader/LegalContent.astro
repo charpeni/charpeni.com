@@ -7,7 +7,7 @@ const { variant } = Astro.props;
 {
   variant === 'privacy-policy' ? (
     <>
-      <p>Last updated: August 20, 2026.</p>
+      <p>Last updated: November 23, 2026.</p>
       <p>
         This website (<a href="https://charpeni.com">https://charpeni.com</a>)
         is the personal website of Nicolas Charpentier. It is intended to
@@ -26,6 +26,18 @@ const { variant } = Astro.props;
         service may process request, device, browser, and page information.
       </p>
       <p class="mt-4">
+        The site uses InsightFlare to measure which pages people read and how
+        long they visit. It processes the
+        page path, referring URL, and information about the browser and device.
+        InsightFlare is configured to omit query strings and fragments from the
+        page address it records for each view. It also measures page performance.
+      </p>
+      <p class="mt-4">
+        When you click a link to another website, InsightFlare records the page
+        you clicked from and the full destination URL, including any query string
+        or fragment in the link.
+      </p>
+      <p class="mt-4">
         The site also uses Cloudflare Web Analytics, which loads a small
         measurement script on each page. It reports page views along with
         information such as the referring page, country, device type, browser,
@@ -34,13 +46,19 @@ const { variant } = Astro.props;
         track visitors across websites.
       </p>
       <p class="mt-4">
-        The site does not use these tools to identify individual visitors.
+        The site does not link these analytics to readers' names or email
+        addresses.
       </p>
       <h2 class="prose mt-4 font-bold">Cookies and Local Storage</h2>
       <p class="mt-4">
         This website uses a first-party cookie named <code>retro-os</code> to
         remember whether retro mode is enabled. The cookie is used only for
         this preference and expires after one year.
+      </p>
+      <p class="mt-4">
+        The site is configured to use InsightFlare's Weak tracking mode. In
+        this mode, InsightFlare counts visits without saving a persistent
+        visitor ID in your browser's local storage.
       </p>
       <p class="mt-4">
         Retro mode may also use your browser's local storage to remember the

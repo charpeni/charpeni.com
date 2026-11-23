@@ -243,6 +243,17 @@ const allLd = [websiteLd(), personLd(), ...structuredData];
       data-event-endpoint="https://pirsch.charpeni.com/p/e"
       data-session-endpoint="https://pirsch.charpeni.com/p/s"></script>
 
+    {
+      import.meta.env.PROD && (
+        <script
+          is:inline
+          defer
+          crossorigin="anonymous"
+          src="https://insightflare.charpeni.com/script.js?siteId=5db13e79-16ef-4175-9171-47fa27e6cf43"
+        ></script>
+      )
+    }
+
     {/*
       Progressive-enhancement fallback. The terminal desktop is a JS
       augmentation: the window manager sizes, positions, and scrolls the
